@@ -52,11 +52,11 @@ def seed_initial_data():
 
     # Seed complex items with modifiers & stock limits
     if not db.query(models.MenuItem).first():
-        burger = models.MenuItem(name="Cheeseburger", description="Juicy beef patty with cheddar cheese", price=8.99, category="Main", stock=25)
-        fries = models.MenuItem(name="French Fries", description="Crispy salted potato fries", price=3.49, category="Side", stock=50)
-        soda = models.MenuItem(name="Iced Soda", description="Sweet fizzy refreshing drink", price=2.49, category="Drink", stock=10)
+        americano = models.MenuItem(name="Americano", description="Americano", price=5000, category="Coffee Classics", stock=25)
+        espresso = models.MenuItem(name="Espresso", description="Espresso", price=5000, category="Coffee Classics", stock=50)
+        cappuccino = models.MenuItem(name="Cappuccino", description="Cappuccino", price=5000, category="Coffee Classics", stock=10)
 
-        db.add_all([burger, fries, soda])
+        db.add_all([americano, espresso, cappuccino])
         db.flush()
 
         # Seed custom item modifiers
