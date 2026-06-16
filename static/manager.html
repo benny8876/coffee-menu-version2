@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+    <!-- Header -->
+    <header class="bg-white border-b px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800">Management Panel</h1>
+            <p class="text-xs text-slate-400">Inventory control, financials, and logs</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border">
+                <span class="text-xs font-bold text-slate-400 uppercase pl-2">Filter Date:</span>
+                <input type="date" id="analytics-date" onchange="fetchAnalytics()" class="bg-transparent border-none text-sm font-bold focus:outline-none outline-none cursor-pointer">
+            </div>
+            <button onclick="exportReport()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
+                Export to Excel
+            </button>
+            <button onclick="toggleAddModal(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
+                + Add Menu Item
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto p-6 space-y-8">
+        <!-- Dashboard Metrics Row -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider" id="revenue-title">Selected Day's Revenue</span>
+                <h3 class="text-3xl font-black text-amber-600 mt-2" id="stat-revenue">$0.00</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Completed Transactions</span>
+                <h3 class="text-3xl font-black text-slate-800 mt-2" id="stat-count">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2 block">Top Selling Items</span>
+                <ol id="stat-top-items" class="text-sm list-decimal list-inside space-y-1 text-slate-600">
+                    <li>No items logged yet</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Dynamic Table QR Cryptographic Link Generator Section -->
+        <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h2 class="text-lg font-bold mb-2 text-slate-800">Tamper-Proof Dining QR Generator</h2>
+            <p class="text-xs text-slate-400 mb-4">Generates cryptographically signed URLs for tables, preventing billing spoofing.</p>
+            <div class="flex flex-wrap items-center gap-3">
+                <select id="qr-table-select" class="bg-slate-100 border-none rounded px-4 py-2.5 text-sm font-semibold outline-none">
+                    <option value="1">Table 1</option>
+                    <option value="2">Table 2</option>
+                    <option value="3">Table 3</option>
+                    <option value="4">Table 4</option>
+                    <option value="5">Table 5</option>
+                    <option value="6">Table 6</option>
+                    <option value="7">Table 7</option>
+                    <option value="8">Table 8</option>
+                    <option value="9">Table 9</option>
+                    <option value="10">Table 10</option>
+                </select>
+                <button onclick="requestSignedToken()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition">
+                    Generate Signed Link
+                </button>
+            </div>
+            <div id="qr-output-container" class="mt-4 p-4 bg-slate-50 border rounded-xl hidden text-sm font-semibold space-y-2">
+                <p class="text-xs text-slate-400 uppercase font-bold">Secure Path Signature:</p>
+                <input type="text" id="signed-url-input" readonly class="w-full bg-white p-2 border rounded font-mono text-xs select-all text-amber-600">
+                <a id="signed-url-anchor" target="_blank" class="inline-block text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-200">Open Secure Menu Panel</a>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-lg font-bold mb-4 border-b pb-2">Modify Menu Items & Pricing</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs text-slate-400 border-b">
+                                <th class="py-2">Item Name</th>
+                                <th class="py-2">Category</th>
+                                <th class="py-2">Price</th>
+                                <th class="py-2">Stock Level</th>
+                                <th class="py-2">Available</th>
+                                <th class="py-2 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menu-management-table" class="text-sm divide-y"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-lg font-bold mb-4 border-b pb-2">Consolidated Orders Record</h2>
+                <div class="space-y-3 overflow-y-auto max-h-[500px]" id="orders-record-log"></div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Add Menu Item Modal -->
+    <div id="add-item-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl relative space-y-4">
+            <button onclick="toggleAddModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            <h3 class="text-lg font-bold text-slate-800">Add New Menu Item</h3>
+            <form id="add-item-form" onsubmit="submitAddItem(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Item Name</label>
+                    <input type="text" id="add-item-name" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
+                        <input type="text" id="add-item-category" placeholder="Main, Drink" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Price ($)</label>
+                        <input type="number" step="0.01" min="0.01" id="add-item-price" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Stock Limit</label>
+                        <input type="number" id="add-item-stock" placeholder="Empty = Infinite" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
+                    <textarea id="add-item-desc" rows="2" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm transition">
+                    Save to Database
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Menu Item Modal -->
+    <div id="edit-item-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl relative space-y-4">
+            <button onclick="toggleEditModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            <h3 class="text-lg font-bold text-slate-800">Edit Menu Item</h3>
+            <form id="edit-item-form" onsubmit="submitEditItem(event)" class="space-y-4">
+                <input type="hidden" id="edit-item-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Item Name</label>
+                    <input type="text" id="edit-item-name" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
+                        <input type="text" id="edit-item-category" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Price ($)</label>
+                        <input type="number" step="0.01" min="0.01" id="edit-item-price" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Stock</label>
+                        <input type="number" id="edit-item-stock" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
+                    <textarea id="edit-item-desc" rows="2" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
+                </div>
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="checkbox" id="edit-item-available" class="rounded text-amber-600 focus:ring-amber-500 h-4 w-4">
+                    <label for="edit-item-available" class="text-sm font-semibold text-slate-600">Mark as available / in stock</label>
+                </div>
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-sm transition">
+                    Apply Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipts Printer Modal -->
+    <div id="receipt-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white p-8 rounded-xl max-w-sm w-full font-mono shadow-2xl relative">
+            <button onclick="toggleReceiptModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            <div id="receipt-payload" class="space-y-4"></div>
+            <button onclick="window.print()" class="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm print:hidden">
+                Print Receipt Document
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = `${window.location.origin}/api/v1`;
+        let menuItemsList = [];
+
+        function setDefaultDatePicker() {
+            const todayLocal = new Date().toLocaleDateString('en-CA');
+            document.getElementById('analytics-date').value = todayLocal;
+        }
+
+        async function fetchAnalytics() {
+            const selectedDate = document.getElementById('analytics-date').value;
+            document.getElementById('revenue-title').innerText = `${selectedDate} Revenue`;
+
+            try {
+                const response = await fetch(`${API_BASE}/manager/analytics/daily?date=${selectedDate}`);
+                const data = await response.json();
+                
+                document.getElementById('stat-revenue').innerText = `$${data.total_revenue.toFixed(2)}`;
+                document.getElementById('stat-count').innerText = data.total_orders_completed;
+                
+                const list = document.getElementById('stat-top-items');
+                list.innerHTML = "";
+                if (data.top_selling_items.length === 0) {
+                    list.innerHTML = "<li>No sales recorded on this date</li>";
+                } else {
+                    data.top_selling_items.forEach(item => {
+                        list.innerHTML += `<li>${item.name} (${item.sold_qty} sold)</li>`;
+                    });
+                }
+            } catch (err) {
+                console.error("Could not fetch metrics.");
+            }
+        }
+
+        function exportReport() {
+            const selectedDate = document.getElementById('analytics-date').value;
+            window.location.href = `${API_BASE}/manager/analytics/export?date=${selectedDate}`;
+        }
+
+        // Requests a cryptographically signed dining URL for a table ID
+        async function requestSignedToken() {
+            const selectId = document.getElementById('qr-table-select').value;
+            try {
+                const response = await fetch(`${API_BASE}/manager/generate-token/${selectId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const fullLink = `${window.location.origin}${data.qr_link}`;
+                    
+                    document.getElementById('signed-url-input').value = fullLink;
+                    document.getElementById('signed-url-anchor').setAttribute('href', data.qr_link);
+                    document.getElementById('qr-output-container').classList.remove('hidden');
+                }
+            } catch (err) {
+                alert("Signature generation request failed.");
+            }
+        }
+
+        async function fetchMenuTable() {
+            try {
+                const response = await fetch(`${API_BASE}/menu/`);
+                menuItemsList = await response.json();
+                
+                const tbody = document.getElementById("menu-management-table");
+                tbody.innerHTML = "";
+                menuItemsList.forEach(item => {
+                    const stockLabel = item.stock !== null ? item.stock : "Infinite";
+                    const tr = document.createElement("tr");
+                    tr.className = "hover:bg-slate-50";
+                    tr.innerHTML = `
+                        <td class="py-3 font-semibold text-slate-800">${item.name}</td>
+                        <td class="py-3 text-slate-500">${item.category}</td>
+                        <td class="py-3 font-medium">$${item.price.toFixed(2)}</td>
+                        <td class="py-3 font-mono text-xs">${stockLabel}</td>
+                        <td class="py-3">
+                            <span class="px-2 py-0.5 rounded text-xs ${item.is_available ? 'bg-green-100 text-green-800':'bg-red-100 text-red-800'}">
+                                ${item.is_available ? 'Active' : 'Sold Out'}
+                            </span>
+                        </td>
+                        <td class="py-3 text-right">
+                            <button onclick="openEditModal(${item.id})" class="text-amber-600 hover:text-amber-800 font-bold text-xs">Edit</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Could not populate items.");
+            }
+        }
+
+        function toggleAddModal(show) {
+            const modal = document.getElementById('add-item-modal');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        async function submitAddItem(event) {
+            event.preventDefault();
+            const name = document.getElementById('add-item-name').value;
+            const category = document.getElementById('add-item-category').value;
+            const price = parseFloat(document.getElementById('add-item-price').value);
+            const description = document.getElementById('add-item-desc').value;
+            const rawStock = document.getElementById('add-item-stock').value;
+            const stock = rawStock !== "" ? parseInt(rawStock) : null;
+
+            const payload = { name, category, price, description, is_available: true, stock, modifiers: [] };
+
+            try {
+                const response = await fetch(`${API_BASE}/manager/menu`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    toggleAddModal(false);
+                    document.getElementById('add-item-form').reset();
+                    fetchMenuTable();
+                }
+            } catch (err) {
+                alert("Network error.");
+            }
+        }
+
+        function toggleEditModal(show) {
+            const modal = document.getElementById('edit-item-modal');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        function openEditModal(itemId) {
+            const item = menuItemsList.find(i => i.id === itemId);
+            if (!item) return;
+
+            document.getElementById('edit-item-id').value = item.id;
+            document.getElementById('edit-item-name').value = item.name;
+            document.getElementById('edit-item-category').value = item.category;
+            document.getElementById('edit-item-price').value = item.price;
+            document.getElementById('edit-item-desc').value = item.description || '';
+            document.getElementById('edit-item-stock').value = item.stock !== null ? item.stock : '';
+            document.getElementById('edit-item-available').checked = item.is_available;
+
+            toggleEditModal(true);
+        }
+
+        async function submitEditItem(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-item-id').value;
+            const name = document.getElementById('edit-item-name').value;
+            const category = document.getElementById('edit-item-category').value;
+            const price = parseFloat(document.getElementById('edit-item-price').value);
+            const description = document.getElementById('edit-item-desc').value;
+            const rawStock = document.getElementById('edit-item-stock').value;
+            const stock = rawStock !== "" ? parseInt(rawStock) : null;
+            const is_available = document.getElementById('edit-item-available').checked;
+
+            const payload = { name, category, price, description, is_available, stock };
+
+            try {
+                const response = await fetch(`${API_BASE}/manager/menu/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    toggleEditModal(false);
+                    fetchMenuTable();
+                }
+            } catch (err) {
+                alert("Network error.");
+            }
+        }
+
+        async function fetchOrdersLog() {
+            try {
+                const response = await fetch(`${API_BASE}/manager/orders`);
+                const orders = await response.json();
+                
+                const container = document.getElementById("orders-record-log");
+                container.innerHTML = "";
+
+                orders.forEach(order => {
+                    const card = document.createElement("div");
+                    card.className = "bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex justify-between items-center";
+                    card.innerHTML = `
+                        <div>
+                            <p class="font-bold text-slate-800">Order ID #${order.id} - Table ${order.table.number}</p>
+                            <p class="text-xs text-slate-400">Total: $${order.total_price.toFixed(2)} | Status: <span class="capitalize font-semibold text-amber-600">${order.status}</span></p>
+                        </div>
+                        <button onclick="loadReceipt(${order.id})" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Receipt</button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                console.error("Error retrieving historical logs.");
+            }
+        }
+
+        async function loadReceipt(orderId) {
+            try {
+                const response = await fetch(`${API_BASE}/manager/orders/${orderId}/voucher`);
+                const receipt = await response.json();
+
+                const receiptContainer = document.getElementById("receipt-payload");
+                const itemsStr = receipt.items.map(i => `
+                    <div class="flex justify-between text-xs border-b border-dashed pb-1">
+                        <span>${i.name} (x${i.quantity})</span>
+                        <span>$${i.subtotal.toFixed(2)}</span>
+                    </div>
+                `).join("");
+
+                receiptContainer.innerHTML = `
+                    <div class="text-center border-b pb-3 border-dashed">
+                        <h2 class="text-lg font-bold">${receipt.restaurant_name}</h2>
+                        <p class="text-[10px] text-slate-400">Transaction ID: ${receipt.voucher_id}</p>
+                        <p class="text-[10px] text-slate-400">${receipt.timestamp}</p>
+                    </div>
+                    <div class="text-xs">
+                        <p><b>Table:</b> ${receipt.table_number}</p>
+                    </div>
+                    <div class="space-y-1 my-3">
+                        ${itemsStr}
+                    </div>
+                    <div class="space-y-1 pt-3 border-t border-dashed text-xs text-slate-600">
+                        <div class="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>$${receipt.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Tax (10%)</span>
+                            <span>$${receipt.tax_amount.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
+                            <span>Grand Total</span>
+                            <span>$${receipt.grand_total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+
+                toggleReceiptModal(true);
+            } catch (err) {
+                alert("Receipt compilation failed.");
+            }
+        }
+
+        function toggleReceiptModal(show) {
+            const modal = document.getElementById('receipt-modal');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        setDefaultDatePicker();
+        fetchAnalytics();
+        fetchMenuTable();
+        fetchOrdersLog();
+    </script>
+</body>
+</html>

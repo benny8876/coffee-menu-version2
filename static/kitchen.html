@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Panel - Real-time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-lg">
+        <div>
+            <h1 class="text-2xl font-black text-emerald-400">Kitchen Display System</h1>
+            <p class="text-xs text-slate-400">Paid and validated orders monitor</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Audio Permission Helper Label -->
+            <span id="audio-status-banner" class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg">
+                🔔 Click anywhere to enable alert sounds
+            </span>
+            <div class="flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" id="ws-indicator"></span>
+                <span class="text-xs text-slate-400 font-medium" id="ws-status">Connecting...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Summon Alerts Banner -->
+    <section id="alerts-container" class="max-w-7xl mx-auto px-6 mt-4 space-y-2">
+        <!-- Live Staff Service calls print here -->
+    </section>
+
+    <!-- Main Board -->
+    <main class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Pending Queue -->
+        <div class="bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">
+                    Pending <span class="bg-amber-400/20 text-amber-400 px-2 py-0.5 rounded-full text-xs" id="count-pending">0</span>
+                </h2>
+            </div>
+            <div id="pending-orders" class="space-y-4 max-h-[70vh] overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Preparing Queue -->
+        <div class="bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-blue-400 flex items-center gap-2">
+                    Preparing <span class="bg-blue-400/20 text-blue-400 px-2 py-0.5 rounded-full text-xs" id="count-preparing">0</span>
+                </h2>
+            </div>
+            <div id="preparing-orders" class="space-y-4 max-h-[70vh] overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- Served Queue -->
+        <div class="bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
+                    Served / Ready <span class="bg-emerald-400/20 text-emerald-400 px-2 py-0.5 rounded-full text-xs" id="count-served">0</span>
+                </h2>
+            </div>
+            <div id="served-orders" class="space-y-4 max-h-[70vh] overflow-y-auto pr-1"></div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = `${window.location.origin}/api/v1`;
+        const WS_URL = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/api/v1/kitchen/ws`;
+
+        // Safe Audio Context setup
+        let audioCtx = null;
+
+        // Automatically unlock the AudioContext on first page interaction
+        document.body.addEventListener('click', () => {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            // Remove helper badge once sounds are authorized
+            const banner = document.getElementById('audio-status-banner');
+            if (banner) {
+                banner.innerText = "🔊 Audio Active";
+                banner.className = "text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg";
+            }
+        }, { once: true });
+
+        // Dual-tone chime synthesized dynamically (sounds like an electronic "ding-ding")
+        function playNewOrderChime() {
+            try {
+                const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') return; // Exit silently if browser hasn't been clicked yet
+
+                // First chime note: C5 (523.25 Hz)
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
+                gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3); // Fade out
+                
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start();
+                osc1.stop(ctx.currentTime + 0.3);
+
+                // Second chime note: E5 (659.25 Hz) delayed slightly
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+                gain2.gain.setValueAtTime(0.15, ctx.currentTime + 0.1);
+                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5); // Fade out
+                
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(ctx.currentTime + 0.1);
+                osc2.stop(ctx.currentTime + 0.5);
+
+            } catch (e) {
+                console.error("Audio synthesis blocked: ", e);
+            }
+        }
+
+        async function fetchOrders() {
+            try {
+                const response = await fetch(`${API_BASE}/kitchen/orders`);
+                const orders = await response.json();
+                renderOrders(orders);
+            } catch (err) {
+                console.error("Failed to query records.");
+            }
+        }
+
+        function renderOrders(orders) {
+            const pendingDiv = document.getElementById("pending-orders");
+            const preparingDiv = document.getElementById("preparing-orders");
+            const servedDiv = document.getElementById("served-orders");
+
+            pendingDiv.innerHTML = "";
+            preparingDiv.innerHTML = "";
+            servedDiv.innerHTML = "";
+
+            let pendingCount = 0, preparingCount = 0, servedCount = 0;
+
+            orders.forEach(order => {
+                const card = document.createElement("div");
+                card.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md space-y-3";
+
+                const itemsHtml = order.items.map(i => {
+                    const modsSubtext = i.selected_modifiers.map(m => `
+                        <div class="text-[11px] text-amber-400 pl-4">+ ${m.modifier.name}</div>
+                    `).join("");
+
+                    return `
+                        <div class="border-b border-slate-700/50 pb-2">
+                            <div class="flex justify-between text-sm">
+                                <span><b class="text-slate-200">${i.quantity}x</b> ${i.menu_item.name}</span>
+                                <span class="text-xs text-slate-400 italic">${i.notes || ''}</span>
+                            </div>
+                            ${modsSubtext}
+                        </div>
+                    `;
+                }).join("");
+
+                let actionsHtml = "";
+                if (order.status === "pending") {
+                    actionsHtml = `<button onclick="updateStatus(${order.id}, 'preparing')" class="w-full bg-blue-600 hover:bg-blue-700 py-1.5 rounded-lg text-xs font-bold transition">Start Cooking</button>`;
+                    pendingCount++;
+                    card.innerHTML = createCardTemplate(order, itemsHtml, actionsHtml);
+                    pendingDiv.appendChild(card);
+                } else if (order.status === "preparing") {
+                    actionsHtml = `<button onclick="updateStatus(${order.id}, 'served')" class="w-full bg-emerald-600 hover:bg-emerald-700 py-1.5 rounded-lg text-xs font-bold transition">Mark Ready</button>`;
+                    preparingCount++;
+                    card.innerHTML = createCardTemplate(order, itemsHtml, actionsHtml);
+                    preparingDiv.appendChild(card);
+                } else if (order.status === "served") {
+                    actionsHtml = `<button onclick="updateStatus(${order.id}, 'completed')" class="w-full bg-slate-600 hover:bg-slate-700 py-1.5 rounded-lg text-xs font-bold transition">Complete / Clear</button>`;
+                    servedCount++;
+                    card.innerHTML = createCardTemplate(order, itemsHtml, actionsHtml);
+                    servedDiv.appendChild(card);
+                }
+            });
+
+            document.getElementById("count-pending").innerText = pendingCount;
+            document.getElementById("count-preparing").innerText = preparingCount;
+            document.getElementById("count-served").innerText = servedCount;
+        }
+
+        function createCardTemplate(order, itemsHtml, actionsHtml) {
+            const timeStr = new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-slate-400 font-mono">ID: #${order.id}</span>
+                    <span class="text-xs text-slate-400">${timeStr}</span>
+                </div>
+                <div class="bg-slate-900/40 p-2 rounded-lg text-center">
+                    <h3 class="font-bold text-lg text-white">Table ${order.table.number}</h3>
+                </div>
+                <div class="space-y-1 my-2">
+                    ${itemsHtml}
+                </div>
+                <div class="pt-2">
+                    ${actionsHtml}
+                </div>
+            `;
+        }
+
+        async function updateStatus(orderId, nextStatus) {
+            try {
+                await fetch(`${API_BASE}/kitchen/orders/${orderId}/status?status=${nextStatus}`, {
+                    method: 'PATCH'
+                });
+                fetchOrders();
+            } catch (err) {
+                console.error("Failed to alter status.");
+            }
+        }
+
+        // Separate service beep alert for waiter calls (Single pitch)
+        function playWaiterAlertSound() {
+            try {
+                const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') return;
+
+                const oscillator = ctx.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+                oscillator.connect(ctx.destination);
+                oscillator.start();
+                oscillator.stop(ctx.currentTime + 0.15);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function triggerStaffSummonAlert(tableNum, serviceRequest) {
+            const container = document.getElementById('alerts-container');
+            const alertBox = document.createElement('div');
+            alertBox.className = "bg-rose-500 text-white font-bold p-4 rounded-xl flex justify-between items-center shadow-lg animate-bounce";
+            alertBox.innerHTML = `
+                <span>🛎️ Alert: Table ${tableNum} requested [${serviceRequest}]!</span>
+                <button onclick="this.parentElement.remove()" class="bg-white/20 hover:bg-white/30 text-white font-black px-3 py-1 rounded-lg text-xs">Dismiss</button>
+            `;
+            container.appendChild(alertBox);
+
+            playWaiterAlertSound();
+        }
+
+        function connectWS() {
+            const ws = new WebSocket(WS_URL);
+            const statusIndicator = document.getElementById("ws-indicator");
+            const statusLabel = document.getElementById("ws-status");
+
+            ws.onopen = () => {
+                statusIndicator.className = "h-2 w-2 rounded-full bg-emerald-500 animate-pulse";
+                statusLabel.innerText = "Connected";
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.event === "service_request") {
+                    triggerStaffSummonAlert(data.table_number, data.request);
+                } else if (data.event === "new_order") {
+                    playNewOrderChime(); // Play dual-tone order chime
+                    fetchOrders();
+                } else {
+                    fetchOrders();
+                }
+            };
+
+            ws.onclose = () => {
+                statusIndicator.className = "h-2 w-2 rounded-full bg-red-500";
+                statusLabel.innerText = "Offline (Reconnecting)";
+                setTimeout(connectWS, 5000);
+            };
+        }
+
+        fetchOrders();
+        connectWS();
+    </script>
+</body>
+</html>
