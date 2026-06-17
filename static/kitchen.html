@@ -175,12 +175,17 @@
                     preparingCount++;
                     card.innerHTML = createCardTemplate(order, itemsHtml, actionsHtml);
                     preparingDiv.appendChild(card);
-                } else if (order.status === "served") {
-                    actionsHtml = `<button onclick="updateStatus(${order.id}, 'completed')" class="w-full bg-slate-600 hover:bg-slate-700 py-1.5 rounded-lg text-xs font-bold transition">Complete / Clear</button>`;
+                } else if  (order.status === "served") {
+                    // No action button here. The card stays here for reference until the manager settles the table bill.
+                    actionsHtml = `
+                    <div class="w-full text-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-1.5 rounded-lg text-xs font-bold">
+                    ✓ Food Delivered to Table
+                    </div>
+                    `;
                     servedCount++;
                     card.innerHTML = createCardTemplate(order, itemsHtml, actionsHtml);
                     servedDiv.appendChild(card);
-                }
+                    }
             });
 
             document.getElementById("count-pending").innerText = pendingCount;

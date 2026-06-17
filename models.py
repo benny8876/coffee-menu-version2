@@ -55,14 +55,15 @@ class Order(Base):
     table_id = Column(Integer, ForeignKey("tables.id"), nullable=False)
     status = Column(Enum(OrderStatus), default=OrderStatus.AWAITING_PAYMENT)
     total_price = Column(Float, default=0.0)
-    
-    # Updated: default is set to Myanmar timezone
     created_at = Column(DateTime, default=get_yangon_now)
+    
+    # NEW: Tracks when the grouped table session was formally closed and paid
+    settled_at = Column(DateTime, nullable=True) 
 
     table = relationship("RestaurantTable")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
-    
+
 
 class OrderItem(Base):
     __tablename__ = "order_items"

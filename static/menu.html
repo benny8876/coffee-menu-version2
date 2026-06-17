@@ -84,7 +84,7 @@
             </div>
         </header>
 
-        <!-- Service Summon / Service Buttons (Integrated beautifully into theme) -->
+        <!-- Service Summon / Service Buttons -->
         <section class="border-4 border-[#161912] bg-[#dee6d0] p-4 rounded-xl mb-10 flex flex-col md:flex-row justify-between items-center gap-4 shadow-[4px_4px_0px_0px_#161912]">
             <div class="text-center md:text-left">
                 <p class="font-retro-title text-sm uppercase">Need Assistance?</p>
@@ -96,28 +96,14 @@
             </div>
         </section>
 
-        <!-- Dynamic Menu & Mockup Grid Structure -->
+        <!-- Dynamic Menu Grid Structure -->
         <div id="validation-gate" class="hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                 
-                <!-- Left Column -->
-                <div class="space-y-8">
-                    <!-- Dynamic Coffee Section -->
-                    <div class="menu-section" id="section-coffee">
-                        <div class="flex items-center gap-2 mb-4">
-                            <h3 class="font-retro-title text-lg uppercase whitespace-nowrap text-[#161912]">COFFEE</h3>
-                            <div class="h-0.5 w-full bg-[#161912]"></div>
-                        </div>
-                        <div class="space-y-4" id="items-coffee"></div>
-                    </div>
-
-                    <!-- Dynamic Signature Section -->
-                    <div class="menu-section" id="section-signature">
-                        <div class="flex items-center gap-2 mb-4">
-                            <h3 class="font-retro-title text-lg uppercase whitespace-nowrap text-[#161912]">SIGNATURE</h3>
-                            <div class="h-0.5 w-full bg-[#161912]"></div>
-                        </div>
-                        <div class="space-y-4" id="items-signature"></div>
+                <!-- Left Column (Dynamically Receives Categories) -->
+                <div class="space-y-8 flex flex-col justify-between">
+                    <div id="left-categories-container" class="space-y-8">
+                        <!-- Dynamic Categories (e.g., COFFEE, SIGNATURE) will append here -->
                     </div>
 
                     <!-- Left Column Waving Coffee Machine Character Art -->
@@ -144,18 +130,13 @@
                     </div>
                 </div>
 
-                <!-- Right Column -->
+                <!-- Right Column (Dynamically Receives Categories) -->
                 <div class="space-y-8 flex flex-col justify-between">
-                    <div>
-                        <!-- Dynamic Non-Coffee Section -->
-                        <div class="menu-section" id="section-non-coffee">
-                            <div class="flex items-center gap-2 mb-4">
-                                <h3 class="font-retro-title text-lg uppercase whitespace-nowrap text-[#161912]">NON-COFFEE</h3>
-                                <div class="h-0.5 w-full bg-[#161912]"></div>
-                            </div>
-                            <div class="space-y-4" id="items-non-coffee"></div>
-                        </div>
+                    <div id="right-categories-container" class="space-y-8">
+                        <!-- Dynamic Categories (e.g., NON-COFFEE, DESSERTS) will append here -->
+                    </div>
 
+                    <div>
                         <!-- Storefront Sketch Graphic -->
                         <div class="py-6 hidden md:block">
                             <svg class="w-full h-32 text-[#161912]" viewBox="0 0 200 100" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -180,22 +161,22 @@
                                 <path d="M25,81 L35,85" />
                             </svg>
                         </div>
-                    </div>
 
-                    <!-- Static-Styled Dynamic ADD-ONS Card -->
-                    <div class="border-4 border-[#161912] bg-[#6f8a38] text-white p-6 rounded-2xl shadow-[4px_4px_0px_0px_#161912] space-y-4">
-                        <div class="text-center space-y-2">
-                            <!-- Steaming mug outline -->
-                            <svg class="w-8 h-8 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M18,8h1a4,4,0,0,1,0,8h-1" />
-                                <path d="M2,8h16v9a4,4,0,0,1-4,4H6a4,4,0,0,1-4-4Z" />
-                                <path d="M6,2v2 M10,2v2 M14,2v2" />
-                            </svg>
-                            <h4 class="font-retro-title text-lg uppercase tracking-wider">ADD-ONS</h4>
-                            <div class="h-0.5 w-16 bg-white mx-auto"></div>
-                        </div>
-                        <div class="space-y-2 text-sm font-semibold" id="addons-list-container">
-                            <!-- List of add-ons currently loaded from DB -->
+                        <!-- Static-Styled Dynamic ADD-ONS Card -->
+                        <div class="border-4 border-[#161912] bg-[#6f8a38] text-white p-6 rounded-2xl shadow-[4px_4px_0px_0px_#161912] space-y-4">
+                            <div class="text-center space-y-2">
+                                <!-- Steaming mug outline -->
+                                <svg class="w-8 h-8 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18,8h1a4,4,0,0,1,0,8h-1" />
+                                    <path d="M2,8h16v9a4,4,0,0,1-4,4H6a4,4,0,0,1-4-4Z" />
+                                    <path d="M6,2v2 M10,2v2 M14,2v2" />
+                                </svg>
+                                <h4 class="font-retro-title text-lg uppercase tracking-wider">ADD-ONS</h4>
+                                <div class="h-0.5 w-16 bg-white mx-auto"></div>
+                            </div>
+                            <div class="space-y-2 text-sm font-semibold" id="addons-list-container">
+                                <!-- List of add-ons currently loaded from DB -->
+                            </div>
                         </div>
                     </div>
 
@@ -239,6 +220,17 @@
             <div id="mod-options-container" class="space-y-2">
                 <!-- Checkboxes populated automatically -->
             </div>
+            
+            <!-- Modifier Modal Quantity Controls -->
+            <div class="flex justify-between items-center border-t-2 border-dashed border-[#161912] pt-4">
+                <span class="text-xs font-bold uppercase text-slate-500">How many cups?</span>
+                <div class="flex items-center gap-3 border-2 border-[#161912] bg-white rounded-lg p-1">
+                    <button type="button" onclick="adjustModalQty(-1)" class="w-8 h-8 flex items-center justify-center font-bold text-lg hover:bg-slate-100 rounded">-</button>
+                    <span id="mod-qty-display" class="w-8 text-center font-bold">1</span>
+                    <button type="button" onclick="adjustModalQty(1)" class="w-8 h-8 flex items-center justify-center font-bold text-lg hover:bg-slate-100 rounded">+</button>
+                </div>
+            </div>
+
             <div class="flex gap-2 pt-2">
                 <button onclick="closeModifierModal()" class="w-1/2 border-2 border-[#161912] bg-white hover:bg-slate-100 text-[#161912] font-bold py-2.5 rounded-lg text-sm transition active:translate-y-0.5">Cancel</button>
                 <button onclick="addSelectedToCart()" class="w-1/2 border-2 border-[#161912] bg-[#6f8a38] hover:bg-[#4b5a2c] text-white font-retro-title py-2.5 rounded-lg text-xs transition active:translate-y-0.5">Add to Order</button>
@@ -298,6 +290,7 @@
         let cart = []; // Array of { item, selectedModifiers: [], quantity }
         let pendingOrderId = null;
         let activeSelection = null; 
+        let modalQuantity = 1; // Track quantity inside modifier popup
 
         async function verifyAndLoad() {
             if (!tableId || !secureToken) {
@@ -320,48 +313,72 @@
             }
         }
 
+        // --- NEW: DYNAMIC CATEGORY DISTRIBUTION RENDERING ENGINE ---
         function renderMenu() {
-            const coffeeContainer = document.getElementById('items-coffee');
-            const signatureContainer = document.getElementById('items-signature');
-            const nonCoffeeContainer = document.getElementById('items-non-coffee');
+            const leftCol = document.getElementById('left-categories-container');
+            const rightCol = document.getElementById('right-categories-container');
 
-            coffeeContainer.innerHTML = "";
-            signatureContainer.innerHTML = "";
-            nonCoffeeContainer.innerHTML = "";
+            leftCol.innerHTML = "";
+            rightCol.innerHTML = "";
 
+            // Group items from database by their category names dynamically
+            const categories = {};
             menuItems.forEach(item => {
-                const isSoldOut = item.stock !== null && item.stock <= 0;
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-start text-sm group";
+                if (!categories[item.category]) {
+                    categories[item.category] = [];
+                }
+                categories[item.category].push(item);
+            });
+
+            // Iterate over each dynamic category
+            let columnIndex = 0;
+            for (const [categoryName, items] of Object.entries(categories)) {
                 
-                div.innerHTML = `
-                    <div class="flex-1 pr-4 cursor-pointer" onclick="${isSoldOut ? '' : `openModifierModal(${item.id})`}">
-                        <div class="flex justify-between font-bold text-[#161912]">
-                            <span class="hover:text-[#6f8a38] transition">${item.name}</span>
-                            <span>$${item.price.toFixed(2)}</span>
+                // Create clean HTML wrapper for this section
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = "menu-section space-y-4 mb-4";
+                
+                const itemsHtml = items.map(item => {
+                    const isSoldOut = item.stock !== null && item.stock <= 0;
+                    return `
+                        <div class="flex justify-between items-start text-sm group">
+                            <div class="flex-1 pr-4 cursor-pointer" onclick="${isSoldOut ? '' : `openModifierModal(${item.id})`}">
+                                <div class="flex justify-between font-bold text-[#161912]">
+                                    <span class="hover:text-[#6f8a38] transition">${item.name}</span>
+                                    <span>$${item.price.toFixed(2)}</span>
+                                </div>
+                                <p class="text-xs text-slate-500 font-retro-typewriter mt-0.5">${item.description || ''}</p>
+                                ${item.stock !== null ? `<span class="text-[9px] bg-[#a5b28d]/20 text-[#4b5a2c] px-1.5 py-0.5 rounded font-mono">Stock: ${item.stock}</span>` : ''}
+                            </div>
                         </div>
-                        <p class="text-xs text-slate-500 font-retro-typewriter mt-0.5">${item.description || ''}</p>
-                        ${item.stock !== null ? `<span class="text-[9px] bg-[#a5b28d]/20 text-[#4b5a2c] px-1 rounded font-mono">Stock Left: ${item.stock}</span>` : ''}
+                    `;
+                }).join("");
+
+                sectionDiv.innerHTML = `
+                    <div class="flex items-center gap-2 mb-4">
+                        <h3 class="font-retro-title text-lg uppercase whitespace-nowrap text-[#161912]">${categoryName}</h3>
+                        <div class="h-0.5 w-full bg-[#161912]"></div>
+                    </div>
+                    <div class="space-y-4">
+                        ${itemsHtml}
                     </div>
                 `;
 
-                // Categorize precisely into columns mimicking the mockup menu card
-                if (item.category.toLowerCase().includes('signature')) {
-                    signatureContainer.appendChild(div);
-                } else if (item.category.toLowerCase().includes('non-coffee')) {
-                    nonCoffeeContainer.appendChild(div);
+                // Distribute category sections evenly across Left and Right grid columns
+                if (columnIndex % 2 === 0) {
+                    leftCol.appendChild(sectionDiv);
                 } else {
-                    coffeeContainer.appendChild(div);
+                    rightCol.appendChild(sectionDiv);
                 }
-            });
+                
+                columnIndex++;
+            }
         }
 
-        // Render modifier options directly inside the "ADD-ONS" section as a reference
         function renderStaticAddonsList() {
             const container = document.getElementById('addons-list-container');
             container.innerHTML = "";
 
-            // Gather all modifiers from available items dynamically
             const allModifiersMap = {};
             menuItems.forEach(item => {
                 item.modifiers.forEach(mod => {
@@ -386,12 +403,15 @@
             });
         }
 
-        // Modifiers Logic
+        // Modifiers Logic & Quantity Customizer
         function openModifierModal(itemId) {
             const item = menuItems.find(i => i.id === itemId);
             if (!item) return;
 
             activeSelection = { item, selectedModifiers: [] };
+            modalQuantity = 1; // Reset to 1 cup
+            document.getElementById('mod-qty-display').innerText = modalQuantity;
+
             document.getElementById('mod-item-name').innerText = item.name;
             document.getElementById('mod-item-desc').innerText = item.description || 'Select extra add-ons below:';
 
@@ -418,6 +438,12 @@
             document.getElementById('mod-modal').classList.remove('hidden');
         }
 
+        function adjustModalQty(change) {
+            modalQuantity += change;
+            if (modalQuantity < 1) modalQuantity = 1;
+            document.getElementById('mod-qty-display').innerText = modalQuantity;
+        }
+
         function toggleModSelection(modId, checked) {
             if (checked) {
                 const mod = activeSelection.item.modifiers.find(m => m.id === modId);
@@ -439,12 +465,12 @@
             );
 
             if (matchedCartItem) {
-                matchedCartItem.quantity += 1;
+                matchedCartItem.quantity += modalQuantity;
             } else {
                 cart.push({
                     item: activeSelection.item,
                     selectedModifiers: [...activeSelection.selectedModifiers],
-                    quantity: 1
+                    quantity: modalQuantity
                 });
             }
 
@@ -498,20 +524,38 @@
                 total += itemTotal * cartItem.quantity;
 
                 const div = document.createElement('div');
-                div.className = "flex justify-between items-start py-2 border-b-2 border-dashed border-[#161912] text-sm";
+                div.className = "flex justify-between items-center py-3 border-b-2 border-dashed border-[#161912] text-sm gap-4";
                 div.innerHTML = `
-                    <div>
-                        <p class="font-bold text-slate-800">${cartItem.item.name} (x${cartItem.quantity})</p>
+                    <div class="flex-1">
+                        <p class="font-bold text-slate-800">${cartItem.item.name}</p>
                         ${modsStr ? `<p class="text-[10px] text-slate-500 leading-relaxed mt-1">${modsStr}</p>` : ''}
+                        <p class="text-xs text-amber-850 font-bold mt-1">$${itemTotal.toFixed(2)} each</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold text-slate-700">$${(itemTotal * cartItem.quantity).toFixed(2)}</span>
-                        <button onclick="removeCartItem(${index})" class="text-red-600 font-bold hover:text-red-800 text-lg">&times;</button>
+                    
+                    <div class="flex items-center gap-2 border-2 border-[#161912] bg-white rounded-lg p-1">
+                        <button onclick="adjustCartItemQty(${index}, -1)" class="w-6 h-6 flex items-center justify-center font-bold text-sm hover:bg-slate-100 rounded">-</button>
+                        <span class="w-6 text-center font-bold">${cartItem.quantity}</span>
+                        <button onclick="adjustCartItemQty(${index}, 1)" class="w-6 h-6 flex items-center justify-center font-bold text-sm hover:bg-slate-100 rounded">+</button>
+                    </div>
+
+                    <div class="text-right flex flex-col items-end gap-1">
+                        <span class="font-bold text-slate-700 font-retro-title">$${(itemTotal * cartItem.quantity).toFixed(2)}</span>
+                        <button onclick="removeCartItem(${index})" class="text-red-600 hover:text-red-800 text-xs underline uppercase font-bold tracking-wider">Remove</button>
                     </div>
                 `;
                 container.appendChild(div);
             });
             document.getElementById('modal-total').innerText = `$${total.toFixed(2)}`;
+        }
+
+        function adjustCartItemQty(index, change) {
+            cart[index].quantity += change;
+            if (cart[index].quantity < 1) {
+                removeCartItem(index);
+            } else {
+                renderCartModalItems();
+                updateCartSummary();
+            }
         }
 
         function removeCartItem(index) {

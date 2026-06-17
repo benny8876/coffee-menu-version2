@@ -13,6 +13,7 @@
             <h1 class="text-2xl font-black text-slate-800">Management Panel</h1>
             <p class="text-xs text-slate-400">Inventory control, financials, and logs</p>
         </div>
+        <!-- Date Selector & Action Tools -->
         <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border">
                 <span class="text-xs font-bold text-slate-400 uppercase pl-2">Filter Date:</span>
@@ -75,7 +76,32 @@
             </div>
         </section>
 
+        <!-- Split Grid Workspace -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Active Dining Sessions (COMBINED TABLE BILLS) -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold mb-2 text-slate-800">Live Dining Sessions (Active Bills)</h2>
+                    <p class="text-xs text-slate-400 mb-4">Consolidate multiple orders from the same table into a single master bill.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs text-slate-400 border-b">
+                                <th class="py-2">Table Number</th>
+                                <th class="py-2">Active Dockets</th>
+                                <th class="py-2">Total Accumulated</th>
+                                <th class="py-2 text-right">Bill Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-tables-tbody" class="text-sm divide-y">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Menu Inventory modifier -->
             <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                 <h2 class="text-lg font-bold mb-4 border-b pb-2">Modify Menu Items & Pricing</h2>
                 <div class="overflow-x-auto">
@@ -94,10 +120,24 @@
                     </table>
                 </div>
             </section>
+        </div>
 
+        <!-- NEW HISTORICAL SECTIONS ROW -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left: Settled Table Sessions (Grouped Tables) -->
             <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-lg font-bold mb-4 border-b pb-2">Consolidated Orders Record</h2>
-                <div class="space-y-3 overflow-y-auto max-h-[500px]" id="orders-record-log"></div>
+                <h2 class="text-lg font-bold mb-2 text-slate-800">Settled Table Sessions Record (Grouped)</h2>
+                <p class="text-xs text-slate-400 mb-4">View master receipts of historical dining sessions closed together.</p>
+                <div class="space-y-3 overflow-y-auto max-h-[400px]" id="settled-tables-history-log">
+                    <!-- Settled tables history -->
+                </div>
+            </section>
+
+            <!-- Right: Single Tickets History Log -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 class="text-lg font-bold mb-2 text-slate-800">Consolidated Orders Record (Single Tickets)</h2>
+                <p class="text-xs text-slate-400 mb-4">View independent order dockets individually.</p>
+                <div class="space-y-3 overflow-y-auto max-h-[400px]" id="orders-record-log"></div>
             </section>
         </div>
     </main>
@@ -177,17 +217,25 @@
         </div>
     </div>
 
-    <!-- Receipts Printer Modal -->
+    <!-- Master Receipt Printer (Consolidated Table Bill) Modal -->
     <div id="receipt-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
         <div class="bg-white p-8 rounded-xl max-w-sm w-full font-mono shadow-2xl relative">
-            <button onclick="toggleReceiptModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            <button onclick="toggleReceiptModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl print:hidden">&times;</button>
             <div id="receipt-payload" class="space-y-4"></div>
-            <button onclick="window.print()" class="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm print:hidden">
-                Print Receipt Document
-            </button>
+            
+            <!-- Context-dependent active action tools -->
+            <div id="receipt-actions" class="mt-6 space-y-2 print:hidden">
+                <button onclick="window.print()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm">
+                    Print Receipt
+                </button>
+                <button id="settle-bill-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm hidden">
+                    Settle & Close Table Bill
+                </button>
+            </div>
         </div>
     </div>
 
+    <!-- JavaScript logic -->
     <script>
         const API_BASE = `${window.location.origin}/api/v1`;
         let menuItemsList = [];
@@ -242,6 +290,217 @@
                 }
             } catch (err) {
                 alert("Signature generation request failed.");
+            }
+        }
+
+        // --- FETCH ACTIVE TABLES (Dining Session) ---
+        async function fetchActiveTables() {
+            try {
+                const response = await fetch(`${API_BASE}/manager/tables/active`);
+                const activeTables = await response.json();
+                
+                const tbody = document.getElementById("active-tables-tbody");
+                tbody.innerHTML = "";
+
+                if (activeTables.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400 italic">No live dining sessions active currently</td></tr>`;
+                    return;
+                }
+
+                activeTables.forEach(table => {
+                    const tr = document.createElement("tr");
+                    tr.className = "hover:bg-slate-50";
+                    tr.innerHTML = `
+                        <td class="py-3 font-bold text-[#161912]">Table ${table.table_number}</td>
+                        <td class="py-3 text-slate-500 font-semibold">${table.active_orders_count} dockets</td>
+                        <td class="py-3 font-semibold text-amber-600">$${table.total_price.toFixed(2)}</td>
+                        <td class="py-3 text-right">
+                            <button onclick="loadConsolidatedTableBill(${table.table_id})" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-black py-1 px-3 rounded-lg transition">Generate Master Bill</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Could not populate live tables.");
+            }
+        }
+
+        // --- LOAD AND COMBINE MULTIPLE TICKETS FOR A SINGLE TABLE ---
+        async function loadConsolidatedTableBill(tableId) {
+            try {
+                const response = await fetch(`${API_BASE}/manager/tables/${tableId}/bill`);
+                const bill = await response.json();
+
+                const receiptContainer = document.getElementById("receipt-payload");
+                
+                const itemsStr = bill.items.map(i => {
+                    const modsLabel = i.modifiers.length > 0 ? `<div class="text-[10px] text-slate-500 pl-4">+ ${i.modifiers.join(', ')}</div>` : "";
+                    const subtotal = i.quantity * i.unit_price;
+                    return `
+                        <div class="border-b border-dashed pb-1">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span>${i.name} (x${i.quantity})</span>
+                                <span>$${subtotal.toFixed(2)}</span>
+                            </div>
+                            ${modsLabel}
+                        </div>
+                    `;
+                }).join("");
+
+                receiptContainer.innerHTML = `
+                    <div class="text-center border-b pb-3 border-dashed">
+                        <h2 class="text-lg font-bold">${bill.restaurant_name}</h2>
+                        <p class="text-[10px] text-slate-400">TABLE SESSION MASTER INVOICE</p>
+                        <p class="text-[10px] text-slate-400">${bill.timestamp}</p>
+                    </div>
+                    <div class="text-xs">
+                        <p><b>TABLE NUMBER:</b> Table ${bill.table_number}</p>
+                        <p class="text-[10px] text-slate-400">Consolidated dockets: ${bill.order_ids.map(id => `#${id}`).join(', ')}</p>
+                    </div>
+                    <div class="space-y-2 my-4">
+                        ${itemsStr}
+                    </div>
+                    <div class="space-y-1 pt-3 border-t border-dashed text-xs text-slate-600">
+                        <div class="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>$${bill.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Tax (10%)</span>
+                            <span>$${bill.tax_amount.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
+                            <span>GRAND TOTAL</span>
+                            <span>$${bill.grand_total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+
+                // Set actions and show Settle & Close Button
+                const settleBtn = document.getElementById('settle-bill-btn');
+                settleBtn.setAttribute('onclick', `settleTableBill(${bill.table_id})`);
+                settleBtn.classList.remove('hidden');
+
+                toggleReceiptModal(true);
+            } catch (err) {
+                alert("Could not load consolidated bill.");
+            }
+        }
+
+        // --- SETTLE ALL DINING DOCKETS FOR THE TABLE AT ONCE ---
+        async function settleTableBill(tableId) {
+            if (!confirm("Confirm payment received and settle this table session? This closes all active dockets.")) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/manager/tables/${tableId}/settle`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    alert("Bill settled! Table cleared.");
+                    toggleReceiptModal(false);
+                    // Refresh data
+                    fetchActiveTables();
+                    fetchOrdersLog();
+                    fetchSettledTablesHistory(); // Reload history
+                    fetchAnalytics();
+                } else {
+                    alert("Settling process failed.");
+                }
+            } catch (err) {
+                alert("Network communication issue.");
+            }
+        }
+
+        // --- FETCH HISTORICAL CLOSED TABLE SESSIONS ---
+        async function fetchSettledTablesHistory() {
+            try {
+                const response = await fetch(`${API_BASE}/manager/tables/settled-history`);
+                const history = await response.json();
+                
+                const container = document.getElementById("settled-tables-history-log");
+                container.innerHTML = "";
+
+                if (history.length === 0) {
+                    container.innerHTML = `<div class="col-span-full text-center text-slate-400 italic py-4 bg-white rounded-xl border border-slate-100">No settled table sessions recorded yet</div>`;
+                    return;
+                }
+
+                history.forEach(session => {
+                    const card = document.createElement("div");
+                    card.className = "bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex justify-between items-center";
+                    // Pass ISO timestamp safely as string argument
+                    const isoTime = session.settled_at_iso;
+                    card.innerHTML = `
+                        <div>
+                            <p class="font-bold text-[#161912]">Table ${session.table_number}</p>
+                            <p class="text-[10px] text-slate-400">Closed: ${session.settled_at}</p>
+                            <p class="text-xs text-slate-500 font-semibold mt-1">Total: $${session.total_price.toFixed(2)} | Dockets: ${session.order_ids.map(id => `#${id}`).join(', ')}</p>
+                        </div>
+                        <button onclick="loadHistoricalTableBill(${session.table_id}, '${isoTime}')" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Master Receipt</button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                console.error("Could not fetch table history.");
+            }
+        }
+
+        // --- LOAD AND DYNAMICALLY COMPILE A PAST TABLE BILL ---
+        async function loadHistoricalTableBill(tableId, settledAtIso) {
+            try {
+                const response = await fetch(`${API_BASE}/manager/tables/${tableId}/historical-bill?settled_at=${encodeURIComponent(settledAtIso)}`);
+                const bill = await response.json();
+
+                const receiptContainer = document.getElementById("receipt-payload");
+                
+                const itemsStr = bill.items.map(i => {
+                    const modsLabel = i.modifiers.length > 0 ? `<div class="text-[10px] text-slate-500 pl-4">+ ${i.modifiers.join(', ')}</div>` : "";
+                    const subtotal = i.quantity * i.unit_price;
+                    return `
+                        <div class="border-b border-dashed pb-1">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span>${i.name} (x${i.quantity})</span>
+                                <span>$${subtotal.toFixed(2)}</span>
+                            </div>
+                            ${modsLabel}
+                        </div>
+                    `;
+                }).join("");
+
+                receiptContainer.innerHTML = `
+                    <div class="text-center border-b pb-3 border-dashed">
+                        <h2 class="text-lg font-bold">${bill.restaurant_name}</h2>
+                        <p class="text-[10px] text-slate-400">HISTORICAL TABLE SESSION RECEIPT</p>
+                        <p class="text-[10px] text-slate-400">${bill.timestamp}</p>
+                    </div>
+                    <div class="text-xs">
+                        <p><b>TABLE NUMBER:</b> Table ${bill.table_number}</p>
+                        <p class="text-[10px] text-slate-400">Dockets: ${bill.order_ids.map(id => `#${id}`).join(', ')}</p>
+                    </div>
+                    <div class="space-y-2 my-4">
+                        ${itemsStr}
+                    </div>
+                    <div class="space-y-1 pt-3 border-t border-dashed text-xs text-slate-600">
+                        <div class="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>$${bill.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Tax (10%)</span>
+                            <span>$${bill.tax_amount.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
+                            <span>GRAND TOTAL</span>
+                            <span>$${bill.grand_total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+
+                // Hide Settle Button on historical views
+                document.getElementById('settle-bill-btn').classList.add('hidden');
+                toggleReceiptModal(true);
+            } catch (err) {
+                alert("Could not load historical receipt.");
             }
         }
 
@@ -384,6 +643,7 @@
             }
         }
 
+        // Single Ticket Receipt Generator (Historical record only)
         async function loadReceipt(orderId) {
             try {
                 const response = await fetch(`${API_BASE}/manager/orders/${orderId}/voucher`);
@@ -425,6 +685,8 @@
                     </div>
                 `;
 
+                // Hide Settle Button on individual closed receipts
+                document.getElementById('settle-bill-btn').classList.add('hidden');
                 toggleReceiptModal(true);
             } catch (err) {
                 alert("Receipt compilation failed.");
@@ -440,7 +702,9 @@
         setDefaultDatePicker();
         fetchAnalytics();
         fetchMenuTable();
+        fetchActiveTables(); // Query live active tables on load
         fetchOrdersLog();
+        fetchSettledTablesHistory(); // Query settled table history on load
     </script>
 </body>
 </html>
