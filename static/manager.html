@@ -1,710 +1,971 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
-    <!-- Header -->
-    <header class="bg-white border-b px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-            <h1 class="text-2xl font-black text-slate-800">Management Panel</h1>
-            <p class="text-xs text-slate-400">Inventory control, financials, and logs</p>
-        </div>
-        <!-- Date Selector & Action Tools -->
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border">
-                <span class="text-xs font-bold text-slate-400 uppercase pl-2">Filter Date:</span>
-                <input type="date" id="analytics-date" onchange="fetchAnalytics()" class="bg-transparent border-none text-sm font-bold focus:outline-none outline-none cursor-pointer">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Manager Dashboard</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+   </head>
+   <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+      <!-- 1. SECURE LOGIN VIEW (Centered, shown if unauthenticated) -->
+      <div id="login-view" class="fixed inset-0 bg-slate-100 z-50 flex items-center justify-center p-4">
+         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full border border-slate-200 space-y-6">
+            <div class="text-center space-y-1">
+               <h2 class="text-2xl font-black text-slate-800">27 Cafe POS</h2>
+               <p class="text-xs text-slate-400">Please enter administrative credentials</p>
             </div>
-            <button onclick="exportReport()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
-                Export to Excel
-            </button>
-            <button onclick="toggleAddModal(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
-                + Add Menu Item
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto p-6 space-y-8">
-        <!-- Dashboard Metrics Row -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider" id="revenue-title">Selected Day's Revenue</span>
-                <h3 class="text-3xl font-black text-amber-600 mt-2" id="stat-revenue">$0.00</h3>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Username</label>
+                  <input type="text" id="login-username" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-800">
+               </div>
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
+                  <input type="password" id="login-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-800">
+               </div>
+               <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-lg text-sm transition">
+               Authenticate Session
+               </button>
+            </form>
+         </div>
+      </div>
+      <!-- 2. PROTECTED DASHBOARD VIEW (Hidden until successfully authorized) -->
+      <div id="dashboard-view" class="hidden">
+         <!-- Header -->
+         <header class="bg-white border-b px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+               <h1 class="text-2xl font-black text-slate-800">Management Panel</h1>
+               <p class="text-xs text-slate-400">Inventory control, financials, and logs</p>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Completed Transactions</span>
-                <h3 class="text-3xl font-black text-slate-800 mt-2" id="stat-count">0</h3>
-            </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2 block">Top Selling Items</span>
-                <ol id="stat-top-items" class="text-sm list-decimal list-inside space-y-1 text-slate-600">
-                    <li>No items logged yet</li>
-                </ol>
-            </div>
-        </section>
-
-        <!-- Dynamic Table QR Cryptographic Link Generator Section -->
-        <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <h2 class="text-lg font-bold mb-2 text-slate-800">Tamper-Proof Dining QR Generator</h2>
-            <p class="text-xs text-slate-400 mb-4">Generates cryptographically signed URLs for tables, preventing billing spoofing.</p>
+            <!-- Action Tools -->
             <div class="flex flex-wrap items-center gap-3">
-                <select id="qr-table-select" class="bg-slate-100 border-none rounded px-4 py-2.5 text-sm font-semibold outline-none">
-                    <option value="1">Table 1</option>
-                    <option value="2">Table 2</option>
-                    <option value="3">Table 3</option>
-                    <option value="4">Table 4</option>
-                    <option value="5">Table 5</option>
-                    <option value="6">Table 6</option>
-                    <option value="7">Table 7</option>
-                    <option value="8">Table 8</option>
-                    <option value="9">Table 9</option>
-                    <option value="10">Table 10</option>
-                </select>
-                <button onclick="requestSignedToken()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition">
-                    Generate Signed Link
-                </button>
+               <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border">
+                  <span class="text-xs font-bold text-slate-400 uppercase pl-2">Filter Date:</span>
+                  <input type="date" id="analytics-date" onchange="fetchAnalytics()" class="bg-transparent border-none text-sm font-bold focus:outline-none outline-none cursor-pointer">
+               </div>
+               <button onclick="exportReport()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
+               Export to PDF
+               </button>
+               <button onclick="toggleAddModal(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
+               + Add Menu Item
+               </button>
+               <!-- Change Password Trigger -->
+               <button onclick="togglePasswordModal(true)" class="border-2 border-slate-600/30 hover:border-slate-650 hover:bg-slate-100 text-slate-700 font-bold py-1.5 px-4 rounded-lg text-sm transition">
+               Change Password
+               </button>
+               <!-- Logout Button -->
+               <button onclick="handleLogout()" class="border-2 border-rose-600/30 hover:border-rose-600 hover:bg-rose-50 text-rose-600 font-bold py-1.5 px-4 rounded-lg text-sm transition">
+               Logout
+               </button>
             </div>
-            <div id="qr-output-container" class="mt-4 p-4 bg-slate-50 border rounded-xl hidden text-sm font-semibold space-y-2">
-                <p class="text-xs text-slate-400 uppercase font-bold">Secure Path Signature:</p>
-                <input type="text" id="signed-url-input" readonly class="w-full bg-white p-2 border rounded font-mono text-xs select-all text-amber-600">
-                <a id="signed-url-anchor" target="_blank" class="inline-block text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-200">Open Secure Menu Panel</a>
-            </div>
-        </section>
-
-        <!-- Split Grid Workspace -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Active Dining Sessions (COMBINED TABLE BILLS) -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
-                <div>
-                    <h2 class="text-lg font-bold mb-2 text-slate-800">Live Dining Sessions (Active Bills)</h2>
-                    <p class="text-xs text-slate-400 mb-4">Consolidate multiple orders from the same table into a single master bill.</p>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-xs text-slate-400 border-b">
-                                <th class="py-2">Table Number</th>
-                                <th class="py-2">Active Dockets</th>
-                                <th class="py-2">Total Accumulated</th>
-                                <th class="py-2 text-right">Bill Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="active-tables-tbody" class="text-sm divide-y">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
-                </div>
+         </header>
+         <!-- Main Content -->
+         <main class="max-w-7xl mx-auto p-6 space-y-8">
+            <!-- Dashboard Metrics Row - Upgraded to 4 Columns -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+               <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                  <span class="text-xs text-slate-400 uppercase font-bold tracking-wider" id="revenue-title">Selected Day's Revenue</span>
+                  <h3 class="text-3xl font-black text-amber-600 mt-2" id="stat-revenue">$0.00</h3>
+               </div>
+               <!-- NEW: Monthly Revenue Card -->
+               <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                  <span class="text-xs text-slate-400 uppercase font-bold tracking-wider" id="monthly-revenue-title">Selected Month's Revenue</span>
+                  <h3 class="text-3xl font-black text-emerald-600 mt-2" id="stat-monthly-revenue">$0.00</h3>
+               </div>
+               <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                  <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Completed Transactions</span>
+                  <h3 class="text-3xl font-black text-slate-800 mt-2" id="stat-count">0</h3>
+               </div>
+               <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <span class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2 block">Top Selling Items</span>
+                  <ol id="stat-top-items" class="text-sm list-decimal list-inside space-y-1 text-slate-600">
+                     <li>No items logged yet</li>
+                  </ol>
+               </div>
             </section>
-
-            <!-- Menu Inventory modifier -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-lg font-bold mb-4 border-b pb-2">Modify Menu Items & Pricing</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+            <!-- Dynamic Table QR Cryptographic Link Generator Section -->
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+               <h2 class="text-lg font-bold mb-2 text-slate-800">Tamper-Proof Dining QR Generator</h2>
+               <p class="text-xs text-slate-400 mb-4">Generates cryptographically signed URLs for tables, preventing billing spoofing.</p>
+               <div class="flex flex-wrap items-center gap-3">
+                  <select id="qr-table-select" class="bg-slate-100 border-none rounded px-4 py-2.5 text-sm font-semibold outline-none">
+                     <option value="1">Table 1</option>
+                     <option value="2">Table 2</option>
+                     <option value="3">Table 3</option>
+                     <option value="4">Table 4</option>
+                     <option value="5">Table 5</option>
+                     <option value="6">Table 6</option>
+                     <option value="7">Table 7</option>
+                     <option value="8">Table 8</option>
+                     <option value="9">Table 9</option>
+                     <option value="10">Table 10</option>
+                  </select>
+                  <button onclick="requestSignedToken()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition">
+                  Generate Signed Link
+                  </button>
+               </div>
+               <div id="qr-output-container" class="mt-4 p-4 bg-slate-50 border rounded-xl hidden text-sm font-semibold space-y-2">
+                  <p class="text-xs text-slate-400 uppercase font-bold">Secure Path Signature:</p>
+                  <input type="text" id="signed-url-input" readonly class="w-full bg-white p-2 border rounded font-mono text-xs select-all text-amber-600">
+                  <a id="signed-url-anchor" target="_blank" class="inline-block text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-200">Open Secure Menu Panel</a>
+               </div>
+            </section>
+            <!-- Split Grid Workspace -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+               <!-- Active Dining Sessions (COMBINED TABLE BILLS) -->
+               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+                  <div>
+                     <h2 class="text-lg font-bold mb-2 text-slate-800">Live Dining Sessions (Active Bills)</h2>
+                     <p class="text-xs text-slate-400 mb-4">Consolidate multiple orders from the same table into a single master bill.</p>
+                  </div>
+                  <div class="overflow-x-auto">
+                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="text-xs text-slate-400 border-b">
-                                <th class="py-2">Item Name</th>
-                                <th class="py-2">Category</th>
-                                <th class="py-2">Price</th>
-                                <th class="py-2">Stock Level</th>
-                                <th class="py-2">Available</th>
-                                <th class="py-2 text-right">Action</th>
-                            </tr>
+                           <tr class="text-xs text-slate-400 border-b">
+                              <th class="py-2">Table Number</th>
+                              <th class="py-2">Active Dockets</th>
+                              <th class="py-2">Total Accumulated</th>
+                              <th class="py-2 text-right">Bill Action</th>
+                           </tr>
+                        </thead>
+                        <tbody id="active-tables-tbody" class="text-sm divide-y"></tbody>
+                     </table>
+                  </div>
+               </section>
+               <!-- Menu Inventory modifier -->
+               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                  <h2 class="text-lg font-bold mb-4 border-b pb-2">Modify Menu Items & Pricing</h2>
+                  <div class="overflow-x-auto">
+                     <table class="w-full text-left border-collapse">
+                        <thead>
+                           <tr class="text-xs text-slate-400 border-b">
+                              <th class="py-2">Item Name</th>
+                              <th class="py-2">Category</th>
+                              <th class="py-2">Price</th>
+                              <th class="py-2">Stock Level</th>
+                              <th class="py-2">Available</th>
+                              <th class="py-2 text-right">Action</th>
+                           </tr>
                         </thead>
                         <tbody id="menu-management-table" class="text-sm divide-y"></tbody>
-                    </table>
-                </div>
-            </section>
-        </div>
-
-        <!-- NEW HISTORICAL SECTIONS ROW -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Left: Settled Table Sessions (Grouped Tables) -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-lg font-bold mb-2 text-slate-800">Settled Table Sessions Record (Grouped)</h2>
-                <p class="text-xs text-slate-400 mb-4">View master receipts of historical dining sessions closed together.</p>
-                <div class="space-y-3 overflow-y-auto max-h-[400px]" id="settled-tables-history-log">
-                    <!-- Settled tables history -->
-                </div>
-            </section>
-
-            <!-- Right: Single Tickets History Log -->
-            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 class="text-lg font-bold mb-2 text-slate-800">Consolidated Orders Record (Single Tickets)</h2>
-                <p class="text-xs text-slate-400 mb-4">View independent order dockets individually.</p>
-                <div class="space-y-3 overflow-y-auto max-h-[400px]" id="orders-record-log"></div>
-            </section>
-        </div>
-    </main>
-
-    <!-- Add Menu Item Modal -->
-    <div id="add-item-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl relative space-y-4">
+                     </table>
+                  </div>
+               </section>
+            </div>
+            <!-- Historical Sections Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+               <!-- Left: Settled Table Sessions (Grouped Tables) -->
+               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                  <h2 class="text-lg font-bold mb-2 text-slate-800">Settled Table Sessions Record (Grouped)</h2>
+                  <p class="text-xs text-slate-400 mb-4">View master receipts of historical dining sessions closed together.</p>
+                  <div class="space-y-3 overflow-y-auto max-h-[400px]" id="settled-tables-history-log"></div>
+               </section>
+               <!-- Right: Single Tickets History Log -->
+               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                  <h2 class="text-lg font-bold mb-2 text-slate-800">Consolidated Orders Record (Single Tickets)</h2>
+                  <p class="text-xs text-slate-400 mb-4">View independent order dockets individually.</p>
+                  <div class="space-y-3 overflow-y-auto max-h-[400px]" id="orders-record-log"></div>
+               </section>
+            </div>
+         </main>
+      </div>
+      <!-- Change Password Modal -->
+      <div id="password-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+         <div class="bg-white p-6 rounded-xl max-w-sm w-full shadow-2xl relative space-y-4">
+            <button onclick="togglePasswordModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            <h3 class="text-lg font-bold text-slate-800">Change Admin Password</h3>
+            <form onsubmit="submitChangePassword(event)" class="space-y-4">
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Old Password</label>
+                  <input type="password" id="p-old-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+               </div>
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">New Password</label>
+                  <input type="password" id="p-new-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+               </div>
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Confirm New Password</label>
+                  <input type="password" id="p-confirm-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+               </div>
+               <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm transition">
+               Update Password
+               </button>
+            </form>
+         </div>
+      </div>
+      <!-- Add Menu Item Modal -->
+      <div id="add-item-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+         <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl relative space-y-4">
             <button onclick="toggleAddModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
             <h3 class="text-lg font-bold text-slate-800">Add New Menu Item</h3>
             <form id="add-item-form" onsubmit="submitAddItem(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Item Name</label>
-                    <input type="text" id="add-item-name" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                </div>
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
-                        <input type="text" id="add-item-category" placeholder="Main, Drink" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Price ($)</label>
-                        <input type="number" step="0.01" min="0.01" id="add-item-price" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Stock Limit</label>
-                        <input type="number" id="add-item-stock" placeholder="Empty = Infinite" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
-                    <textarea id="add-item-desc" rows="2" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
-                </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm transition">
-                    Save to Database
-                </button>
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Item Name</label>
+                  <input type="text" id="add-item-name" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+               </div>
+               <div class="grid grid-cols-3 gap-4">
+                  <div>
+                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
+                     <input type="text" id="add-item-category" placeholder="Main, Drink" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                  </div>
+                  <div>
+                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Price (Ks)</label>
+                     <input type="number" step="0.01" min="0.01" id="add-item-price" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                  </div>
+                  <div>
+                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Stock Limit</label>
+                     <input type="number" id="add-item-stock" placeholder="Empty = Infinite" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                  </div>
+               </div>
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Product Photo</label>
+                  <input type="file" id="add-item-image" accept="image/*" class="w-full bg-slate-100 border-none rounded px-3 py-1.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+               </div>
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
+                  <textarea id="add-item-desc" rows="2" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+               </div>
+               <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm transition">
+               Save to Database
+               </button>
             </form>
-        </div>
-    </div>
-
-    <!-- Edit Menu Item Modal -->
-    <div id="edit-item-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl relative space-y-4">
+         </div>
+      </div>
+      <!-- Edit Menu Item Modal -->
+      <div id="edit-item-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+         <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl relative space-y-4">
             <button onclick="toggleEditModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
             <h3 class="text-lg font-bold text-slate-800">Edit Menu Item</h3>
             <form id="edit-item-form" onsubmit="submitEditItem(event)" class="space-y-4">
-                <input type="hidden" id="edit-item-id">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Item Name</label>
-                    <input type="text" id="edit-item-name" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                </div>
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
-                        <input type="text" id="edit-item-category" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Price ($)</label>
-                        <input type="number" step="0.01" min="0.01" id="edit-item-price" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Stock</label>
-                        <input type="number" id="edit-item-stock" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
-                    <textarea id="edit-item-desc" rows="2" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
-                </div>
-                <div class="flex items-center gap-2 pt-2">
-                    <input type="checkbox" id="edit-item-available" class="rounded text-amber-600 focus:ring-amber-500 h-4 w-4">
-                    <label for="edit-item-available" class="text-sm font-semibold text-slate-600">Mark as available / in stock</label>
-                </div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-sm transition">
-                    Apply Changes
-                </button>
+               <input type="hidden" id="edit-item-id">
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Item Name</label>
+                  <input type="text" id="edit-item-name" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+               </div>
+               <div class="grid grid-cols-3 gap-4">
+                  <div>
+                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
+                     <input type="text" id="edit-item-category" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                  </div>
+                  <div>
+                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Price (Ks)</label>
+                     <input type="number" step="0.01" min="0.01" id="edit-item-price" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                  </div>
+                  <div>
+                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Stock</label>
+                     <input type="number" id="edit-item-stock" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                  </div>
+               </div>
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Update Photo</label>
+                  <input type="file" id="edit-item-image" accept="image/*" class="w-full bg-slate-100 border-none rounded px-3 py-1.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+               </div>
+               <div>
+                  <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
+                  <textarea id="edit-item-desc" rows="2" class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
+               </div>
+               <div class="flex items-center gap-2 pt-2">
+                  <input type="checkbox" id="edit-item-available" class="rounded text-amber-600 focus:ring-amber-500 h-4 w-4">
+                  <label for="edit-item-available" class="text-sm font-semibold text-slate-600">Mark as available / in stock</label>
+               </div>
+               <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-sm transition">
+               Apply Changes
+               </button>
             </form>
-        </div>
-    </div>
-
-    <!-- Master Receipt Printer (Consolidated Table Bill) Modal -->
-    <div id="receipt-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
-        <div class="bg-white p-8 rounded-xl max-w-sm w-full font-mono shadow-2xl relative">
+         </div>
+      </div>
+      <!-- Master Receipt Printer Modal -->
+      <div id="receipt-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+         <div class="bg-white p-8 rounded-xl max-w-sm w-full font-mono shadow-2xl relative">
             <button onclick="toggleReceiptModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl print:hidden">&times;</button>
             <div id="receipt-payload" class="space-y-4"></div>
-            
-            <!-- Context-dependent active action tools -->
             <div id="receipt-actions" class="mt-6 space-y-2 print:hidden">
-                <button onclick="window.print()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm">
-                    Print Receipt
-                </button>
-                <button id="settle-bill-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm hidden">
-                    Settle & Close Table Bill
-                </button>
+               <button onclick="window.print()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm">
+               Print Receipt
+               </button>
+               <button id="settle-bill-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm hidden">
+               Settle & Close Table Bill
+               </button>
             </div>
-        </div>
-    </div>
-
-    <!-- JavaScript logic -->
-    <script>
-        const API_BASE = `${window.location.origin}/api/v1`;
-        let menuItemsList = [];
-
-        function setDefaultDatePicker() {
-            const todayLocal = new Date().toLocaleDateString('en-CA');
-            document.getElementById('analytics-date').value = todayLocal;
-        }
-
-        async function fetchAnalytics() {
+         </div>
+      </div>
+      <!-- JavaScript logic -->
+      <script>
+         const API_BASE = `${window.location.origin}/api/v1`;
+         let menuItemsList = [];
+         
+         function getAuthHeaders() {
+             const token = localStorage.getItem('manager_token');
+             return {
+                 'Authorization': `Bearer ${token}`,
+                 'Content-Type': 'application/json'
+             };
+         }
+         
+         function checkAuthState() {
+             const token = localStorage.getItem('manager_token');
+             const loginView = document.getElementById('login-view');
+             const dashboardView = document.getElementById('dashboard-view');
+         
+             if (!token) {
+                 loginView.classList.remove('hidden');
+                 dashboardView.classList.add('hidden');
+             } else {
+                 loginView.classList.add('hidden');
+                 dashboardView.classList.remove('hidden');
+                 
+                 setDefaultDatePicker();
+                 fetchAnalytics();
+                 fetchMenuTable();
+                 fetchActiveTables(); 
+                 fetchOrdersLog();
+                 fetchSettledTablesHistory();
+             }
+         }
+         
+         async function handleLogin(event) {
+             event.preventDefault();
+             const usernameInput = document.getElementById('login-username').value;
+             const passwordInput = document.getElementById('login-password').value;
+         
+             try {
+                 const response = await fetch(`${API_BASE}/manager/login`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                 });
+         
+                 if (response.ok) {
+                     const data = await response.json();
+                     localStorage.setItem('manager_token', data.token);
+                     checkAuthState();
+                 } else {
+                     alert("Invalid administrator username or password.");
+                 }
+             } catch (err) {
+                 alert("Network error occurred.");
+             }
+         }
+         
+         function handleLogout() {
+             localStorage.removeItem('manager_token');
+             window.location.reload();
+         }
+         
+         // --- NEW: Toggle Password Modal ---
+         function togglePasswordModal(show) {
+             const modal = document.getElementById('password-modal');
+             if (show) modal.classList.remove('hidden');
+             else modal.classList.add('hidden');
+         }
+         
+         // --- NEW: Submit Password Change Request ---
+         async function submitChangePassword(event) {
+             event.preventDefault();
+             const oldPassword = document.getElementById('p-old-password').value;
+             const newPassword = document.getElementById('p-new-password').value;
+             const confirmPassword = document.getElementById('p-confirm-password').value;
+         
+             if (newPassword !== confirmPassword) {
+                 alert("New passwords do not match. Please re-enter.");
+                 return;
+             }
+         
+             try {
+                 const response = await fetch(`${API_BASE}/manager/change-password`, {
+                     method: 'POST',
+                     headers: getAuthHeaders(),
+                     body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
+                 });
+         
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 if (response.ok) {
+                     alert("Password updated successfully! For security purposes, please log back in with your new credentials.");
+                     handleLogout(); // Force logout to clear session
+                 } else {
+                     const err = await response.json();
+                     alert(err.detail || "Incorrect old password.");
+                 }
+             } catch (err) {
+                 alert("Network communication error.");
+             }
+         }
+         
+         function setDefaultDatePicker() {
+             const todayLocal = new Date().toLocaleDateString('en-CA');
+             document.getElementById('analytics-date').value = todayLocal;
+         }
+         
+         async function fetchAnalytics() {
             const selectedDate = document.getElementById('analytics-date').value;
             document.getElementById('revenue-title').innerText = `${selectedDate} Revenue`;
-
+         
+            // Calculate the Name of the month selected for UI labeling (e.g. "June 2026")
+            const dateObj = new Date(selectedDate);
+            const monthNameLabel = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            document.getElementById('monthly-revenue-title').innerText = `${monthNameLabel} Revenue`;
+         
             try {
-                const response = await fetch(`${API_BASE}/manager/analytics/daily?date=${selectedDate}`);
+                const response = await fetch(`${API_BASE}/manager/analytics/daily?date=${selectedDate}`, {
+                    headers: getAuthHeaders()
+                });
+         
+                if (response.status === 401) { handleLogout(); return; }
+         
                 const data = await response.json();
                 
                 document.getElementById('stat-revenue').innerText = `$${data.total_revenue.toFixed(2)}`;
+                document.getElementById('stat-monthly-revenue').innerText = `$${data.total_monthly_revenue.toFixed(2)}`; // NEW
                 document.getElementById('stat-count').innerText = data.total_orders_completed;
-                
-                const list = document.getElementById('stat-top-items');
-                list.innerHTML = "";
-                if (data.top_selling_items.length === 0) {
-                    list.innerHTML = "<li>No sales recorded on this date</li>";
-                } else {
-                    data.top_selling_items.forEach(item => {
-                        list.innerHTML += `<li>${item.name} (${item.sold_qty} sold)</li>`;
+                 
+                 const list = document.getElementById('stat-top-items');
+                 list.innerHTML = "";
+                 if (data.top_selling_items.length === 0) {
+                     list.innerHTML = "<li>No sales recorded on this date</li>";
+                 } else {
+                     data.top_selling_items.forEach(item => {
+                         list.innerHTML += `<li>${item.name} (${item.sold_qty} sold)</li>`;
+                     });
+                 }
+             } catch (err) {
+                 console.error("Could not fetch metrics.");
+             }
+         }
+         
+         // --- Updated: Secure Excel (CSV) Exporter using Auth-Headers & Blob Streaming ---
+         // --- Updated: Secure PDF Document Exporter ---
+         async function exportReport() {
+         const selectedDate = document.getElementById('analytics-date').value;
+         
+         try {
+         const response = await fetch(`${API_BASE}/manager/analytics/export?date=${selectedDate}`, {
+            headers: getAuthHeaders()
+         });
+         
+         if (response.status === 401) { 
+            handleLogout(); 
+            return; 
+         }
+         
+         if (response.ok) {
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            
+            const virtualAnchor = document.createElement('a');
+            virtualAnchor.href = downloadUrl;
+            // Updated: Saved as a clean, standardized PDF
+            virtualAnchor.download = `business_summary_${selectedDate}.pdf`;
+            
+            document.body.appendChild(virtualAnchor);
+            virtualAnchor.click();
+            
+            virtualAnchor.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+         } else {
+            alert("Export failed. Please check backend log streams.");
+         }
+         } catch (err) {
+         alert("Network error exporting document.");
+         }
+         }
+         
+         async function requestSignedToken() {
+             const selectId = document.getElementById('qr-table-select').value;
+             try {
+                 const response = await fetch(`${API_BASE}/manager/generate-token/${selectId}`, {
+                     headers: getAuthHeaders()
+                 });
+                 
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 if (response.ok) {
+                     const data = await response.json();
+                     const fullLink = `${window.location.origin}${data.qr_link}`;
+                     
+                     document.getElementById('signed-url-input').value = fullLink;
+                     document.getElementById('signed-url-anchor').setAttribute('href', data.qr_link);
+                     document.getElementById('qr-output-container').classList.remove('hidden');
+                 }
+             } catch (err) {
+                 alert("Signature generation request failed.");
+             }
+         }
+         
+         async function fetchActiveTables() {
+             try {
+                 const response = await fetch(`${API_BASE}/manager/tables/active`, {
+                     headers: getAuthHeaders()
+                 });
+         
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 const activeTables = await response.json();
+                 const tbody = document.getElementById("active-tables-tbody");
+                 tbody.innerHTML = "";
+         
+                 if (activeTables.length === 0) {
+                     tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400 italic">No live dining sessions active currently</td></tr>`;
+                     return;
+                 }
+         
+                 activeTables.forEach(table => {
+                     const tr = document.createElement("tr");
+                     tr.className = "hover:bg-slate-50";
+                     tr.innerHTML = `
+                         <td class="py-3 font-bold text-[#161912]">Table ${table.table_number}</td>
+                         <td class="py-3 text-slate-500 font-semibold">${table.active_orders_count} dockets</td>
+                         <td class="py-3 font-semibold text-amber-600">${table.total_price.toFixed(2)} Ks</td>
+                         <td class="py-3 text-right">
+                             <button onclick="loadConsolidatedTableBill(${table.table_id})" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-black py-1 px-3 rounded-lg transition">Generate Master Bill</button>
+                         </td>
+                     `;
+                     tbody.appendChild(tr);
+                 });
+             } catch (err) {
+                 console.error("Could not populate live tables.");
+             }
+         }
+         
+         async function loadConsolidatedTableBill(tableId) {
+             try {
+                 const response = await fetch(`${API_BASE}/manager/tables/${tableId}/bill`, {
+                     headers: getAuthHeaders()
+                 });
+         
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 const bill = await response.json();
+                 const receiptContainer = document.getElementById("receipt-payload");
+                 const itemsStr = bill.items.map(i => {
+                     const modsLabel = i.modifiers.length > 0 ? `<div class="text-[10px] text-slate-500 pl-4">+ ${i.modifiers.join(', ')}</div>` : "";
+                     const subtotal = i.quantity * i.unit_price;
+                     return `
+                         <div class="border-b border-dashed pb-1">
+                             <div class="flex justify-between text-xs font-semibold">
+                                 <span>${i.name} (x${i.quantity})</span>
+                                 <span>$${subtotal.toFixed(2)}</span>
+                             </div>
+                             ${modsLabel}
+                         </div>
+                     `;
+                 }).join("");
+         
+                 receiptContainer.innerHTML = `
+                     <div class="text-center border-b pb-3 border-dashed">
+                         <h2 class="text-lg font-bold">${bill.restaurant_name}</h2>
+                         <p class="text-[10px] text-slate-400">TABLE SESSION MASTER INVOICE</p>
+                         <p class="text-[10px] text-slate-400">${bill.timestamp}</p>
+                     </div>
+                     <div class="text-xs">
+                         <p><b>TABLE NUMBER:</b> Table ${bill.table_number}</p>
+                         <p class="text-[10px] text-slate-400">Consolidated dockets: ${bill.order_ids.map(id => `#${id}`).join(', ')}</p>
+                     </div>
+                     <div class="space-y-2 my-4">
+                         ${itemsStr}
+                     </div>
+                     <div class="space-y-1 pt-3 border-t border-dashed text-xs text-slate-600">
+                         <div class="flex justify-between">
+                             <span>Subtotal</span>
+                             <span>${bill.subtotal.toFixed(2)} Ks</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span>Tax (10%)</span>
+                             <span>${bill.tax_amount.toFixed(2)} Ks</span>
+                         </div>
+                         <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
+                             <span>GRAND TOTAL</span>
+                             <span>${bill.grand_total.toFixed(2)} Ks</span>
+                         </div>
+                     </div>
+                 `;
+         
+                 const settleBtn = document.getElementById('settle-bill-btn');
+                 settleBtn.setAttribute('onclick', `settleTableBill(${bill.table_id})`);
+                 settleBtn.classList.remove('hidden');
+         
+                 toggleReceiptModal(true);
+             } catch (err) {
+                 alert("Could not load consolidated bill.");
+             }
+         }
+         
+         async function settleTableBill(tableId) {
+             if (!confirm("Confirm payment received and settle this table session? This closes all active dockets.")) return;
+         
+             try {
+                 const response = await fetch(`${API_BASE}/manager/tables/${tableId}/settle`, {
+                     method: 'POST',
+                     headers: getAuthHeaders()
+                 });
+         
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 if (response.ok) {
+                     alert("Bill settled! Table cleared.");
+                     toggleReceiptModal(false);
+                     fetchActiveTables();
+                     fetchOrdersLog();
+                     fetchSettledTablesHistory();
+                     fetchAnalytics();
+                 }
+             } catch (err) {
+                 alert("Network communication issue.");
+             }
+         }
+         
+         async function fetchSettledTablesHistory() {
+             try {
+                 const response = await fetch(`${API_BASE}/manager/tables/settled-history`, {
+                     headers: getAuthHeaders()
+                 });
+         
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 const history = await response.json();
+                 const container = document.getElementById("settled-tables-history-log");
+                 container.innerHTML = "";
+         
+                 if (history.length === 0) {
+                     container.innerHTML = `<div class="col-span-full text-center text-slate-400 italic py-4 bg-white rounded-xl border border-slate-100">No settled table sessions recorded yet</div>`;
+                     return;
+                 }
+         
+                 history.forEach(session => {
+                     const card = document.createElement("div");
+                     card.className = "bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex justify-between items-center";
+                     const isoTime = session.settled_at_iso;
+                     card.innerHTML = `
+                         <div>
+                             <p class="font-bold text-[#161912]">Table ${session.table_number}</p>
+                             <p class="text-[10px] text-slate-400">Closed: ${session.settled_at}</p>
+                             <p class="text-xs text-slate-500 font-semibold mt-1">Total: ${session.total_price.toFixed(2)} Ks| Dockets: ${session.order_ids.map(id => `#${id}`).join(', ')}</p>
+                         </div>
+                         <button onclick="loadHistoricalTableBill(${session.table_id}, '${isoTime}')" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Master Receipt</button>
+                     `;
+                     container.appendChild(card);
+                 });
+             } catch (err) {
+                 console.error("Could not fetch table history.");
+             }
+         }
+         
+         async function loadHistoricalTableBill(tableId, settledAtIso) {
+             try {
+                 const response = await fetch(`${API_BASE}/manager/tables/${tableId}/historical-bill?settled_at=${encodeURIComponent(settledAtIso)}`, {
+                     headers: getAuthHeaders()
+                 });
+         
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 const bill = await response.json();
+                 const receiptContainer = document.getElementById("receipt-payload");
+                 const itemsStr = bill.items.map(i => {
+                     const modsLabel = i.modifiers.length > 0 ? `<div class="text-[10px] text-slate-500 pl-4">+ ${i.modifiers.join(', ')}</div>` : "";
+                     const subtotal = i.quantity * i.unit_price;
+                     return `
+                         <div class="border-b border-dashed pb-1">
+                             <div class="flex justify-between text-xs font-semibold">
+                                 <span>${i.name} (x${i.quantity})</span>
+                                 <span>${subtotal.toFixed(2)} Ks</span>
+                             </div>
+                             ${modsLabel}
+                         </div>
+                     `;
+                 }).join("");
+         
+                 receiptContainer.innerHTML = `
+                     <div class="text-center border-b pb-3 border-dashed">
+                         <h2 class="text-lg font-bold">${bill.restaurant_name}</h2>
+                         <p class="text-[10px] text-slate-400">HISTORICAL TABLE SESSION RECEIPT</p>
+                         <p class="text-[10px] text-slate-400">${bill.timestamp}</p>
+                     </div>
+                     <div class="text-xs">
+                         <p><b>TABLE NUMBER:</b> Table ${bill.table_number}</p>
+                         <p class="text-[10px] text-slate-400">Dockets: ${bill.order_ids.map(id => `#${id}`).join(', ')}</p>
+                     </div>
+                     <div class="space-y-2 my-4">
+                         ${itemsStr}
+                     </div>
+                     <div class="space-y-1 pt-3 border-t border-dashed text-xs text-slate-600">
+                         <div class="flex justify-between">
+                             <span>Subtotal</span>
+                             <span>${bill.subtotal.toFixed(2)} Ks</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span>Tax (10%)</span>
+                             <span>${bill.tax_amount.toFixed(2)} Ks</span>
+                         </div>
+                         <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
+                             <span>GRAND TOTAL</span>
+                             <span>${bill.grand_total.toFixed(2)} Ks</span>
+                         </div>
+                     </div>
+                 `;
+         
+                 document.getElementById('settle-bill-btn').classList.add('hidden');
+                 toggleReceiptModal(true);
+             } catch (err) {
+                 alert("Could not load historical receipt.");
+             }
+         }
+         
+         async function handleImageUpload(fileInputId) {
+             const fileInput = document.getElementById(fileInputId);
+             if (fileInput.files.length === 0) return null;
+         
+             const formData = new FormData();
+             formData.append("file", fileInput.files[0]);
+         
+             try {
+                 const token = localStorage.getItem('manager_token');
+                 const response = await fetch(`${API_BASE}/manager/upload-image`, {
+                     method: 'POST',
+                     headers: { 'Authorization': `Bearer ${token}` },
+                     body: formData
+                 });
+                 
+                 if (response.status === 401) { handleLogout(); return null; }
+         
+                 if (response.ok) {
+                     const data = await response.json();
+                     return data.image_url;
+                 }
+             } catch (err) {
+                 console.error("Image upload failed: ", err);
+             }
+             return null;
+         }
+         
+         async function fetchMenuTable() {
+             try {
+                 const response = await fetch(`${API_BASE}/menu/`);
+                 menuItemsList = await response.json();
+                 
+                 const tbody = document.getElementById("menu-management-table");
+                 tbody.innerHTML = "";
+                 menuItemsList.forEach(item => {
+                     const stockLabel = item.stock !== null ? item.stock : "Infinite";
+                     const tr = document.createElement("tr");
+                     tr.className = "hover:bg-slate-50";
+                     tr.innerHTML = `
+                         <td class="py-3 font-semibold text-slate-800">${item.name}</td>
+                         <td class="py-3 text-slate-500">${item.category}</td>
+                         <td class="py-3 font-medium">${item.price.toFixed(2)} Ks</td>
+                         <td class="py-3 font-mono text-xs">${stockLabel}</td>
+                         <td class="py-3">
+                             <span class="px-2 py-0.5 rounded text-xs ${item.is_available ? 'bg-green-100 text-green-800':'bg-red-100 text-red-800'}">
+                                 ${item.is_available ? 'Active' : 'Sold Out'}
+                             </span>
+                         </td>
+                         <td class="py-3 text-right">
+                             <button onclick="openEditModal(${item.id})" class="text-amber-600 hover:text-amber-800 font-bold text-xs">Edit</button>
+                         </td>
+                     `;
+                     tbody.appendChild(tr);
+                 });
+             } catch (err) {
+                 console.error("Could not populate items.");
+             }
+         }
+         
+         function toggleAddModal(show) {
+             const modal = document.getElementById('add-item-modal');
+             if (show) modal.classList.remove('hidden');
+             else modal.classList.add('hidden');
+         }
+         
+         async function submitAddItem(event) {
+             event.preventDefault();
+             const uploadedImageUrl = await handleImageUpload('add-item-image');
+         
+             const name = document.getElementById('add-item-name').value;
+             const category = document.getElementById('add-item-category').value;
+             const price = parseFloat(document.getElementById('add-item-price').value);
+             const description = document.getElementById('add-item-desc').value;
+             const rawStock = document.getElementById('add-item-stock').value;
+             const stock = rawStock !== "" ? parseInt(rawStock) : null;
+         
+             const payload = { 
+                 name, 
+                 category, 
+                 price, 
+                 description, 
+                 is_available: true, 
+                 stock, 
+                 image_url: uploadedImageUrl,
+                 modifiers: [] 
+             };
+         
+             try {
+                 const response = await fetch(`${API_BASE}/manager/menu`, {
+                     method: 'POST',
+                     headers: getAuthHeaders(),
+                     body: JSON.stringify(payload)
+                 });
+                 
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 if (response.ok) {
+                     toggleAddModal(false);
+                     document.getElementById('add-item-form').reset();
+                     fetchMenuTable();
+                 }
+             } catch (err) {
+                 alert("Network error.");
+             }
+         }
+         
+         function toggleEditModal(show) {
+             const modal = document.getElementById('edit-item-modal');
+             if (show) modal.classList.remove('hidden');
+             else modal.classList.add('hidden');
+         }
+         
+         function openEditModal(itemId) {
+             const item = menuItemsList.find(i => i.id === itemId);
+             if (!item) return;
+         
+             document.getElementById('edit-item-id').value = item.id;
+             document.getElementById('edit-item-name').value = item.name;
+             document.getElementById('edit-item-category').value = item.category;
+             document.getElementById('edit-item-price').value = item.price;
+             document.getElementById('edit-item-desc').value = item.description || '';
+             document.getElementById('edit-item-stock').value = item.stock !== null ? item.stock : '';
+             document.getElementById('edit-item-available').checked = item.is_available;
+             document.getElementById('edit-item-image').value = "";
+         
+             toggleEditModal(true);
+         }
+         
+         async function submitEditItem(event) {
+             event.preventDefault();
+             const id = document.getElementById('edit-item-id').value;
+             let uploadedImageUrl = await handleImageUpload('edit-item-image');
+             
+             const name = document.getElementById('edit-item-name').value;
+             const category = document.getElementById('edit-item-category').value;
+             const price = parseFloat(document.getElementById('edit-item-price').value);
+             const description = document.getElementById('edit-item-desc').value;
+             const rawStock = document.getElementById('edit-item-stock').value;
+             const stock = rawStock !== "" ? parseInt(rawStock) : null;
+             const is_available = document.getElementById('edit-item-available').checked;
+         
+             const payload = { name, category, price, description, is_available, stock };
+             if (uploadedImageUrl) {
+                 payload.image_url = uploadedImageUrl;
+             }
+         
+             try {
+                 const response = await fetch(`${API_BASE}/manager/menu/${id}`, {
+                 method: 'PUT',
+                 headers: {
+                     ...getAuthHeaders(), // Secure administrative session authorization
+                     'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify(payload)
                     });
-                }
-            } catch (err) {
-                console.error("Could not fetch metrics.");
-            }
-        }
-
-        function exportReport() {
-            const selectedDate = document.getElementById('analytics-date').value;
-            window.location.href = `${API_BASE}/manager/analytics/export?date=${selectedDate}`;
-        }
-
-        // Requests a cryptographically signed dining URL for a table ID
-        async function requestSignedToken() {
-            const selectId = document.getElementById('qr-table-select').value;
-            try {
-                const response = await fetch(`${API_BASE}/manager/generate-token/${selectId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    const fullLink = `${window.location.origin}${data.qr_link}`;
-                    
-                    document.getElementById('signed-url-input').value = fullLink;
-                    document.getElementById('signed-url-anchor').setAttribute('href', data.qr_link);
-                    document.getElementById('qr-output-container').classList.remove('hidden');
-                }
-            } catch (err) {
-                alert("Signature generation request failed.");
-            }
-        }
-
-        // --- FETCH ACTIVE TABLES (Dining Session) ---
-        async function fetchActiveTables() {
-            try {
-                const response = await fetch(`${API_BASE}/manager/tables/active`);
-                const activeTables = await response.json();
-                
-                const tbody = document.getElementById("active-tables-tbody");
-                tbody.innerHTML = "";
-
-                if (activeTables.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400 italic">No live dining sessions active currently</td></tr>`;
-                    return;
-                }
-
-                activeTables.forEach(table => {
-                    const tr = document.createElement("tr");
-                    tr.className = "hover:bg-slate-50";
-                    tr.innerHTML = `
-                        <td class="py-3 font-bold text-[#161912]">Table ${table.table_number}</td>
-                        <td class="py-3 text-slate-500 font-semibold">${table.active_orders_count} dockets</td>
-                        <td class="py-3 font-semibold text-amber-600">$${table.total_price.toFixed(2)}</td>
-                        <td class="py-3 text-right">
-                            <button onclick="loadConsolidatedTableBill(${table.table_id})" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-black py-1 px-3 rounded-lg transition">Generate Master Bill</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error("Could not populate live tables.");
-            }
-        }
-
-        // --- LOAD AND COMBINE MULTIPLE TICKETS FOR A SINGLE TABLE ---
-        async function loadConsolidatedTableBill(tableId) {
-            try {
-                const response = await fetch(`${API_BASE}/manager/tables/${tableId}/bill`);
-                const bill = await response.json();
-
-                const receiptContainer = document.getElementById("receipt-payload");
-                
-                const itemsStr = bill.items.map(i => {
-                    const modsLabel = i.modifiers.length > 0 ? `<div class="text-[10px] text-slate-500 pl-4">+ ${i.modifiers.join(', ')}</div>` : "";
-                    const subtotal = i.quantity * i.unit_price;
-                    return `
-                        <div class="border-b border-dashed pb-1">
-                            <div class="flex justify-between text-xs font-semibold">
-                                <span>${i.name} (x${i.quantity})</span>
-                                <span>$${subtotal.toFixed(2)}</span>
-                            </div>
-                            ${modsLabel}
-                        </div>
-                    `;
-                }).join("");
-
-                receiptContainer.innerHTML = `
-                    <div class="text-center border-b pb-3 border-dashed">
-                        <h2 class="text-lg font-bold">${bill.restaurant_name}</h2>
-                        <p class="text-[10px] text-slate-400">TABLE SESSION MASTER INVOICE</p>
-                        <p class="text-[10px] text-slate-400">${bill.timestamp}</p>
-                    </div>
-                    <div class="text-xs">
-                        <p><b>TABLE NUMBER:</b> Table ${bill.table_number}</p>
-                        <p class="text-[10px] text-slate-400">Consolidated dockets: ${bill.order_ids.map(id => `#${id}`).join(', ')}</p>
-                    </div>
-                    <div class="space-y-2 my-4">
-                        ${itemsStr}
-                    </div>
-                    <div class="space-y-1 pt-3 border-t border-dashed text-xs text-slate-600">
-                        <div class="flex justify-between">
-                            <span>Subtotal</span>
-                            <span>$${bill.subtotal.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Tax (10%)</span>
-                            <span>$${bill.tax_amount.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
-                            <span>GRAND TOTAL</span>
-                            <span>$${bill.grand_total.toFixed(2)}</span>
-                        </div>
-                    </div>
-                `;
-
-                // Set actions and show Settle & Close Button
-                const settleBtn = document.getElementById('settle-bill-btn');
-                settleBtn.setAttribute('onclick', `settleTableBill(${bill.table_id})`);
-                settleBtn.classList.remove('hidden');
-
-                toggleReceiptModal(true);
-            } catch (err) {
-                alert("Could not load consolidated bill.");
-            }
-        }
-
-        // --- SETTLE ALL DINING DOCKETS FOR THE TABLE AT ONCE ---
-        async function settleTableBill(tableId) {
-            if (!confirm("Confirm payment received and settle this table session? This closes all active dockets.")) return;
-
-            try {
-                const response = await fetch(`${API_BASE}/manager/tables/${tableId}/settle`, {
-                    method: 'POST'
-                });
-                if (response.ok) {
-                    alert("Bill settled! Table cleared.");
-                    toggleReceiptModal(false);
-                    // Refresh data
-                    fetchActiveTables();
-                    fetchOrdersLog();
-                    fetchSettledTablesHistory(); // Reload history
-                    fetchAnalytics();
-                } else {
-                    alert("Settling process failed.");
-                }
-            } catch (err) {
-                alert("Network communication issue.");
-            }
-        }
-
-        // --- FETCH HISTORICAL CLOSED TABLE SESSIONS ---
-        async function fetchSettledTablesHistory() {
-            try {
-                const response = await fetch(`${API_BASE}/manager/tables/settled-history`);
-                const history = await response.json();
-                
-                const container = document.getElementById("settled-tables-history-log");
-                container.innerHTML = "";
-
-                if (history.length === 0) {
-                    container.innerHTML = `<div class="col-span-full text-center text-slate-400 italic py-4 bg-white rounded-xl border border-slate-100">No settled table sessions recorded yet</div>`;
-                    return;
-                }
-
-                history.forEach(session => {
-                    const card = document.createElement("div");
-                    card.className = "bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex justify-between items-center";
-                    // Pass ISO timestamp safely as string argument
-                    const isoTime = session.settled_at_iso;
-                    card.innerHTML = `
-                        <div>
-                            <p class="font-bold text-[#161912]">Table ${session.table_number}</p>
-                            <p class="text-[10px] text-slate-400">Closed: ${session.settled_at}</p>
-                            <p class="text-xs text-slate-500 font-semibold mt-1">Total: $${session.total_price.toFixed(2)} | Dockets: ${session.order_ids.map(id => `#${id}`).join(', ')}</p>
-                        </div>
-                        <button onclick="loadHistoricalTableBill(${session.table_id}, '${isoTime}')" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Master Receipt</button>
-                    `;
-                    container.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Could not fetch table history.");
-            }
-        }
-
-        // --- LOAD AND DYNAMICALLY COMPILE A PAST TABLE BILL ---
-        async function loadHistoricalTableBill(tableId, settledAtIso) {
-            try {
-                const response = await fetch(`${API_BASE}/manager/tables/${tableId}/historical-bill?settled_at=${encodeURIComponent(settledAtIso)}`);
-                const bill = await response.json();
-
-                const receiptContainer = document.getElementById("receipt-payload");
-                
-                const itemsStr = bill.items.map(i => {
-                    const modsLabel = i.modifiers.length > 0 ? `<div class="text-[10px] text-slate-500 pl-4">+ ${i.modifiers.join(', ')}</div>` : "";
-                    const subtotal = i.quantity * i.unit_price;
-                    return `
-                        <div class="border-b border-dashed pb-1">
-                            <div class="flex justify-between text-xs font-semibold">
-                                <span>${i.name} (x${i.quantity})</span>
-                                <span>$${subtotal.toFixed(2)}</span>
-                            </div>
-                            ${modsLabel}
-                        </div>
-                    `;
-                }).join("");
-
-                receiptContainer.innerHTML = `
-                    <div class="text-center border-b pb-3 border-dashed">
-                        <h2 class="text-lg font-bold">${bill.restaurant_name}</h2>
-                        <p class="text-[10px] text-slate-400">HISTORICAL TABLE SESSION RECEIPT</p>
-                        <p class="text-[10px] text-slate-400">${bill.timestamp}</p>
-                    </div>
-                    <div class="text-xs">
-                        <p><b>TABLE NUMBER:</b> Table ${bill.table_number}</p>
-                        <p class="text-[10px] text-slate-400">Dockets: ${bill.order_ids.map(id => `#${id}`).join(', ')}</p>
-                    </div>
-                    <div class="space-y-2 my-4">
-                        ${itemsStr}
-                    </div>
-                    <div class="space-y-1 pt-3 border-t border-dashed text-xs text-slate-600">
-                        <div class="flex justify-between">
-                            <span>Subtotal</span>
-                            <span>$${bill.subtotal.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Tax (10%)</span>
-                            <span>$${bill.tax_amount.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
-                            <span>GRAND TOTAL</span>
-                            <span>$${bill.grand_total.toFixed(2)}</span>
-                        </div>
-                    </div>
-                `;
-
-                // Hide Settle Button on historical views
-                document.getElementById('settle-bill-btn').classList.add('hidden');
-                toggleReceiptModal(true);
-            } catch (err) {
-                alert("Could not load historical receipt.");
-            }
-        }
-
-        async function fetchMenuTable() {
-            try {
-                const response = await fetch(`${API_BASE}/menu/`);
-                menuItemsList = await response.json();
-                
-                const tbody = document.getElementById("menu-management-table");
-                tbody.innerHTML = "";
-                menuItemsList.forEach(item => {
-                    const stockLabel = item.stock !== null ? item.stock : "Infinite";
-                    const tr = document.createElement("tr");
-                    tr.className = "hover:bg-slate-50";
-                    tr.innerHTML = `
-                        <td class="py-3 font-semibold text-slate-800">${item.name}</td>
-                        <td class="py-3 text-slate-500">${item.category}</td>
-                        <td class="py-3 font-medium">$${item.price.toFixed(2)}</td>
-                        <td class="py-3 font-mono text-xs">${stockLabel}</td>
-                        <td class="py-3">
-                            <span class="px-2 py-0.5 rounded text-xs ${item.is_available ? 'bg-green-100 text-green-800':'bg-red-100 text-red-800'}">
-                                ${item.is_available ? 'Active' : 'Sold Out'}
-                            </span>
-                        </td>
-                        <td class="py-3 text-right">
-                            <button onclick="openEditModal(${item.id})" class="text-amber-600 hover:text-amber-800 font-bold text-xs">Edit</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error("Could not populate items.");
-            }
-        }
-
-        function toggleAddModal(show) {
-            const modal = document.getElementById('add-item-modal');
-            if (show) modal.classList.remove('hidden');
-            else modal.classList.add('hidden');
-        }
-
-        async function submitAddItem(event) {
-            event.preventDefault();
-            const name = document.getElementById('add-item-name').value;
-            const category = document.getElementById('add-item-category').value;
-            const price = parseFloat(document.getElementById('add-item-price').value);
-            const description = document.getElementById('add-item-desc').value;
-            const rawStock = document.getElementById('add-item-stock').value;
-            const stock = rawStock !== "" ? parseInt(rawStock) : null;
-
-            const payload = { name, category, price, description, is_available: true, stock, modifiers: [] };
-
-            try {
-                const response = await fetch(`${API_BASE}/manager/menu`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (response.ok) {
-                    toggleAddModal(false);
-                    document.getElementById('add-item-form').reset();
-                    fetchMenuTable();
-                }
-            } catch (err) {
-                alert("Network error.");
-            }
-        }
-
-        function toggleEditModal(show) {
-            const modal = document.getElementById('edit-item-modal');
-            if (show) modal.classList.remove('hidden');
-            else modal.classList.add('hidden');
-        }
-
-        function openEditModal(itemId) {
-            const item = menuItemsList.find(i => i.id === itemId);
-            if (!item) return;
-
-            document.getElementById('edit-item-id').value = item.id;
-            document.getElementById('edit-item-name').value = item.name;
-            document.getElementById('edit-item-category').value = item.category;
-            document.getElementById('edit-item-price').value = item.price;
-            document.getElementById('edit-item-desc').value = item.description || '';
-            document.getElementById('edit-item-stock').value = item.stock !== null ? item.stock : '';
-            document.getElementById('edit-item-available').checked = item.is_available;
-
-            toggleEditModal(true);
-        }
-
-        async function submitEditItem(event) {
-            event.preventDefault();
-            const id = document.getElementById('edit-item-id').value;
-            const name = document.getElementById('edit-item-name').value;
-            const category = document.getElementById('edit-item-category').value;
-            const price = parseFloat(document.getElementById('edit-item-price').value);
-            const description = document.getElementById('edit-item-desc').value;
-            const rawStock = document.getElementById('edit-item-stock').value;
-            const stock = rawStock !== "" ? parseInt(rawStock) : null;
-            const is_available = document.getElementById('edit-item-available').checked;
-
-            const payload = { name, category, price, description, is_available, stock };
-
-            try {
-                const response = await fetch(`${API_BASE}/manager/menu/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (response.ok) {
-                    toggleEditModal(false);
-                    fetchMenuTable();
-                }
-            } catch (err) {
-                alert("Network error.");
-            }
-        }
-
-        async function fetchOrdersLog() {
-            try {
-                const response = await fetch(`${API_BASE}/manager/orders`);
-                const orders = await response.json();
-                
-                const container = document.getElementById("orders-record-log");
-                container.innerHTML = "";
-
-                orders.forEach(order => {
-                    const card = document.createElement("div");
-                    card.className = "bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex justify-between items-center";
-                    card.innerHTML = `
-                        <div>
-                            <p class="font-bold text-slate-800">Order ID #${order.id} - Table ${order.table.number}</p>
-                            <p class="text-xs text-slate-400">Total: $${order.total_price.toFixed(2)} | Status: <span class="capitalize font-semibold text-amber-600">${order.status}</span></p>
-                        </div>
-                        <button onclick="loadReceipt(${order.id})" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Receipt</button>
-                    `;
-                    container.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Error retrieving historical logs.");
-            }
-        }
-
-        // Single Ticket Receipt Generator (Historical record only)
-        async function loadReceipt(orderId) {
-            try {
-                const response = await fetch(`${API_BASE}/manager/orders/${orderId}/voucher`);
-                const receipt = await response.json();
-
-                const receiptContainer = document.getElementById("receipt-payload");
-                const itemsStr = receipt.items.map(i => `
-                    <div class="flex justify-between text-xs border-b border-dashed pb-1">
-                        <span>${i.name} (x${i.quantity})</span>
-                        <span>$${i.subtotal.toFixed(2)}</span>
-                    </div>
-                `).join("");
-
-                receiptContainer.innerHTML = `
-                    <div class="text-center border-b pb-3 border-dashed">
-                        <h2 class="text-lg font-bold">${receipt.restaurant_name}</h2>
-                        <p class="text-[10px] text-slate-400">Transaction ID: ${receipt.voucher_id}</p>
-                        <p class="text-[10px] text-slate-400">${receipt.timestamp}</p>
-                    </div>
-                    <div class="text-xs">
-                        <p><b>Table:</b> ${receipt.table_number}</p>
-                    </div>
-                    <div class="space-y-1 my-3">
-                        ${itemsStr}
-                    </div>
-                    <div class="space-y-1 pt-3 border-t border-dashed text-xs text-slate-600">
-                        <div class="flex justify-between">
-                            <span>Subtotal</span>
-                            <span>$${receipt.subtotal.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Tax (10%)</span>
-                            <span>$${receipt.tax_amount.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
-                            <span>Grand Total</span>
-                            <span>$${receipt.grand_total.toFixed(2)}</span>
-                        </div>
-                    </div>
-                `;
-
-                // Hide Settle Button on individual closed receipts
-                document.getElementById('settle-bill-btn').classList.add('hidden');
-                toggleReceiptModal(true);
-            } catch (err) {
-                alert("Receipt compilation failed.");
-            }
-        }
-
-        function toggleReceiptModal(show) {
-            const modal = document.getElementById('receipt-modal');
-            if (show) modal.classList.remove('hidden');
-            else modal.classList.add('hidden');
-        }
-
-        setDefaultDatePicker();
-        fetchAnalytics();
-        fetchMenuTable();
-        fetchActiveTables(); // Query live active tables on load
-        fetchOrdersLog();
-        fetchSettledTablesHistory(); // Query settled table history on load
-    </script>
-</body>
+         
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 if (response.ok) {
+                     toggleEditModal(false);
+                     fetchMenuTable();
+                 }
+             } catch (err) {
+                 alert("Network error.");
+             }
+         }
+         
+         async function fetchOrdersLog() {
+             try {
+                 const response = await fetch(`${API_BASE}/manager/orders`, {
+                     headers: getAuthHeaders()
+                 });
+         
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 const orders = await response.json();
+                 const container = document.getElementById("orders-record-log");
+                 container.innerHTML = "";
+         
+                 orders.forEach(order => {
+                     const card = document.createElement("div");
+                     card.className = "bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex justify-between items-center";
+                     card.innerHTML = `
+                         <div>
+                             <p class="font-bold text-slate-800">Order ID #${order.id} - Table ${order.table.number}</p>
+                             <p class="text-xs text-slate-400">Total: ${order.total_price.toFixed(2)} Ks| Status: <span class="capitalize font-semibold text-amber-600">${order.status}</span></p>
+                         </div>
+                         <button onclick="loadReceipt(${order.id})" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Receipt</button>
+                     `;
+                     container.appendChild(card);
+                 });
+             } catch (err) {
+                 console.error("Error retrieving historical logs.");
+             }
+         }
+         
+         async function loadReceipt(orderId) {
+             try {
+                 const response = await fetch(`${API_BASE}/manager/orders/${orderId}/voucher`, {
+                     headers: getAuthHeaders()
+                 });
+         
+                 if (response.status === 401) { handleLogout(); return; }
+         
+                 const receipt = await response.json();
+                 const receiptContainer = document.getElementById("receipt-payload");
+                 const itemsStr = receipt.items.map(i => `
+                     <div class="flex justify-between text-xs border-b border-dashed pb-1">
+                         <span>${i.name} (x${i.quantity})</span>
+                         <span>${i.subtotal.toFixed(2)} Ks</span>
+                     </div>
+                 `).join("");
+         
+                 receiptContainer.innerHTML = `
+                     <div class="text-center border-b pb-3 border-dashed">
+                         <h2 class="text-lg font-bold">${receipt.restaurant_name}</h2>
+                         <p class="text-[10px] text-slate-400">Transaction ID: ${receipt.voucher_id}</p>
+                         <p class="text-[10px] text-slate-400">${receipt.timestamp}</p>
+                     </div>
+                     <div class="text-xs">
+                         <p><b>Table:</b> ${receipt.table_number}</p>
+                     </div>
+                     <div class="space-y-1 my-3">
+                         ${itemsStr}
+                     </div>
+                     <div class="space-y-1 pt-3 border-t border-dashed text-xs text-slate-600">
+                         <div class="flex justify-between">
+                             <span>Subtotal</span>
+                             <span>${receipt.subtotal.toFixed(2)} Ks</span>
+                         </div>
+                         <div class="flex justify-between">
+                             <span>Tax (10%)</span>
+                             <span>${receipt.tax_amount.toFixed(2)} Ks</span>
+                         </div>
+                         <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
+                             <span>Grand Total</span>
+                             <span>${receipt.grand_total.toFixed(2)} Ks</span>
+                         </div>
+                     </div>
+                 `;
+         
+                 document.getElementById('settle-bill-btn').classList.add('hidden');
+                 toggleReceiptModal(true);
+             } catch (err) {
+                 alert("Receipt compilation failed.");
+             }
+         }
+         
+         function toggleReceiptModal(show) {
+             const modal = document.getElementById('receipt-modal');
+             if (show) modal.classList.remove('hidden');
+             else modal.classList.add('hidden');
+         }
+         
+         // Initialize session protection on page load
+         checkAuthState();
+      </script>
+   </body>
 </html>

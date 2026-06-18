@@ -3,6 +3,16 @@ from typing import List, Optional
 from datetime import datetime
 from models import OrderStatus
 
+# --- NEW: Administrator Login Schema ---
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+# --- NEW: Password Change Schema ---
+class PasswordChangeRequest(BaseModel):
+    old_password: str
+    new_password: str
+
 # --- Modifiers ---
 class ModifierBase(BaseModel):
     name: str
@@ -24,6 +34,9 @@ class MenuItemBase(BaseModel):
     category: str
     is_available: bool = True
     stock: Optional[int] = None
+    
+    # NEW: Schema supports dynamic image URL tracking
+    image_url: Optional[str] = None 
 
 class MenuItemCreate(MenuItemBase):
     modifiers: Optional[List[ModifierCreate]] = []
@@ -35,6 +48,9 @@ class MenuItemUpdate(BaseModel):
     category: Optional[str] = None
     is_available: Optional[bool] = None
     stock: Optional[int] = None
+    
+    # NEW
+    image_url: Optional[str] = None 
 
 class MenuItemResponse(MenuItemBase):
     id: int
@@ -87,5 +103,6 @@ class OrderResponse(BaseModel):
 class DailyAnalytics(BaseModel):
     date: str
     total_revenue: float
+    total_monthly_revenue: float # NEW: Tracks total revenue for the selected calendar month
     total_orders_completed: int
     top_selling_items: List[dict]

@@ -1,638 +1,613 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coffee Shop Borcelle - Menu</title>
-    <!-- Google Fonts for retro/vintage vibes -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Special+Elite&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .font-retro-title {
-            font-family: 'Alfa Slab One', serif;
-        }
-        .font-retro-body {
-            font-family: 'Space Mono', monospace;
-        }
-        .font-retro-typewriter {
-            font-family: 'Special Elite', system-ui;
-        }
-        /* Custom retro checkerboard top border */
-        .checkerboard-border {
-            background-image: 
-                linear-gradient(45deg, #6f8a38 25%, transparent 25%), 
-                linear-gradient(-45deg, #6f8a38 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #6f8a38 75%), 
-                linear-gradient(-45deg, transparent 75%, #6f8a38 75%);
-            background-size: 16px 16px;
-            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-            background-color: #dee6d0;
-        }
-    </style>
-</head>
-<body class="bg-[#dee6d0] text-[#161912] font-retro-body min-h-screen pb-24 relative select-none">
-    
-    <!-- Checkerboard Top Accent -->
-    <div class="h-6 w-full checkerboard-border border-b-4 border-[#161912]"></div>
-
-    <!-- Paper Container matching proportions of menu mockup card -->
-    <div class="max-w-2xl mx-auto px-6 py-8 md:px-12 md:py-10">
-        
-        <!-- Header: Logo and Title -->
-        <header class="text-center mb-10 space-y-4">
-            <!-- Animated Clinking Waving Cartoon Cups SVG -->
-            <div class="flex justify-center items-center gap-1">
-                <svg class="w-16 h-16 text-[#161912]" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- Left Cup -->
-                    <path d="M25,45 C25,65 40,65 40,45" fill="none"/>
-                    <path d="M25,45 L40,45"/>
-                    <path d="M25,50 C20,50 20,58 25,58" fill="none"/>
-                    <!-- Smiling Eyes and Mouth Left -->
-                    <circle cx="30" cy="51" r="1.5" fill="currentColor"/>
-                    <circle cx="35" cy="51" r="1.5" fill="currentColor"/>
-                    <path d="M31.5,54 Q32.5,56 33.5,54"/>
-                    
-                    <!-- Right Cup -->
-                    <path d="M50,45 C50,65 65,65 65,45" fill="none"/>
-                    <path d="M50,45 L65,45"/>
-                    <path d="M65,50 C70,50 70,58 65,58" fill="none"/>
-                    <!-- Smiling Eyes and Mouth Right -->
-                    <circle cx="55" cy="51" r="1.5" fill="currentColor"/>
-                    <circle cx="60" cy="51" r="1.5" fill="currentColor"/>
-                    <path d="M56.5,54 Q57.5,56 58.5,54"/>
-
-                    <!-- Waving Arms & legs -->
-                    <path d="M20,52 Q15,48 12,52" />
-                    <path d="M70,52 Q75,48 78,52" />
-                    <path d="M30,62 L28,68" />
-                    <path d="M35,62 L37,68" />
-                    <path d="M55,62 L53,68" />
-                    <path d="M60,62 L62,68" />
-                </svg>
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>27 Cafe & Bar- Menu</title>
+      <!-- Google Fonts for classy Serif and modern numerical layouts -->
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+         .font-27-title {
+         font-family: 'Playfair Display', serif;
+         }
+         .font-27-body {
+         font-family: 'Inter', sans-serif;
+         }
+         /* Custom scrollbar hiding for horizontal swiping */
+         .scrollbar-none::-webkit-scrollbar {
+         display: none;
+         }
+         .scrollbar-none {
+         -ms-overflow-style: none;
+         scrollbar-width: none;
+         }
+         /* --- CARTOON MOVEMENTS & KEYFRAME ANIMATIONS --- */
+         @keyframes float {
+         0%, 100% { transform: translateY(0) rotate(0deg); }
+         50% { transform: translateY(-8px) rotate(3deg); }
+         }
+         @keyframes bounce-hop {
+         0%, 100% { transform: translateY(0) scaleY(1); }
+         50% { transform: translateY(-12px) scaleY(0.95); }
+         }
+         @keyframes wave-arm {
+         0%, 100% { transform: rotate(0deg); }
+         50% { transform: rotate(15deg); }
+         }
+         @keyframes steam-rise {
+         0% { transform: translateY(0) scaleX(1); opacity: 0.1; }
+         50% { transform: translateY(-4px) scaleX(1.1); opacity: 0.5; }
+         100% { stroke-dashoffset: 0; transform: translateY(-4px); }
+         }
+         .animate-scale {
+         animation: bounce-hop 0.2s ease-out;
+         }
+         .animate-float { animation: float 4s ease-in-out infinite; }
+         .animate-bounce-hop { animation: bounce-hop 3s ease-in-out infinite; }
+         .animate-wave-arm { animation: wave-arm 2s ease-in-out infinite; transform-origin: bottom left; }
+         .animate-steam { animation: steam-rise 2.5s ease-in-out infinite; }
+      </style>
+   </head>
+   <body class="bg-[#eae6dd] text-[#735647] font-27-body min-h-screen pb-32 relative select-none">
+      <!-- Checkerboard Top Accent -->
+      <div class="h-6 w-full checkerboard-border border-b-4 border-[#161912] hidden"></div>
+      <!-- Paper Container matching proportions of menu mockup card -->
+      <div class="max-w-xl mx-auto px-4 sm:px-6 py-6 md:py-12 relative min-h-screen flex flex-col justify-between">
+         <!-- Header -->
+         <header class="relative pb-6 border-b border-[#301f16]/30 mb-8 flex flex-col items-start w-full">
+            <div class="flex items-center gap-6">
+               <div class="h-40 w-40 flex items-center justify-center shrink-0">
+                  <img src="./static/logo2.jpg" alt="Cafe Logo" class="h-full w-full object-contain" onerror="this.style.display='none'">
+               </div>
+               <div class="space-y-1">
+                  <h1 style="font-family: 'Quattrocento', serif;" class="font-27-title tracking-tight leading-none text-[#301f16]">
+                     <span class="font-extrabold text-7xl select-none">27</span><span class="font-normal text-6xl select-none">cafe</span>
+                  </h1>
+                  <p style="font-family: 'Quattrocento', serif;" class="font-27-title tracking-tight leading-none text-[#301f16]">Cafe & Bar --since 2025</p>
+               </div>
+               
             </div>
-            
-            <div class="space-y-1">
-                <p class="text-xs uppercase tracking-[0.3em] font-bold text-[#4b5a2c]">COFFEE SHOP</p>
-                <h1 class="text-xl md:text-2xl font-retro-title uppercase tracking-widest text-[#161912]">BORCELLE</h1>
+            <div class="absolute top-2 right-0 hidden sm:flex items-center gap-4 text-[#301f16]/80">
+               <svg class="w-8 h-8 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M18,8h1a4,4,0,0,1,0,8h-1" />
+                  <path d="M2,8h16v9a4,4,0,0,1-4,4H6a4,4,0,0,1-4-4Z" />
+                  <path d="M6,2v2 M10,2v2" />
+               </svg>
+               <svg class="w-10 h-10 opacity-60" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M40,35 C40,25 65,25 65,35" />
+                  <rect x="35" y="35" width="35" height="35" rx="5" />
+                  <path d="M70,45 C78,45 78,60 70,60" />
+                  <path d="M35,42 L25,50 L35,58" />
+                  <path d="M47,20 Q50,15 47,10" />
+                  <path d="M52,20 Q55,15 52,10" />
+                  <path d="M57,20 Q60,15 57,10" />
+               </svg>
             </div>
-
-            <!-- Big Block "MENU" Title -->
-            <div class="py-2">
-                <h2 class="text-6xl md:text-8xl font-retro-title text-[#6f8a38] uppercase tracking-wider select-none leading-none">MENU</h2>
+            <br>
+            <p class="font-bold text-[#301f16]">27 cafe မှ တစ်ဆိုင်လုံး 100% သဘာဝအသီးစစ်စစ်သာ အသုံးပြုထားပါသည်။</p>
+         </header>
+         <!-- Service Summon Controls -->
+         <section class="border border-[#301f16]/30 bg-white/40 p-4 rounded-xl mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="text-center sm:text-left">
+               <p class="font-27-title font-bold text-sm uppercase">Service Request</p>
+               <p class="text-[10px] text-slate-500">Need help? Summon our waitstaff directly.</p>
             </div>
-        </header>
-
-        <!-- Service Summon / Service Buttons -->
-        <section class="border-4 border-[#161912] bg-[#dee6d0] p-4 rounded-xl mb-10 flex flex-col md:flex-row justify-between items-center gap-4 shadow-[4px_4px_0px_0px_#161912]">
-            <div class="text-center md:text-left">
-                <p class="font-retro-title text-sm uppercase">Need Assistance?</p>
-                <p class="text-xs text-slate-600">Summon our waiters directly from your screen.</p>
+            <div class="flex gap-2 w-full sm:w-auto">
+               <button onclick="summonService('Water')" class="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-[#301f16] font-bold text-xs py-2 px-4 rounded-lg border border-[#301f16]/20 transition active:scale-95">Water</button>
+               <button onclick="summonService('Waiter')" class="flex-1 sm:flex-none bg-[#301f16] hover:bg-[#1E140C] text-white text-xs font-bold py-2 px-4 rounded-lg transition active:scale-95">Call Waiter</button>
             </div>
-            <div class="flex gap-2 w-full md:w-auto">
-                <button onclick="summonService('Water')" class="flex-1 md:flex-none border-2 border-[#161912] bg-white hover:bg-slate-100 text-[#161912] font-bold text-xs py-2 px-4 rounded-lg transition active:translate-y-0.5">Request Water</button>
-                <button onclick="summonService('Waiter')" class="flex-1 md:flex-none border-2 border-[#161912] bg-[#6f8a38] hover:bg-[#4b5a2c] text-white font-bold text-xs py-2 px-4 rounded-lg transition active:translate-y-0.5">Call Waiter</button>
+         </section>
+         <!-- Dynamic Menu Container -->
+         <div id="validation-gate" class="hidden flex-1 flex flex-col justify-between">
+            <!-- 1. Standard Categories Container (Vertical Lists: Coffee, Milkshakes, etc.) -->
+            <div id="standard-categories-container" class="space-y-8">
+               <!-- Populated dynamically -->
             </div>
-        </section>
-
-        <!-- Dynamic Menu Grid Structure -->
-        <div id="validation-gate" class="hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                
-                <!-- Left Column (Dynamically Receives Categories) -->
-                <div class="space-y-8 flex flex-col justify-between">
-                    <div id="left-categories-container" class="space-y-8">
-                        <!-- Dynamic Categories (e.g., COFFEE, SIGNATURE) will append here -->
-                    </div>
-
-                    <!-- Left Column Waving Coffee Machine Character Art -->
-                    <div class="pt-6 hidden md:block">
-                        <svg class="w-48 h-48 mx-auto text-[#161912]" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <!-- Mocha Pot -->
-                            <polygon points="35,30 65,30 60,80 40,80" fill="none"/>
-                            <path d="M40,55 L60,55" />
-                            <path d="M48,30 L52,30 L50,22 Z" fill="currentColor" />
-                            <!-- Handle -->
-                            <path d="M63,42 C72,42 72,65 61,65" fill="none" stroke-width="2.5"/>
-                            <!-- Spout -->
-                            <path d="M35,35 L28,42 L35,46 Z" fill="currentColor"/>
-                            <!-- Face -->
-                            <circle cx="45" cy="45" r="2" fill="currentColor"/>
-                            <circle cx="55" cy="45" r="2" fill="currentColor"/>
-                            <path d="M47,49 Q50,52 53,49" stroke-width="2.5"/>
-                            <!-- Waving Arms & legs -->
-                            <path d="M35,60 Q25,56 20,64" />
-                            <path d="M61,60 Q72,56 78,64" />
-                            <path d="M43,80 L40,90" />
-                            <path d="M57,80 L60,90" />
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Right Column (Dynamically Receives Categories) -->
-                <div class="space-y-8 flex flex-col justify-between">
-                    <div id="right-categories-container" class="space-y-8">
-                        <!-- Dynamic Categories (e.g., NON-COFFEE, DESSERTS) will append here -->
-                    </div>
-
-                    <div>
-                        <!-- Storefront Sketch Graphic -->
-                        <div class="py-6 hidden md:block">
-                            <svg class="w-full h-32 text-[#161912]" viewBox="0 0 200 100" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <!-- Main Roof -->
-                                <rect x="40" y="30" width="120" height="50" rx="3" />
-                                <rect x="35" y="20" width="130" height="10" rx="2" />
-                                <!-- Awning stripes -->
-                                <path d="M45,30 L45,45 M65,30 L65,45 M85,30 L85,45 M105,30 L105,45 M125,30 L125,45 M145,30 L145,45" />
-                                <!-- Windows -->
-                                <rect x="50" y="50" width="30" height="25" rx="1" />
-                                <path d="M65,50 L65,75 M50,62 L80,62" />
-                                <!-- Door -->
-                                <rect x="110" y="45" width="25" height="35" rx="1" />
-                                <circle cx="130" cy="62" r="1.5" fill="currentColor" />
-                                <!-- Plants -->
-                                <circle cx="95" cy="70" r="3" />
-                                <path d="M95,73 L95,80" />
-                                <!-- Outside patron sitting -->
-                                <circle cx="25" cy="70" r="3" />
-                                <path d="M25,73 L25,85" />
-                                <path d="M25,78 L15,82" />
-                                <path d="M25,81 L35,85" />
-                            </svg>
-                        </div>
-
-                        <!-- Static-Styled Dynamic ADD-ONS Card -->
-                        <div class="border-4 border-[#161912] bg-[#6f8a38] text-white p-6 rounded-2xl shadow-[4px_4px_0px_0px_#161912] space-y-4">
-                            <div class="text-center space-y-2">
-                                <!-- Steaming mug outline -->
-                                <svg class="w-8 h-8 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M18,8h1a4,4,0,0,1,0,8h-1" />
-                                    <path d="M2,8h16v9a4,4,0,0,1-4,4H6a4,4,0,0,1-4-4Z" />
-                                    <path d="M6,2v2 M10,2v2 M14,2v2" />
-                                </svg>
-                                <h4 class="font-retro-title text-lg uppercase tracking-wider">ADD-ONS</h4>
-                                <div class="h-0.5 w-16 bg-white mx-auto"></div>
-                            </div>
-                            <div class="space-y-2 text-sm font-semibold" id="addons-list-container">
-                                <!-- List of add-ons currently loaded from DB -->
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+            <!-- Clean Separator Line above juices -->
+            <hr class="border-[#301f16]/10 my-8">
+            <!-- 2. Bottom Swipe-Aside Section (Fresh Juices, Cakes, etc. with Floating Photos) -->
+            <div id="juice-categories-container" class="space-y-12">
+               <!-- Populated dynamically -->
             </div>
-
-            <!-- Card Bottom Stamp Footer -->
-            <footer class="mt-16 pt-4 border-t-2 border-dashed border-[#161912] flex flex-col sm:flex-row justify-between items-center text-xs font-retro-title text-slate-600 gap-2">
-                <span>123 ANYWHERE ST., ANY CITY</span>
-                <span>@REALLYGREATSITE</span>
+            <!-- Card Bottom Stamp Footer (Your Custom Footer on Main Menu) -->
+            <footer class="mt-16 pt-4 border-t border-[#735647]/20 flex flex-col sm:flex-row justify-between items-center text-[10px] text-[#735647]/70 uppercase tracking-widest font-semibold gap-2">
+               <span class="truncate">Thank you for supporting 27 Cafe.</span>
+               <span class="shrink-0">Tiktok-@27cafe.nbar</span>
             </footer>
-        </div>
-
-        <!-- Security Block State -->
-        <div id="security-warning" class="hidden">
-            <div class="border-4 border-[#161912] bg-red-100 text-red-900 p-8 rounded-2xl text-center space-y-3 shadow-[4px_4px_0px_0px_#161912]">
-                <h3 class="text-xl font-retro-title uppercase">Access Denied</h3>
-                <p class="text-sm font-retro-typewriter">Please scan a valid table QR code printed at your table to view our active digital menu and place secure orders.</p>
+         </div>
+         <!-- Security Warning State -->
+         <div id="security-warning" class="hidden">
+            <div class="border border-red-300 bg-red-50 text-red-900 p-8 rounded-2xl text-center space-y-3">
+               <h3 class="text-lg font-27-title font-bold uppercase">Access Blocked</h3>
+               <p class="text-xs">Please scan a secure table QR code printed on your table to view our dining card and place orders.</p>
             </div>
-        </div>
-    </div>
-
-    <!-- Sticky Cart Bar -->
-    <div id="cart-bar" class="fixed bottom-0 left-0 right-0 bg-[#dee6d0] border-t-4 border-[#161912] p-4 shadow-lg flex justify-between items-center max-w-2xl mx-auto rounded-t-2xl hidden z-40">
-        <div>
-            <p class="text-xs uppercase font-bold text-slate-500">Cart Total</p>
-            <p class="text-2xl font-retro-title text-[#161912]" id="cart-total">$0.00</p>
-        </div>
-        <button onclick="toggleCartModal(true)" class="border-2 border-[#161912] bg-[#6f8a38] hover:bg-[#4b5a2c] text-white font-retro-title text-sm py-2.5 px-6 rounded-xl transition active:translate-y-0.5 shadow-[2px_2px_0px_0px_#161912]">
-            View Cart (<span id="cart-count">0</span>)
-        </button>
-    </div>
-
-    <!-- Item Customizer Modifiers Popup -->
-    <div id="mod-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-[#dee6d0] border-4 border-[#161912] rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-[6px_6px_0px_0px_#161912]">
-            <div>
-                <h3 class="text-lg font-retro-title uppercase text-[#161912]" id="mod-item-name">Modify Cup</h3>
-                <p class="text-xs text-slate-600 font-retro-typewriter" id="mod-item-desc"></p>
+         </div>
+      </div>
+      <!-- Sticky Centered Large Cart Bar -->
+      <div id="cart-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 hidden w-11/12 max-w-sm">
+         <button onclick="toggleCartModal(true)" class="w-full flex items-center justify-between bg-[#1E140C] hover:bg-[#2D1C13] text-white font-semibold py-4 px-6 rounded-full transition shadow-2xl active:scale-[0.98]">
+            <div class="flex items-center gap-2">
+               <!-- Shopping Bag Icon -->
+               <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+               </svg>
+               <span class="font-27-title text-sm tracking-wide">VIEW MY ORDER</span>
             </div>
-            <div id="mod-options-container" class="space-y-2">
-                <!-- Checkboxes populated automatically -->
+            <!-- Highlighted item count badge -->
+            <span class="bg-white text-[#1E140C] text-xs font-bold px-3 py-1 rounded-full shadow-inner">
+            <span id="cart-count">0</span> items
+            </span>
+         </button>
+      </div>
+      <!-- Review Tray Checkout Dialog (Optimized Mobile Drawer) -->
+      <div id="cart-modal" class="fixed inset-0 bg-black/50 z-45 flex items-end justify-center hidden" onclick="closeCartOnBackdrop(event)">
+         <!-- Elegant Card Drawer (Responsive p-4 on mobile, p-6 on tablet/desktop) -->
+         <div class="bg-[#eae6dd] border-t border-[#735647]/30 rounded-t-3xl w-full max-w-xl p-4 sm:p-6 space-y-5 max-h-[90vh] flex flex-col justify-between shadow-2xl" onclick="event.stopPropagation()">
+            <!-- Header (Playfair Display) -->
+            <div class="flex justify-between items-center pb-3 border-b border-[#735647]/10">
+               <h3 class="text-2xl font-27-title font-bold text-[#735647]">Your Order</h3>
+               <!-- Styled Close Icon with expanded touch target -->
+               <button onclick="toggleCartModal(false)" class="text-[#735647]/60 hover:text-[#735647] text-3xl font-light leading-none transition p-2">&times;</button>
             </div>
-            
-            <!-- Modifier Modal Quantity Controls -->
-            <div class="flex justify-between items-center border-t-2 border-dashed border-[#161912] pt-4">
-                <span class="text-xs font-bold uppercase text-slate-500">How many cups?</span>
-                <div class="flex items-center gap-3 border-2 border-[#161912] bg-white rounded-lg p-1">
-                    <button type="button" onclick="adjustModalQty(-1)" class="w-8 h-8 flex items-center justify-center font-bold text-lg hover:bg-slate-100 rounded">-</button>
-                    <span id="mod-qty-display" class="w-8 text-center font-bold">1</span>
-                    <button type="button" onclick="adjustModalQty(1)" class="w-8 h-8 flex items-center justify-center font-bold text-lg hover:bg-slate-100 rounded">+</button>
-                </div>
+            <!-- Items list (Scrolls independently) -->
+            <div id="cart-items" class="overflow-y-auto space-y-4 flex-1 pr-2 scrollbar-none divide-y-0">
+               <!-- Cart items load here -->
             </div>
-
-            <div class="flex gap-2 pt-2">
-                <button onclick="closeModifierModal()" class="w-1/2 border-2 border-[#161912] bg-white hover:bg-slate-100 text-[#161912] font-bold py-2.5 rounded-lg text-sm transition active:translate-y-0.5">Cancel</button>
-                <button onclick="addSelectedToCart()" class="w-1/2 border-2 border-[#161912] bg-[#6f8a38] hover:bg-[#4b5a2c] text-white font-retro-title py-2.5 rounded-lg text-xs transition active:translate-y-0.5">Add to Order</button>
+            <hr class="border-[#735647]/20">
+            <!-- Total Block -->
+            <div class="pt-2">
+               <div class="flex justify-between font-27-title text-xl text-[#735647] font-bold">
+                  <span>Total</span>
+                  <span id="modal-total" class="font-extrabold text-2xl">0 Ks</span>
+               </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Review Checkout Dialog -->
-    <div id="cart-modal" class="fixed inset-0 bg-black/50 z-40 flex items-end justify-center hidden">
-        <div class="bg-[#dee6d0] border-t-4 border-x-4 border-[#161912] rounded-t-3xl w-full max-w-xl p-6 space-y-4 max-h-[90vh] flex flex-col justify-between">
-            <div class="flex justify-between items-center border-b-2 border-[#161912] pb-3">
-                <h3 class="text-lg font-retro-title uppercase">Your Tray</h3>
-                <button onclick="toggleCartModal(false)" class="text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
-            </div>
-            
-            <div id="cart-items" class="overflow-y-auto space-y-3 flex-1 pr-2">
-                <!-- Selected tray list elements -->
-            </div>
-
-            <div class="border-t-2 border-[#161912] pt-3">
-                <div class="flex justify-between font-retro-title text-xl text-[#161912]">
-                    <span>TOTAL</span>
-                    <span id="modal-total">$0.00</span>
-                </div>
-            </div>
-
-            <button onclick="submitOrder()" class="w-full border-2 border-[#161912] bg-emerald-700 hover:bg-emerald-800 text-white font-retro-title py-3 rounded-xl transition active:translate-y-0.5 shadow-[2px_2px_0px_0px_#161912]">
-                Proceed to Checkout
+            <!-- Place Order Action Button (Solid dark brown rounded button) -->
+            <button onclick="submitOrder()" class="w-full bg-[#22150E] hover:bg-[#341D14] text-white font-retro-title py-4 rounded-2xl text-base font-bold transition active:scale-95 shadow-md">
+            Place Order
             </button>
-        </div>
-    </div>
-
-    <!-- Simulated Gateway Payment Modal -->
-    <div id="payment-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-[#dee6d0] border-4 border-[#161912] rounded-2xl w-full max-w-xs p-6 text-center space-y-4 shadow-[8px_8px_0px_0px_#161912]">
-            <div class="mx-auto w-12 h-12 rounded-full border-2 border-[#161912] bg-emerald-100 flex items-center justify-center text-emerald-800 font-black text-lg">✓</div>
-            <h3 class="font-retro-title text-lg uppercase text-[#161912]">Authorize Bill</h3>
-            <p class="text-xs text-slate-600 font-retro-typewriter">Simulating Secure Payment Handshake. Authorizing will release your order directly to the kitchen display screen.</p>
-            <div class="border-2 border-[#161912] bg-white p-3 rounded-xl font-mono text-sm font-bold">
-                <span>Amount Due: </span><span id="pay-amount" class="text-amber-700">$0.00</span>
-            </div>
-            <button onclick="confirmPayment()" class="w-full border-2 border-[#161912] bg-emerald-700 hover:bg-emerald-800 text-white font-retro-title py-2.5 rounded-lg text-sm transition active:translate-y-0.5">
-                Confirm & Pay
+         </div>
+      </div>
+      <!-- Simulated Gateway Payment Modal -->
+      <div id="payment-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden p-4">
+         <!-- Upgraded w-11/12 max-w-xs to prevent container clipping on small viewports -->
+         <div class="bg-[#eae6dd] border-4 border-[#735647]/30 rounded-2xl w-11/12 max-w-xs p-6 text-center space-y-4 shadow-2xl relative">
+            <button onclick="document.getElementById('payment-modal').classList.add('hidden')" 
+               class="absolute top-3 right-3 text-[#735647]/60 hover:text-[#735647] text-2xl font-light leading-none p-2">
+            &times;
             </button>
-        </div>
-    </div>
-
-    <script>
-        const API_BASE = `${window.location.origin}/api/v1`;
-        
-        // Secure tokens generated by the Manager panel
-        const urlParams = new URLSearchParams(window.location.search);
-        const tableId = urlParams.get('table');
-        const secureToken = urlParams.get('token');
-
-        let menuItems = [];
-        let cart = []; // Array of { item, selectedModifiers: [], quantity }
-        let pendingOrderId = null;
-        let activeSelection = null; 
-        let modalQuantity = 1; // Track quantity inside modifier popup
-
-        async function verifyAndLoad() {
-            if (!tableId || !secureToken) {
-                document.getElementById('security-warning').classList.remove('hidden');
-                return;
-            }
-
-            document.getElementById('validation-gate').classList.remove('hidden');
-            await fetchMenu();
-        }
-
-        async function fetchMenu() {
-            try {
-                const response = await fetch(`${API_BASE}/menu/`);
-                menuItems = await response.json();
-                renderMenu();
-                renderStaticAddonsList();
-            } catch (err) {
-                console.error("Failed to query catalog.");
-            }
-        }
-
-        // --- NEW: DYNAMIC CATEGORY DISTRIBUTION RENDERING ENGINE ---
-        function renderMenu() {
-            const leftCol = document.getElementById('left-categories-container');
-            const rightCol = document.getElementById('right-categories-container');
-
-            leftCol.innerHTML = "";
-            rightCol.innerHTML = "";
-
-            // Group items from database by their category names dynamically
-            const categories = {};
-            menuItems.forEach(item => {
-                if (!categories[item.category]) {
-                    categories[item.category] = [];
-                }
-                categories[item.category].push(item);
-            });
-
-            // Iterate over each dynamic category
-            let columnIndex = 0;
-            for (const [categoryName, items] of Object.entries(categories)) {
+            <div class="mx-auto w-12 h-12 rounded-full border border-[#735647]/20 bg-emerald-100 flex items-center justify-center text-emerald-800 font-black text-lg">✓</div>
+            <h3 class="font-27-title text-xl font-bold text-[#735647]">Authorize Bill</h3>
+            <p class="text-xs text-slate-500">Simulating Secure Payment Handshake. Authorizing will release your order directly to the kitchen display screen.</p>
+            <div class="border-2 border-[#161912] bg-white p-3 rounded-xl font-mono text-base font-bold">
+               <span>Amount Due: </span><span id="pay-amount" class="text-amber-800">0 Ks</span>
+            </div>
+            <button onclick="confirmPayment()" class="w-full border-2 border-[#161912] bg-[#1E140C] hover:bg-[#2D1C13] text-white font-retro-title py-2.5 rounded-lg text-sm transition active:scale-95">
+            Confirm & Pay
+            </button>
+            <hr class="border-[#735647]/20 my-2">
+            <div class="flex justify-between items-center text-[10px] text-[#735647]/70 uppercase tracking-widest font-semibold">
+               <span class="truncate mr-2">Thank you for supporting 27 Cafe</span>
+               <span class="shrink-0">@27cafe_user</span>
+            </div>
+         </div>
+      </div>
+      <script>
+         const API_BASE = `${window.location.origin}/api/v1`;
+         
+         // Secure table and validation matching parameters
+         const urlParams = new URLSearchParams(window.location.search);
+         const tableId = urlParams.get('table');
+         const secureToken = urlParams.get('token');
+         
+         let menuItems = [];
+         let cart = []; 
+         let pendingOrderId = null;
+         
+         // Aesthetic default fallback images if no photo is uploaded by the manager
+         const juiceImages = {
+             "squeeze": "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=400&q=80",
+             "orange": "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=400&q=80",
+             "trio": "https://images.unsplash.com/photo-1582281298055-e25b84a30b0b?auto=format&fit=crop&w=400&q=80",
+             "garden": "https://images.unsplash.com/photo-1628556264797-122e2392761a?auto=format&fit=crop&w=400&q=80",
+             "lemon": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80",
+             "berry": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=400&q=80",
+             "apple": "https://images.unsplash.com/photo-1512484776495-a09d92e87c3b?auto=format&fit=crop&w=400&q=80",
+             "pineapple": "https://images.unsplash.com/photo-1589733901241-5e53429e145e?auto=format&fit=crop&w=400&q=80",
+             "default": "https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=400&q=80",
+         
+             // --- NEW: Dynamic Cake and Bakery Fallbacks ---
+             "cake": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=400&q=80",
+             "dessert": "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=400&q=80",
+             "bakery": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
+         
+             "default": "https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=400&q=80"
+         };
+         
+         function getJuiceImage(name) {
+             const lowercaseName = name.toLowerCase();
+             for (const [key, url] of Object.entries(juiceImages)) {
+                 if (lowercaseName.includes(key)) return url;
+             }
+             return juiceImages.default;
+         }
+         
+         async function verifyAndLoad() {
+             if (!tableId || !secureToken) {
+                 document.getElementById('security-warning').classList.remove('hidden');
+                 return;
+             }
+         
+             document.getElementById('validation-gate').classList.remove('hidden');
+             await fetchMenu();
+         }
+         
+         async function fetchMenu() {
+             try {
+                 const response = await fetch(`${API_BASE}/menu/`);
+                 menuItems = await response.json();
+                 renderMenu();
+                 renderStaticAddonsList();
+             } catch (err) {
+                 console.error("Failed to query catalog.");
+             }
+         }
+         
+         // --- RENDER DYNAMIC 27 CAFE STRUCTURES ---
+         function renderMenu() {
+             const standardContainer = document.getElementById('standard-categories-container');
+             const juiceContainer = document.getElementById('juice-categories-container');
+         
+             standardContainer.innerHTML = "";
+             juiceContainer.innerHTML = "";
+         
+             const categories = {};
+             menuItems.forEach(item => {
+                 if (!categories[item.category]) categories[item.category] = [];
+                 categories[item.category].push(item);
+             });
+         
+             for (const [categoryName, items] of Object.entries(categories)) {
+                const normalizedCategory = categoryName.toLowerCase();
                 
-                // Create clean HTML wrapper for this section
+                // Matches "juice", "fresh juice", "cake", "dessert", "bakery", etc.
+                const isPhotoCategory = normalizedCategory.includes('juice') || 
+                                        normalizedCategory.includes('cake') || 
+                                        normalizedCategory.includes('dessert') || 
+                                        normalizedCategory.includes('bakery');
+         
                 const sectionDiv = document.createElement('div');
-                sectionDiv.className = "menu-section space-y-4 mb-4";
-                
-                const itemsHtml = items.map(item => {
-                    const isSoldOut = item.stock !== null && item.stock <= 0;
-                    return `
-                        <div class="flex justify-between items-start text-sm group">
-                            <div class="flex-1 pr-4 cursor-pointer" onclick="${isSoldOut ? '' : `openModifierModal(${item.id})`}">
-                                <div class="flex justify-between font-bold text-[#161912]">
-                                    <span class="hover:text-[#6f8a38] transition">${item.name}</span>
-                                    <span>$${item.price.toFixed(2)}</span>
-                                </div>
-                                <p class="text-xs text-slate-500 font-retro-typewriter mt-0.5">${item.description || ''}</p>
-                                ${item.stock !== null ? `<span class="text-[9px] bg-[#a5b28d]/20 text-[#4b5a2c] px-1.5 py-0.5 rounded font-mono">Stock: ${item.stock}</span>` : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join("");
-
-                sectionDiv.innerHTML = `
-                    <div class="flex items-center gap-2 mb-4">
-                        <h3 class="font-retro-title text-lg uppercase whitespace-nowrap text-[#161912]">${categoryName}</h3>
-                        <div class="h-0.5 w-full bg-[#161912]"></div>
-                    </div>
-                    <div class="space-y-4">
-                        ${itemsHtml}
-                    </div>
-                `;
-
-                // Distribute category sections evenly across Left and Right grid columns
-                if (columnIndex % 2 === 0) {
-                    leftCol.appendChild(sectionDiv);
-                } else {
-                    rightCol.appendChild(sectionDiv);
-                }
-                
-                columnIndex++;
-            }
-        }
-
-        function renderStaticAddonsList() {
-            const container = document.getElementById('addons-list-container');
-            container.innerHTML = "";
-
-            const allModifiersMap = {};
-            menuItems.forEach(item => {
-                item.modifiers.forEach(mod => {
-                    allModifiersMap[mod.name] = mod.price;
-                });
-            });
-
-            const uniqueModifiers = Object.entries(allModifiersMap);
-            if (uniqueModifiers.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-100 italic text-center">No additional add-ons today.</p>`;
-                return;
-            }
-
-            uniqueModifiers.forEach(([name, price]) => {
-                const div = document.createElement('div');
-                div.className = "flex justify-between border-b border-white/20 pb-1";
-                div.innerHTML = `
-                    <span>${name}</span>
-                    <span>$${price.toFixed(2)}</span>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // Modifiers Logic & Quantity Customizer
-        function openModifierModal(itemId) {
-            const item = menuItems.find(i => i.id === itemId);
-            if (!item) return;
-
-            activeSelection = { item, selectedModifiers: [] };
-            modalQuantity = 1; // Reset to 1 cup
-            document.getElementById('mod-qty-display').innerText = modalQuantity;
-
-            document.getElementById('mod-item-name').innerText = item.name;
-            document.getElementById('mod-item-desc').innerText = item.description || 'Select extra add-ons below:';
-
-            const optionsContainer = document.getElementById('mod-options-container');
-            optionsContainer.innerHTML = "";
-
-            if (item.modifiers.length === 0) {
-                optionsContainer.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">No modifiers available for this item.</p>`;
-            } else {
-                item.modifiers.forEach(mod => {
-                    const div = document.createElement('label');
-                    div.className = "flex justify-between items-center p-3 border-2 border-[#161912] bg-white hover:bg-slate-50 rounded-lg cursor-pointer text-sm font-semibold select-none";
-                    div.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" value="${mod.id}" onchange="toggleModSelection(${mod.id}, this.checked)" class="rounded text-amber-600 focus:ring-[#161912] w-4 h-4 border-2 border-[#161912]">
-                            <span>${mod.name}</span>
-                        </div>
-                        <span class="text-amber-800">+$${mod.price.toFixed(2)}</span>
-                    `;
-                    optionsContainer.appendChild(div);
-                });
-            }
-
-            document.getElementById('mod-modal').classList.remove('hidden');
-        }
-
-        function adjustModalQty(change) {
-            modalQuantity += change;
-            if (modalQuantity < 1) modalQuantity = 1;
-            document.getElementById('mod-qty-display').innerText = modalQuantity;
-        }
-
-        function toggleModSelection(modId, checked) {
-            if (checked) {
-                const mod = activeSelection.item.modifiers.find(m => m.id === modId);
-                activeSelection.selectedModifiers.push(mod);
-            } else {
-                activeSelection.selectedModifiers = activeSelection.selectedModifiers.filter(m => m.id !== modId);
-            }
-        }
-
-        function closeModifierModal() {
-            document.getElementById('mod-modal').classList.add('hidden');
-            activeSelection = null;
-        }
-
-        function addSelectedToCart() {
-            const matchedCartItem = cart.find(cartItem => 
-                cartItem.item.id === activeSelection.item.id &&
-                JSON.stringify(cartItem.selectedModifiers.map(m => m.id).sort()) === JSON.stringify(activeSelection.selectedModifiers.map(m => m.id).sort())
-            );
-
-            if (matchedCartItem) {
-                matchedCartItem.quantity += modalQuantity;
-            } else {
-                cart.push({
-                    item: activeSelection.item,
-                    selectedModifiers: [...activeSelection.selectedModifiers],
-                    quantity: modalQuantity
-                });
-            }
-
-            closeModifierModal();
-            updateCartSummary();
-        }
-
-        function updateCartSummary() {
-            let total = 0;
-            let count = 0;
-
-            cart.forEach(cartItem => {
-                let itemTotal = cartItem.item.price;
-                cartItem.selectedModifiers.forEach(m => itemTotal += m.price);
-                total += itemTotal * cartItem.quantity;
-                count += cartItem.quantity;
-            });
-
-            const cartBar = document.getElementById('cart-bar');
-            if (count > 0) {
-                cartBar.classList.remove('hidden');
-                document.getElementById('cart-total').innerText = `$${total.toFixed(2)}`;
-                document.getElementById('cart-count').innerText = count;
-            } else {
-                cartBar.classList.add('hidden');
-            }
-        }
-
-        function toggleCartModal(show) {
-            const modal = document.getElementById('cart-modal');
-            if (show) {
-                modal.classList.remove('hidden');
-                renderCartModalItems();
-            } else {
-                modal.classList.add('hidden');
-            }
-        }
-
-        function renderCartModalItems() {
-            const container = document.getElementById('cart-items');
-            container.innerHTML = "";
-            let total = 0;
-
-            cart.forEach((cartItem, index) => {
-                let itemTotal = cartItem.item.price;
-                const modsStr = cartItem.selectedModifiers.map(m => {
-                    itemTotal += m.price;
-                    return `+ ${m.name} (+$${m.price.toFixed(2)})`;
-                }).join('<br>');
-
-                total += itemTotal * cartItem.quantity;
-
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center py-3 border-b-2 border-dashed border-[#161912] text-sm gap-4";
-                div.innerHTML = `
-                    <div class="flex-1">
-                        <p class="font-bold text-slate-800">${cartItem.item.name}</p>
-                        ${modsStr ? `<p class="text-[10px] text-slate-500 leading-relaxed mt-1">${modsStr}</p>` : ''}
-                        <p class="text-xs text-amber-850 font-bold mt-1">$${itemTotal.toFixed(2)} each</p>
-                    </div>
-                    
-                    <div class="flex items-center gap-2 border-2 border-[#161912] bg-white rounded-lg p-1">
-                        <button onclick="adjustCartItemQty(${index}, -1)" class="w-6 h-6 flex items-center justify-center font-bold text-sm hover:bg-slate-100 rounded">-</button>
-                        <span class="w-6 text-center font-bold">${cartItem.quantity}</span>
-                        <button onclick="adjustCartItemQty(${index}, 1)" class="w-6 h-6 flex items-center justify-center font-bold text-sm hover:bg-slate-100 rounded">+</button>
-                    </div>
-
-                    <div class="text-right flex flex-col items-end gap-1">
-                        <span class="font-bold text-slate-700 font-retro-title">$${(itemTotal * cartItem.quantity).toFixed(2)}</span>
-                        <button onclick="removeCartItem(${index})" class="text-red-600 hover:text-red-800 text-xs underline uppercase font-bold tracking-wider">Remove</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-            document.getElementById('modal-total').innerText = `$${total.toFixed(2)}`;
-        }
-
-        function adjustCartItemQty(index, change) {
-            cart[index].quantity += change;
-            if (cart[index].quantity < 1) {
-                removeCartItem(index);
-            } else {
-                renderCartModalItems();
-                updateCartSummary();
-            }
-        }
-
-        function removeCartItem(index) {
-            cart.splice(index, 1);
-            renderCartModalItems();
-            updateCartSummary();
-            if (cart.length === 0) toggleCartModal(false);
-        }
-
-        async function submitOrder() {
-            const itemsPayload = cart.map(cartItem => ({
-                menu_item_id: cartItem.item.id,
-                quantity: cartItem.quantity,
-                notes: "",
-                modifier_ids: cartItem.selectedModifiers.map(m => m.id)
-            }));
-
-            try {
-                const response = await fetch(`${API_BASE}/menu/order`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        table_id: parseInt(tableId),
-                        token: secureToken,
-                        items: itemsPayload
-                    })
-                });
-
-                if (response.ok) {
-                    const orderData = await response.json();
-                    pendingOrderId = orderData.id;
-                    
-                    toggleCartModal(false);
-                    document.getElementById('pay-amount').innerText = `$${orderData.total_price.toFixed(2)}`;
-                    document.getElementById('payment-modal').classList.remove('hidden');
-                } else {
-                    const errObj = await response.json();
-                    alert(`Order placement failed: ${errObj.detail || 'Internal error'}`);
-                }
-            } catch (err) {
-                alert("Network connectivity issue.");
-            }
-        }
-
-        async function confirmPayment() {
-            try {
-                const response = await fetch(`${API_BASE}/menu/order/${pendingOrderId}/mock-pay`, {
-                    method: 'POST'
-                });
-                if (response.ok) {
-                    alert("Order processed successfully! Your request has been sent to the kitchen display screen.");
-                    cart = [];
-                    updateCartSummary();
-                    document.getElementById('payment-modal').classList.add('hidden');
-                    fetchMenu();
-                } else {
-                    alert("Authorization failed on payment gateway.");
-                }
-            } catch (err) {
-                alert("Network failure processing payment.");
-            }
-        }
-
-        async function summonService(type) {
-            try {
-                const response = await fetch(`${API_BASE}/menu/call-waiter?table_id=${tableId}&request_type=${type}`, {
-                    method: 'POST'
-                });
-                if (response.ok) {
-                    alert(`Alert Sent: Waiting staff notified of request: "${type}".`);
-                }
-            } catch (e) {
-                console.error("Alert dispatch failed.");
-            }
-        }
-
-        verifyAndLoad();
-    </script>
-</body>
+                sectionDiv.className = "space-y-4 relative";
+         
+                if (isPhotoCategory) {
+                     // --- DYNAMIC FRESH JUICES CAROUSEL (FLOATING STYLE & EXPANDED CARD PROPORTIONS) ---
+                     const cardsHtml = items.map(item => {
+                         const isSoldOut = item.stock !== null && item.stock <= 0;
+                         const imgUrl = item.image_url ? item.image_url : getJuiceImage(item.name);
+         
+                         const cartItem = cart.find(c => c.item.id === item.id);
+                         const quantityInCart = cartItem ? cartItem.quantity : 0;
+         
+                         return `
+                             <!-- Floating Card with direct Tap-to-Order -->
+                             <div class="snap-start flex-none w-44 sm:w-48 flex flex-col cursor-pointer active:scale-95 transition duration-200" onclick="${isSoldOut ? '' : `addToCartDirect(${item.id})`}">
+                                 <!-- Rounded Photo with deep soft drop shadow (Scaled up h-56) -->
+                                 <div class="relative h-48 sm:h-56 w-full rounded-3xl overflow-hidden shadow-xl border border-[#9d958c]/25 hover:shadow-2xl transition duration-300">
+                                     <img src="${imgUrl}" class="h-full w-full object-cover" alt="${item.name}">
+                                     
+                                     <!-- Quantity Badge Overlay on Top-Left of the photo -->
+                                     ${quantityInCart > 0 ? `
+                                         <div class="absolute top-3 left-3 bg-[#735647] text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md animate-scale">
+                                             ${quantityInCart}x
+                                         </div>
+                                     ` : ''}
+         
+                                     ${isSoldOut ? `
+                                         <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                             <span class="text-xs bg-red-600 text-white font-bold px-2.5 py-1.5 rounded-lg">Sold Out</span>
+                                         </div>
+                                     ` : ''}
+                                 </div>
+                                 <!-- Clean Name Centered Below -->
+                                 <h4 class="font-27-title font-black text-sm md:text-base text-[#735647] text-center mt-3 whitespace-normal leading-snug">${item.name}</h4>
+                                 <!-- Price Centered Below Name -->
+                                 <p class="font-27-title font-extrabold text-sm md:text-base text-[#4b5a2c] text-center mt-1.5">${item.price.toFixed(0)} Ks</p>
+                             </div>
+                         `;
+                     }).join("");
+         
+                     sectionDiv.innerHTML = `
+                         <!-- Juice Swiper Header -->
+                         <div class="flex flex-col border-b-2 border-[#735647]/20 pb-3">
+                             <h3 class="font-27-title text-2xl font-bold uppercase tracking-wider">${categoryName}</h3>
+                             <span class="text-xs uppercase tracking-wider text-[#9d958c] font-semibold mt-1">Swipe to explore →</span>
+                         </div>
+                         <!-- Horizontal Swipe Wrapper -->
+                         <div class="flex overflow-x-auto snap-x snap-mandatory gap-6 scrollbar-none py-2 px-1">
+                             ${cardsHtml}
+                         </div>
+                     `;
+                     
+                     juiceContainer.appendChild(sectionDiv);
+         
+                 } else {
+                     // --- STANDARD CLASSY VERTICAL LISTS ---
+                     const itemsHtml = items.map(item => {
+                         const isSoldOut = item.stock !== null && item.stock <= 0;
+         
+                         const cartItem = cart.find(c => c.item.id === item.id);
+                         const quantityInCart = cartItem ? cartItem.quantity : 0;
+         
+                         return `
+                             <div class="flex justify-between items-start text-sm py-4 cursor-pointer active:scale-[0.99] transition duration-150 border-b border-[#735647]/10" onclick="${isSoldOut ? '' : `addToCartDirect(${item.id})`}">
+                                 <div class="flex-1 pr-6">
+                                     <div class="flex items-center gap-2">
+                                         <!-- Scaled up Item Name -->
+                                         <h4 class="font-27-title font-extrabold text-base md:text-lg text-[#735647] hover:text-[#9d958c] transition">${item.name}</h4>
+                                         <!-- Dynamic inline item-count badge -->
+                                         ${quantityInCart > 0 ? `
+                                             <span class="bg-[#735647] text-white text-xs font-bold px-2 py-0.5 rounded-full">${quantityInCart}x</span>
+                                         ` : ''}
+                                     </div>
+                                     <!-- Scaled up Item Description -->
+                                     <p class="text-xs md:text-sm text-slate-600 mt-1 leading-relaxed font-normal">${item.description || ''}</p>
+                                     ${item.stock !== null ? `<span class="text-[10px] bg-slate-200/50 text-[#735647] px-1.5 py-0.5 rounded font-mono">Stock: ${item.stock}</span>` : ''}
+                                 </div>
+                                 <!-- Scaled up Price display -->
+                                 <div class="flex items-center gap-2.5 font-27-title font-black text-base md:text-lg text-[#735647]">
+                                     <span class="text-slate-300 font-normal">|</span>
+                                     <span>${item.price.toFixed(0)} Ks</span>
+                                 </div>
+                             </div>
+                         `;
+                     }).join("");
+         
+                     sectionDiv.innerHTML = `
+                         <!-- Scaled up Header -->
+                         <h3 class="font-27-title text-2xl md:text-3xl font-black uppercase tracking-wider border-b-2 border-[#735647]/15 pb-3">${categoryName}</h3>
+                         <div class="divide-y divide-dashed divide-[#735647]/10">
+                             ${itemsHtml}
+                         </div>
+                     `;
+         
+                     standardContainer.appendChild(sectionDiv);
+                 }
+             }
+         }
+         
+         // Render dynamic ADD-ONS Card
+         function renderStaticAddonsList() {
+             const container = document.getElementById('addons-list-container');
+             container.innerHTML = "";
+         
+             const allModifiersMap = {};
+             menuItems.forEach(item => {
+                 item.modifiers.forEach(mod => {
+                     allModifiersMap[mod.name] = mod.price;
+                 });
+             });
+         
+             const uniqueModifiers = Object.entries(allModifiersMap);
+             if (uniqueModifiers.length === 0) {
+                 container.innerHTML = `<p class="text-xs text-slate-100 italic text-center">No additional add-ons today.</p>`;
+                 return;
+             }
+         
+             uniqueModifiers.forEach(([name, price]) => {
+                 const div = document.createElement('div');
+                 div.className = "flex justify-between border-b border-white/20 pb-2 text-sm md:text-base";
+                 div.innerHTML = `
+                     <span class="font-medium">${name}</span>
+                     <span class="font-bold">${price.toFixed(0)} Ks</span>
+                 `;
+                 container.appendChild(div);
+             });
+         }
+         
+         // Handles high-speed tap-to-add order placement
+         function addToCartDirect(itemId) {
+             const item = menuItems.find(i => i.id === itemId);
+             if (!item) return;
+         
+             const matchedCartItem = cart.find(cartItem => cartItem.item.id === itemId);
+         
+             if (matchedCartItem) {
+                 matchedCartItem.quantity += 1;
+             } else {
+                 cart.push({
+                     item: item,
+                     selectedModifiers: [], 
+                     quantity: 1
+                 });
+             }
+         
+             updateCartSummary();
+             renderMenu(); 
+         }
+         
+         function updateCartSummary() {
+             let total = 0;
+             let count = 0;
+         
+             cart.forEach(cartItem => {
+                 let itemTotal = cartItem.item.price;
+                 cartItem.selectedModifiers.forEach(m => itemTotal += m.price);
+                 total += itemTotal * cartItem.quantity;
+                 count += cartItem.quantity;
+             });
+         
+             const cartBar = document.getElementById('cart-bar');
+             const cartModal = document.getElementById('cart-modal');
+             const paymentModal = document.getElementById('payment-modal');
+         
+             if (count > 0) {
+                 document.getElementById('cart-count').innerText = count;
+                 
+                 // Hide floating bar if checkout trays or payment gates are active
+                 if (cartModal.classList.contains('hidden') && paymentModal.classList.contains('hidden')) {
+                     cartBar.classList.remove('hidden');
+                 } else {
+                     cartBar.classList.add('hidden');
+                 }
+             } else {
+                 cartBar.classList.add('hidden');
+             }
+         }
+         
+         function toggleCartModal(show) {
+             const modal = document.getElementById('cart-modal');
+             if (show) {
+                 modal.classList.remove('hidden');
+                 renderCartModalItems();
+             } else {
+                 modal.classList.add('hidden');
+             }
+             updateCartSummary(); // Dynamic visibility update
+         }
+         
+         // Backdrop click trigger closes the cart tray safely
+         function closeCartOnBackdrop(event) {
+             toggleCartModal(false);
+         }
+         
+         // --- UPDATED: Renders list items matching layout in input_file_4.png ---
+         function renderCartModalItems() {
+             const container = document.getElementById('cart-items');
+             container.innerHTML = "";
+             let total = 0;
+         
+             cart.forEach((cartItem, index) => {
+                 let itemTotal = cartItem.item.price;
+                 cartItem.selectedModifiers.forEach(m => itemTotal += m.price);
+         
+                 const rowSubtotal = itemTotal * cartItem.quantity;
+                 total += rowSubtotal;
+         
+                 // Mathematical format: "unit_price x quantity = subtotal"
+                 const mathBreakdown = `${itemTotal.toFixed(0)} &times; ${cartItem.quantity} = ${rowSubtotal.toFixed(0)}`;
+         
+                 const div = document.createElement('div');
+                 div.className = "flex justify-between items-center py-3 text-sm gap-4";
+                 
+                 div.innerHTML = `
+                     <!-- Left: Product Name & Formula breakdown -->
+                     <div class="flex-1 min-w-[120px]">
+                         <p class="font-bold text-[#735647] text-base md:text-lg leading-tight">${cartItem.item.name}</p>
+                         <p class="text-xs text-slate-500 font-retro-typewriter mt-1">${mathBreakdown}</p>
+                     </div>
+                     
+                     <!-- Right: Solid Dark Circular Adjusters (+ / -) -->
+                     <div class="flex items-center gap-3">
+                         <button onclick="adjustCartItemQty(${index}, -1)" class="w-10 h-10 rounded-full bg-[#22150E] hover:bg-[#341D14] text-white flex items-center justify-center font-bold text-lg transition active:scale-90 shadow-sm">-</button>
+                         <span class="w-6 text-center font-bold text-base text-[#735647]">${cartItem.quantity}</span>
+                         <button onclick="adjustCartItemQty(${index}, 1)" class="w-10 h-10 rounded-full bg-[#22150E] hover:bg-[#341D14] text-white flex items-center justify-center font-bold text-lg transition active:scale-90 shadow-sm">+</button>
+                     </div>
+                 `;
+                 container.appendChild(div);
+             });
+             document.getElementById('modal-total').innerText = `${total.toFixed(0)} Ks`;
+         }
+         
+         function adjustCartItemQty(index, change) {
+             cart[index].quantity += change;
+             if (cart[index].quantity < 1) {
+                 removeCartItem(index);
+             } else {
+                 renderCartModalItems();
+                 updateCartSummary();
+                 renderMenu(); 
+             }
+         }
+         
+         function removeCartItem(index) {
+             cart.splice(index, 1);
+             renderCartModalItems();
+             updateCartSummary();
+             renderMenu(); 
+             if (cart.length === 0) toggleCartModal(false);
+         }
+         
+         async function submitOrder() {
+             const itemsPayload = cart.map(cartItem => ({
+                 menu_item_id: cartItem.item.id,
+                 quantity: cartItem.quantity,
+                 notes: "",
+                 modifier_ids: cartItem.selectedModifiers.map(m => m.id)
+             }));
+         
+             try {
+                 const response = await fetch(`${API_BASE}/menu/order`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                         table_id: parseInt(tableId),
+                         token: secureToken,
+                         items: itemsPayload
+                     })
+                 });
+         
+                 if (response.ok) {
+                     const orderData = await response.json();
+                     pendingOrderId = orderData.id;
+                     
+                     // Close the tray cleanly
+                     document.getElementById('cart-modal').classList.add('hidden');
+                     
+                     // Launch payment confirmation gate
+                     document.getElementById('pay-amount').innerText = `${orderData.total_price.toFixed(0)} Ks`;
+                     document.getElementById('payment-modal').classList.remove('hidden');
+         
+                     updateCartSummary(); // Will hide the floating View My Order bar
+                 } else {
+                     const errObj = await response.json();
+                     alert(`Order placement failed: ${errObj.detail || 'Internal error'}`);
+                 }
+             } catch (err) {
+                 alert("Network connectivity issue.");
+             }
+         }
+         
+         async function confirmPayment() {
+             try {
+                 const response = await fetch(`${API_BASE}/menu/order/${pendingOrderId}/mock-pay`, {
+                     method: 'POST'
+                 });
+                 if (response.ok) {
+                     const modal = document.getElementById('payment-modal');
+                     if(modal){
+                         modal.style.disply ='none';
+                         modal.classList.add('hidden');
+                     }
+                     
+                     cart = [];
+                     updateCartSummary(); // Clears floating bar automatically
+                     fetchMenu();
+                 } else {
+                     alert("Authorization failed on payment gateway.");
+                 }
+             } catch (err) {
+                 alert("Network failure processing payment.");
+             }
+         }
+         
+         async function summonService(type) {
+             try {
+                 const response = await fetch(`${API_BASE}/menu/call-waiter?table_id=${tableId}&request_type=${type}`, {
+                     method: 'POST'
+                 });
+                 if (response.ok) {
+                     alert("Alert Sent: Waiting staff notified.");
+                 }
+             } catch (e) {
+                 console.error("Alert dispatch failed.");
+             }
+         }
+         
+         verifyAndLoad();
+      </script>
+   </body>
 </html>

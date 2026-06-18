@@ -34,7 +34,10 @@ class MenuItem(Base):
     price = Column(Float, nullable=False)
     category = Column(String, nullable=False)
     is_available = Column(Boolean, default=True)
-    stock = Column(Integer, nullable=True) # None = Infinite stock
+    stock = Column(Integer, nullable=True)
+    
+    # NEW: Stores the server path of your uploaded menu item photos
+    image_url = Column(String, nullable=True) 
 
     modifiers = relationship("MenuItemModifier", back_populates="menu_item", cascade="all, delete-orphan")
 
@@ -85,3 +88,10 @@ class OrderItemModifier(Base):
 
     order_item = relationship("OrderItem", back_populates="selected_modifiers")
     modifier = relationship("MenuItemModifier")
+
+
+class AdminCredential(Base):
+    __tablename__ = "admin_credentials"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)

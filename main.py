@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import models, os
 from database import engine, SessionLocal
 from routers import menu, kitchen, manager
+import hashlib # Add to imports 
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -20,6 +22,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# NEW: Mount the static directory to serve static media files dynamically
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
 # Routing Modules
 app.include_router(menu.router, prefix="/api/v1")
 app.include_router(kitchen.router, prefix="/api/v1")
@@ -28,40 +34,50 @@ app.include_router(manager.router, prefix="/api/v1")
 # Static Frontend Routes
 @app.get("/menu")
 def serve_menu():
-    file_path = os.path.join("static", "menu.html")
-    return FileResponse(file_path) if os.path.exists(file_path) else {"error": "menu.html missing"}
+    return FileResponse(os.path.join("static", "menu.html"))
 
 @app.get("/kitchen")
 def serve_kitchen():
-    file_path = os.path.join("static", "kitchen.html")
-    return FileResponse(file_path) if os.path.exists(file_path) else {"error": "kitchen.html missing"}
+    return FileResponse(os.path.join("static", "kitchen.html"))
 
 @app.get("/manager")
 def serve_manager():
-    file_path = os.path.join("static", "manager.html")
-    return FileResponse(file_path) if os.path.exists(file_path) else {"error": "manager.html missing"}
+    return FileResponse(os.path.join("static", "manager.html"))
+
+
+# Simple zero-dependency secure password hasher
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
 
 @app.on_event("startup")
 def seed_initial_data():
     db = SessionLocal()
+    
+    # NEW: Seeds default manager credentials on first database creation
+    if not db.query(models.AdminCredential).first():
+        default_admin = models.AdminCredential(
+            username="admin",
+            password_hash=hash_password("adminpassword123")
+        )
+        db.add(default_admin)
+        db.commit()
+
     # Seed tables 1-10
     if not db.query(models.RestaurantTable).first():
         tables = [models.RestaurantTable(number=i) for i in range(1, 11)]
         db.add_all(tables)
         db.commit()
 
-    # Seed complex items with modifiers & stock limits
+    # Seed default menu items
     if not db.query(models.MenuItem).first():
-        americano = models.MenuItem(name="Americano", description="Americano", price=5000, category="Coffee Classics", stock=25)
-        espresso = models.MenuItem(name="Espresso", description="Espresso", price=5000, category="Coffee Classics", stock=50)
-        cappuccino = models.MenuItem(name="Cappuccino", description="Cappuccino", price=5000, category="Coffee Classics", stock=10)
+        burger = models.MenuItem(name="Cheeseburger", description="Juicy beef patty with cheddar cheese", price=8.99, category="Main", stock=25)
+        fries = models.MenuItem(name="French Fries", description="Crispy salted potato fries", price=3.49, category="Side", stock=50)
+        soda = models.MenuItem(name="Iced Soda", description="Sweet fizzy refreshing drink", price=2.49, category="Drink", stock=10)
 
-        db.add_all([americano, espresso, cappuccino])
+        db.add_all([burger, fries, soda])
         db.flush()
 
-        # Seed custom item modifiers
-        #mod1 = models.MenuItemModifier(menu_item_id=burger.id, name="Double Meat Patty", price=2.50)
-        #mod2 = models.MenuItemModifier(menu_item_id=burger.id, name="Add Smoked Bacon", price=1.50)
+        #mod1 = models.MenuItemModifier(menu_item_id=burger.#mod2 = models.MenuItemModifier(menu_item_id=burger.id, name="Add Smoked Bacon", price=1.50)
         #mod3 = models.MenuItemModifier(menu_item_id=fries.id, name="Add Extra Cheese sauce", price=0.75)
         
         #db.add_all([mod1, mod2, mod3])
