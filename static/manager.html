@@ -415,8 +415,8 @@
          
                 const data = await response.json();
                 
-                document.getElementById('stat-revenue').innerText = `$${data.total_revenue.toFixed(2)}`;
-                document.getElementById('stat-monthly-revenue').innerText = `$${data.total_monthly_revenue.toFixed(2)}`; // NEW
+                document.getElementById('stat-revenue').innerText = `${data.total_revenue.toFixed(2)} Ks`;
+                document.getElementById('stat-monthly-revenue').innerText = `${data.total_monthly_revenue.toFixed(2)} Ks`; // NEW
                 document.getElementById('stat-count').innerText = data.total_orders_completed;
                  
                  const list = document.getElementById('stat-top-items');
@@ -569,10 +569,6 @@
                              <span>Subtotal</span>
                              <span>${bill.subtotal.toFixed(2)} Ks</span>
                          </div>
-                         <div class="flex justify-between">
-                             <span>Tax (10%)</span>
-                             <span>${bill.tax_amount.toFixed(2)} Ks</span>
-                         </div>
                          <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
                              <span>GRAND TOTAL</span>
                              <span>${bill.grand_total.toFixed(2)} Ks</span>
@@ -691,10 +687,6 @@
                          <div class="flex justify-between">
                              <span>Subtotal</span>
                              <span>${bill.subtotal.toFixed(2)} Ks</span>
-                         </div>
-                         <div class="flex justify-between">
-                             <span>Tax (10%)</span>
-                             <span>${bill.tax_amount.toFixed(2)} Ks</span>
                          </div>
                          <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
                              <span>GRAND TOTAL</span>
