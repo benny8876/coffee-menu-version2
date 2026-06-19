@@ -61,11 +61,13 @@
          .animate-steam { animation: steam-rise 2.5s ease-in-out infinite; }
       </style>
    </head>
-   <!-- Updated body class with 'overflow-x-hidden' to safeguard mobile swipe layouts from clipping -->
-   <body class="text-[#874230] font-27-body min-h-screen pb-32 relative select-none overflow-x-hidden">
-      <!-- Paper Container matching proportions of menu mockup card -->
-      <div class="max-w-xl mx-auto px-4 sm:px-6 py-6 md:py-12 relative min-h-screen flex flex-col justify-between">
-         <!-- --- 1. TOP-LEFT RETRO PALM LEAF BACKGROUND WATERMARK --- -->
+   <body class="text-[#874230] font-27-body min-h-screen select-none">
+      
+      <!-- 1. MASTER WRAPPER (Handles relative positioning and overflow containment safely) -->
+      <div class="relative min-h-screen w-full overflow-x-hidden">
+         
+         <!-- --- BACKGROUND WATERMARKS --- -->
+         <!-- Top-Left Retro Palm Leaf -->
          <div class="absolute -left-16 -top-12 w-48 sm:w-72 h-auto pointer-events-none opacity-20 text-[#6f8a38]/80 z-0 select-none">
             <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
                <path d="M15,85 C35,65 65,35 85,15" />
@@ -84,7 +86,8 @@
                <path d="M72,28 Q84,32 90,40 C80,33 75,29 75,28" />
             </svg>
          </div>
-         <!-- --- 2. TOP-RIGHT RETRO MONSTERA LEAF BACKGROUND WATERMARK --- -->
+         
+         <!-- Top-Right Retro Monstera Leaf -->
          <div class="absolute -right-20 -top-12 w-56 sm:w-80 h-auto pointer-events-none opacity-20 text-[#6f8a38]/80 z-0 select-none">
             <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
                <path d="M50,90 C50,90 50,70 50,50" />
@@ -100,8 +103,8 @@
                <path d="M54,72 C62,76 70,72 78,66" />
             </svg>
          </div>
-         <!-- --- 3. NEW: BOTTOM-LEFT RETRO MONSTERA LEAF BACKGROUND WATERMARK --- -->
-         <!-- Rotated 120 degrees to fit elegantly into the bottom corner -->
+         
+         <!-- Bottom-Left Retro Monstera Leaf -->
          <div class="absolute -left-20 -bottom-16 w-56 sm:w-80 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none rotate-[120deg]">
             <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
                <path d="M50,90 C50,90 50,70 50,50" />
@@ -117,8 +120,8 @@
                <path d="M54,72 C62,76 70,72 78,66" />
             </svg>
          </div>
-         <!-- --- 4. NEW: BOTTOM-RIGHT RETRO PALM LEAF BACKGROUND WATERMARK --- -->
-         <!-- Rotated -120 degrees to fit elegantly into the bottom corner -->
+         
+         <!-- Bottom-Right Retro Palm Leaf -->
          <div class="absolute -right-16 -bottom-16 w-48 sm:w-72 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none -rotate-[120deg]">
             <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
                <path d="M15,85 C35,65 65,35 85,15" />
@@ -137,8 +140,10 @@
                <path d="M72,28 Q84,32 90,40 C80,33 75,29 75,28" />
             </svg>
          </div>
+
          <!-- Checkerboard Top Accent -->
          <div class="h-6 w-full checkerboard-border border-b-4 border-[#161912] hidden"></div>
+         
          <!-- --- CARTOON ILLUSTRATION OVERLAYS --- -->
          <!-- Character 1: Floating Happy Steaming Mug (Top Right margin) -->
          <div class="absolute right-28 top-24 w-16 h-16 opacity-20 pointer-events-none md:block animate-float">
@@ -193,81 +198,91 @@
                <path d="M58,80 Q60,90 64,90" />
             </svg>
          </div>
-         <!-- Header -->
-         <header class="relative pb-6 border-b border-[#874230]/30 mb-8 flex flex-col items-start w-full">
-            <div class="flex items-center gap-6">
-               <div class="h-40 w-40 flex items-center justify-center shrink-0">
-                  <img src="./static/logo2.jpg" alt="Cafe Logo" class="h-full w-full object-contain" onerror="this.style.display='none'">
+
+         <!-- Paper Container Contents -->
+         <div class="relative z-10 flex flex-col justify-between min-h-screen">
+            <!-- Header -->
+            <header class="relative pb-6 border-b border-[#874230]/30 mb-8 flex flex-col items-start w-full">
+               <div class="flex items-center gap-6">
+                  <!-- Scaled-down dynamic responsive heights to prevent layout crowding -->
+                  <div class="h-20 sm:h-28 md:h-36 lg:h-40 w-auto flex items-center justify-center shrink-0">
+                     <img src="./static/logo2.jpg" alt="Cafe Logo" class="h-full w-full object-contain" onerror="this.style.display='none'">
+                  </div>
+                  <div class="space-y-1">
+                     <h1 style="font-family: 'Revans', sans-serif;" class="font-27-title tracking-tight leading-none text-[#602D1F]">
+                        <span class="font-bold text-5xl sm:text-7xl select-none">27</span>
+                        <span class="font-normal text-4xl sm:text-6xl select-none">cafe</span>
+                     </h1>
+                     <p style="font-family: 'Revans', sans-serif;" class="text-[12px] tracking-[0.25em] font-semibold text-[#602D1F] pl-1">
+                        Cafe & Bar 
+                     </p>
+                  </div>
                </div>
-               <div class="space-y-1">
-                  <h1 style="font-family: 'Revans', sans-serif;" class="font-27-title tracking-tight leading-none text-[#602D1F]">
-                     <span class="font-bold text-7xl select-none">27</span>
-                     <span class="font-normal text-6xl select-none">cafe</span>
-                  </h1>
-                  <p style="font-family: 'Revans', sans-serif;" class="text-[12px] tracking-[0.25em] font-semibold text-[#602D1F] pl-1">
-                     Cafe & Bar 
-                  </p>
+               <div class="absolute top-2 right-0 hidden sm:flex items-center gap-4 text-[#874230]/80">
+                  <svg class="w-8 h-8 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                     <path d="M18,8h1a4,4,0,0,1,0,8h-1" />
+                     <path d="M2,8h16v9a4,4,0,0,1-4,4H6a4,4,0,0,1-4-4Z" />
+                     <path d="M6,2v2 M10,2v2" />
+                  </svg>
+                  <svg class="w-10 h-10 opacity-60" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                     <path d="M40,35 C40,25 65,25 65,35" />
+                     <rect x="35" y="35" width="35" height="35" rx="5" />
+                     <path d="M70,45 C78,45 78,60 70,60" />
+                     <path d="M35,42 L25,50 L35,58" />
+                     <path d="M47,20 Q50,15 47,10" />
+                     <path d="M52,20 Q55,15 52,10" />
+                     <path d="M57,20 Q60,15 57,10" />
+                  </svg>
                </div>
+               <br>
+               <p class="font-bold text-[#874230] text-sm sm:text-base leading-relaxed">27 cafe မှ တစ်ဆိုင်လုံး 100% သဘာဝအသီးစစ်စစ်သာ အသုံးပြုထားပါသည်။</p>
+            </header>
+
+            <!-- Service Summon Controls -->
+            <section class="border border-[#874230]/30 bg-white/40 p-4 rounded-xl mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+               <div class="text-center sm:text-left">
+                  <p class="font-27-title font-bold text-sm uppercase">Service Request</p>
+                  <p class="text-[10px] text-slate-500">Need help? Summon our waitstaff directly.</p>
+               </div>
+               <div class="flex gap-2 w-full sm:w-auto">
+                  <button onclick="summonService('Water')" class="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-[#874230] font-bold text-xs py-2.5 px-4 rounded-lg border border-[#874230]/20 transition active:scale-95">Water</button>
+                  <button onclick="summonService('Waiter')" class="flex-1 sm:flex-none bg-[#874230] hover:bg-[#1E140C] text-white text-xs font-bold py-2.5 px-4 rounded-lg transition active:scale-95">Call Waiter</button>
+               </div>
+            </section>
+
+            <!-- Dynamic Menu Container -->
+            <div id="validation-gate" class="hidden flex-1 flex flex-col justify-between">
+               <!-- 1. Standard Categories Container (Vertical Lists: Coffee, Milkshakes, etc.) -->
+               <div id="standard-categories-container" class="space-y-8">
+                  <!-- Populated dynamically -->
+               </div>
+               <!-- Clean Separator Line above juices -->
+               <hr class="border-[#874230]/10 my-8">
+               <!-- 2. Bottom Swipe-Aside Section (Fresh Juices, Cakes, etc. with Floating Photos) -->
+               <div id="juice-categories-container" class="space-y-12">
+                  <!-- Populated dynamically -->
+               </div>
+               <!-- Card Bottom Stamp Footer (Your Custom Footer on Main Menu) -->
+               <footer class="mt-16 pt-4 border-t border-[#874230]/20 flex flex-col sm:flex-row justify-between items-center text-[10px] text-[#874230]/70 uppercase tracking-widest font-semibold gap-2">
+                  <span class="truncate">Thank you for supporting 27 Cafe.</span>
+                  <span class="shrink-0">Tiktok-@27cafe.nbar</span>
+               </footer>
             </div>
-            <div class="absolute top-2 right-0 hidden sm:flex items-center gap-4 text-[#874230]/80">
-               <svg class="w-8 h-8 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M18,8h1a4,4,0,0,1,0,8h-1" />
-                  <path d="M2,8h16v9a4,4,0,0,1-4,4H6a4,4,0,0,1-4-4Z" />
-                  <path d="M6,2v2 M10,2v2" />
-               </svg>
-               <svg class="w-10 h-10 opacity-60" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M40,35 C40,25 65,25 65,35" />
-                  <rect x="35" y="35" width="35" height="35" rx="5" />
-                  <path d="M70,45 C78,45 78,60 70,60" />
-                  <path d="M35,42 L25,50 L35,58" />
-                  <path d="M47,20 Q50,15 47,10" />
-                  <path d="M52,20 Q55,15 52,10" />
-                  <path d="M57,20 Q60,15 57,10" />
-               </svg>
-            </div>
-            <br>
-            <p class="font-bold text-[#874230]">27 cafe မှ တစ်ဆိုင်လုံး 100% သဘာဝအသီးစစ်စစ်သာ အသုံးပြုထားပါသည်။</p>
-         </header>
-         <!-- Service Summon Controls -->
-         <section class="border border-[#874230]/30 bg-white/40 p-4 rounded-xl mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="text-center sm:text-left">
-               <p class="font-27-title font-bold text-sm uppercase">Service Request</p>
-               <p class="text-[10px] text-slate-500">Need help? Summon our waitstaff directly.</p>
-            </div>
-            <div class="flex gap-2 w-full sm:w-auto">
-               <button onclick="summonService('Water')" class="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-[#874230] font-bold text-xs py-2.5 px-4 rounded-lg border border-[#874230]/20 transition active:scale-95">Water</button>
-               <button onclick="summonService('Waiter')" class="flex-1 sm:flex-none bg-[#874230] hover:bg-[#1E140C] text-white text-xs font-bold py-2.5 px-4 rounded-lg transition active:scale-95">Call Waiter</button>
-            </div>
-         </section>
-         <!-- Dynamic Menu Container -->
-         <div id="validation-gate" class="hidden flex-1 flex flex-col justify-between">
-            <!-- 1. Standard Categories Container (Vertical Lists: Coffee, Milkshakes, etc.) -->
-            <div id="standard-categories-container" class="space-y-8">
-               <!-- Populated dynamically -->
-            </div>
-            <!-- Clean Separator Line above juices -->
-            <hr class="border-[#874230]/10 my-8">
-            <!-- 2. Bottom Swipe-Aside Section (Fresh Juices, Cakes, etc. with Floating Photos) -->
-            <div id="juice-categories-container" class="space-y-12">
-               <!-- Populated dynamically -->
-            </div>
-            <!-- Card Bottom Stamp Footer (Your Custom Footer on Main Menu) -->
-            <footer class="mt-16 pt-4 border-t border-[#874230]/20 flex flex-col sm:flex-row justify-between items-center text-[10px] text-[#874230]/70 uppercase tracking-widest font-semibold gap-2">
-               <span class="truncate">Thank you for supporting 27 Cafe.</span>
-               <span class="shrink-0">Tiktok-@27cafe.nbar</span>
-            </footer>
-         </div>
-         <!-- Security Warning State -->
-         <div id="security-warning" class="hidden">
-            <div class="border border-red-300 bg-red-50 text-red-900 p-8 rounded-2xl text-center space-y-3">
-               <h3 class="text-lg font-27-title font-bold uppercase">Access Blocked</h3>
-               <p class="text-xs">Please scan a secure table QR code printed on your table to view our dining card and place orders.</p>
+
+            <!-- Security Warning State -->
+            <div id="security-warning" class="hidden">
+               <div class="border border-red-300 bg-red-50 text-red-900 p-8 rounded-2xl text-center space-y-3">
+                  <h3 class="text-lg font-27-title font-bold uppercase">Access Blocked</h3>
+                  <p class="text-xs">Please scan a secure table QR code printed on your table to view our dining card and place orders.</p>
+               </div>
             </div>
          </div>
       </div>
-      <!-- --- UPDATED: Sticky Centered Fully Responsive Cart Bar --- -->
-      <!-- Flex width (w-[90%]) and responsive scaling (max-w-xs to max-w-md) to layout beautifully on mobile and iPads -->
-      <!-- High Z-Index (z-[100]) forces rendering on top of all iPad Safari/Chrome overlays -->
+
+      <!-- --- 2. VIEWPORT-FIXED STICKY OVERLAYS (Direct children of body for perfect mobile/iPad rendering) --- -->
+
+      <!-- Sticky Centered Fully Responsive Cart Bar -->
+      <!-- High Z-Index (z-[100]) forces rendering on top of all iPad Safari/Chrome viewport layers -->
       <div id="cart-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] hidden w-[90%] sm:w-11/12 max-w-xs sm:max-w-sm md:max-w-md">
          <button onclick="toggleCartModal(true)" class="w-full flex items-center justify-between bg-[#1E140C] hover:bg-[#2D1C13] text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-full transition shadow-2xl active:scale-[0.98]">
             <div class="flex items-center gap-1.5 sm:gap-2">
@@ -286,8 +301,10 @@
             </span>
          </button>
       </div>
+
       <!-- Review Tray Checkout Dialog (Optimized Mobile Drawer) -->
-      <div id="cart-modal" class="fixed inset-0 bg-black/50 z-45 flex items-end justify-center hidden" onclick="closeCartOnBackdrop(event)">
+      <!-- Placed as direct sibling of body for absolute viewport alignment on iOS -->
+      <div id="cart-modal" class="fixed inset-0 bg-black/50 z-[110] flex items-end justify-center hidden" onclick="closeCartOnBackdrop(event)">
          <!-- Elegant Card Drawer (Responsive p-4 on mobile, p-6 on tablet/desktop) -->
          <div class="bg-[#eae6dd] border-t border-[#874230]/30 rounded-t-3xl w-full max-w-xl p-4 sm:p-6 space-y-5 max-h-[90vh] flex flex-col justify-between shadow-2xl" onclick="event.stopPropagation()">
             <!-- Header (Playfair Display) -->
@@ -314,8 +331,10 @@
             </button>
          </div>
       </div>
+
       <!-- Simulated Gateway Payment Modal -->
-      <div id="payment-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden p-4">
+      <!-- Placed as direct sibling of body for absolute viewport alignment on iOS -->
+      <div id="payment-modal" class="fixed inset-0 bg-black/70 z-[120] flex items-center justify-center hidden p-4">
          <!-- Upgraded w-11/12 max-w-xs to prevent container clipping on small viewports -->
          <div class="bg-[#eae6dd] border-4 border-[#874230]/30 rounded-2xl w-11/12 max-w-xs p-6 text-center space-y-4 shadow-2xl relative">
             <button onclick="document.getElementById('payment-modal').classList.add('hidden')" 
@@ -338,6 +357,7 @@
             </div>
          </div>
       </div>
+
       <script>
          const API_BASE = `${window.location.origin}/api/v1`;
          
@@ -443,7 +463,7 @@
                                      
                                      <!-- Quantity Badge Overlay on Top-Left of the photo -->
                                      ${quantityInCart > 0 ? `
-                                         <div class="absolute top-3 left-3 bg-[#874230] text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md animate-scale">
+                                         <div class="absolute top-3 left-3 bg-[#874230] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-md animate-scale">
                                              ${quantityInCart}x
                                          </div>
                                      ` : ''}
@@ -468,8 +488,8 @@
                              <h3 class="font-27-title text-xl sm:text-2xl font-bold uppercase tracking-wider">${categoryName}</h3>
                              <span class="text-xs uppercase tracking-wider text-[#9d958c] font-semibold mt-1">Swipe to explore →</span>
                          </div>
-                         <!-- Horizontal Swipe Wrapper -->
-                         <div class="flex overflow-x-auto snap-x snap-mandatory gap-6 scrollbar-none py-2 px-1">
+                         <!-- Horizontal Swipe Wrapper - 2 Rows for Photo-based items -->
+                         <div class="grid grid-rows-2 grid-flow-col overflow-x-auto snap-x snap-mandatory gap-y-4 gap-x-5 scrollbar-none py-2 px-1">
                              ${cardsHtml}
                          </div>
                      `;
@@ -753,4 +773,4 @@
          verifyAndLoad();
       </script>
    </body>
-</html>
+</html> 
