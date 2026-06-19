@@ -8,13 +8,23 @@
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Quattrocento:wght@400;700&family=Yrsa:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+      <link href="https://fonts.cdnfonts.com/css/revans" rel="stylesheet">
       <script src="https://cdn.tailwindcss.com"></script>
       <style>
+         /* --- STABLE STATIC BACKGROUND SYSTEM --- */
+         body {
+         background-image: url('./static/bg_logo.jpg');
+         background-size: cover;
+         background-position: center;
+         background-attachment: fixed;
+         background-repeat: no-repeat;
+         background-color: #ffffff; /* Fallback */
+         }
          .font-27-title {
-         font-family: 'Playfair Display', serif;
+         font-family: 'Revans', serif;
          }
          .font-27-body {
-         font-family: 'Inter', sans-serif;
+         font-family: 'Revans', sans-serif;
          }
          /* Custom scrollbar hiding for horizontal swiping */
          .scrollbar-none::-webkit-scrollbar {
@@ -51,30 +61,155 @@
          .animate-steam { animation: steam-rise 2.5s ease-in-out infinite; }
       </style>
    </head>
-   <body class="bg-[#eae6dd] text-[#735647] font-27-body min-h-screen pb-32 relative select-none">
-      <!-- Checkerboard Top Accent -->
-      <div class="h-6 w-full checkerboard-border border-b-4 border-[#161912] hidden"></div>
+   <!-- Updated body class with 'overflow-x-hidden' to safeguard mobile swipe layouts from clipping -->
+   <body class="text-[#874230] font-27-body min-h-screen pb-32 relative select-none overflow-x-hidden">
       <!-- Paper Container matching proportions of menu mockup card -->
       <div class="max-w-xl mx-auto px-4 sm:px-6 py-6 md:py-12 relative min-h-screen flex flex-col justify-between">
+         <!-- --- 1. TOP-LEFT RETRO PALM LEAF BACKGROUND WATERMARK --- -->
+         <div class="absolute -left-16 -top-12 w-48 sm:w-72 h-auto pointer-events-none opacity-20 text-[#6f8a38]/80 z-0 select-none">
+            <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M15,85 C35,65 65,35 85,15" />
+               <path d="M35,65 Q18,60 8,62 C15,68 28,70 38,68" />
+               <path d="M42,58 Q22,48 12,48 C20,58 32,62 45,61" />
+               <path d="M50,50 Q30,35 20,32 C28,42 40,50 52,52" />
+               <path d="M58,42 Q40,25 32,20 C38,30 48,40 60,42" />
+               <path d="M65,35 Q50,18 42,12 C48,22 56,32 68,35" />
+               <path d="M72,28 Q60,12 55,5 C60,15 65,22 75,28" />
+               <path d="M78,22 Q70,8 68,2 C72,10 75,15 82,22" />
+               <path d="M35,65 Q48,78 52,88 C46,80 40,72 38,68" />
+               <path d="M42,58 Q55,70 60,80 C53,72 47,65 45,61" />
+               <path d="M50,50 Q65,60 70,70 C62,62 55,55 52,52" />
+               <path d="M58,42 Q72,50 78,60 C68,52 62,45 60,42" />
+               <path d="M65,35 Q78,42 84,50 C75,42 69,36 68,35" />
+               <path d="M72,28 Q84,32 90,40 C80,33 75,29 75,28" />
+            </svg>
+         </div>
+         <!-- --- 2. TOP-RIGHT RETRO MONSTERA LEAF BACKGROUND WATERMARK --- -->
+         <div class="absolute -right-20 -top-12 w-56 sm:w-80 h-auto pointer-events-none opacity-20 text-[#6f8a38]/80 z-0 select-none">
+            <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M50,90 C50,90 50,70 50,50" />
+               <path d="M50,20 C42,23 30,30 25,40 C21,48 20,60 28,68 C32,72 36,75 42,78 L45,80 C48,82 50,85 50,90" />
+               <path d="M50,20 C58,23 70,30 75,40 C79,48 80,60 72,68 C68,72 64,75 58,78 L55,80 C52,82 50,85 50,90" />
+               <path d="M45,35 C38,36 32,32 25,28" />
+               <path d="M42,48 C32,49 24,42 16,36" />
+               <path d="M44,61 C34,64 26,58 18,52" />
+               <path d="M46,72 C38,76 30,72 22,66" />
+               <path d="M55,35 C62,36 68,32 75,28" />
+               <path d="M58,48 C68,49 76,42 84,36" />
+               <path d="M56,61 C66,64 74,58 82,52" />
+               <path d="M54,72 C62,76 70,72 78,66" />
+            </svg>
+         </div>
+         <!-- --- 3. NEW: BOTTOM-LEFT RETRO MONSTERA LEAF BACKGROUND WATERMARK --- -->
+         <!-- Rotated 120 degrees to fit elegantly into the bottom corner -->
+         <div class="absolute -left-20 -bottom-16 w-56 sm:w-80 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none rotate-[120deg]">
+            <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M50,90 C50,90 50,70 50,50" />
+               <path d="M50,20 C42,23 30,30 25,40 C21,48 20,60 28,68 C32,72 36,75 42,78 L45,80 C48,82 50,85 50,90" />
+               <path d="M50,20 C58,23 70,30 75,40 C79,48 80,60 72,68 C68,72 64,75 58,78 L55,80 C52,82 50,85 50,90" />
+               <path d="M45,35 C38,36 32,32 25,28" />
+               <path d="M42,48 C32,49 24,42 16,36" />
+               <path d="M44,61 C34,64 26,58 18,52" />
+               <path d="M46,72 C38,76 30,72 22,66" />
+               <path d="M55,35 C62,36 68,32 75,28" />
+               <path d="M58,48 C68,49 76,42 84,36" />
+               <path d="M56,61 C66,64 74,58 82,52" />
+               <path d="M54,72 C62,76 70,72 78,66" />
+            </svg>
+         </div>
+         <!-- --- 4. NEW: BOTTOM-RIGHT RETRO PALM LEAF BACKGROUND WATERMARK --- -->
+         <!-- Rotated -120 degrees to fit elegantly into the bottom corner -->
+         <div class="absolute -right-16 -bottom-16 w-48 sm:w-72 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none -rotate-[120deg]">
+            <svg viewBox="0 0 100 100" class="w-full h-full" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M15,85 C35,65 65,35 85,15" />
+               <path d="M35,65 Q18,60 8,62 C15,68 28,70 38,68" />
+               <path d="M42,58 Q22,48 12,48 C20,58 32,62 45,61" />
+               <path d="M50,50 Q30,35 20,32 C28,42 40,50 52,52" />
+               <path d="M58,42 Q40,25 32,20 C38,30 48,40 60,42" />
+               <path d="M65,35 Q50,18 42,12 C48,22 56,32 68,35" />
+               <path d="M72,28 Q60,12 55,5 C60,15 65,22 75,28" />
+               <path d="M78,22 Q70,8 68,2 C72,10 75,15 82,22" />
+               <path d="M35,65 Q48,78 52,88 C46,80 40,72 38,68" />
+               <path d="M42,58 Q55,70 60,80 C53,72 47,65 45,61" />
+               <path d="M50,50 Q65,60 70,70 C62,62 55,55 52,52" />
+               <path d="M58,42 Q72,50 78,60 C68,52 62,45 60,42" />
+               <path d="M65,35 Q78,42 84,50 C75,42 69,36 68,35" />
+               <path d="M72,28 Q84,32 90,40 C80,33 75,29 75,28" />
+            </svg>
+         </div>
+         <!-- Checkerboard Top Accent -->
+         <div class="h-6 w-full checkerboard-border border-b-4 border-[#161912] hidden"></div>
+         <!-- --- CARTOON ILLUSTRATION OVERLAYS --- -->
+         <!-- Character 1: Floating Happy Steaming Mug (Top Right margin) -->
+         <div class="absolute right-28 top-24 w-16 h-16 opacity-20 pointer-events-none md:block animate-float">
+            <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M30,40 H70 V75 C70,82 60,82 50,82 C40,82 30,82 30,75 Z" />
+               <path d="M70,48 C78,48 78,65 70,65" />
+               <circle cx="43" cy="56" r="2" fill="#735647" />
+               <circle cx="57" cy="56" r="2" fill="#735647" />
+               <path d="M48.5,63 Q50,66 51.5,63" />
+               <path class="animate-steam" d="M45,28 Q48,22 45,15" />
+               <path class="animate-steam" d="M55,28 Q58,22 55,15" style="animation-delay: 0.8s;" />
+            </svg>
+         </div>
+         <!-- Character 2: Dancing Coffee Bean (Middle Right margin) -->
+         <div class="absolute -right-25 top-[35%] w-20 h-20 opacity-15 pointer-events-none lg:block animate-bounce-hop">
+            <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M35,25 C15,35 15,65 35,75 C55,85 85,85 85,55 C85,25 55,15 35,25 Z" fill="#eae6dd" />
+               <path d="M35,25 Q50,50 65,75" stroke-dasharray="3,3" />
+               <circle cx="45" cy="40" r="2" fill="#735647" />
+               <circle cx="58" cy="48" r="2" fill="#735647" />
+               <path d="M49,50 Q54,54 53,48" />
+               <path d="M22,45 Q15,48 10,42" />
+               <path d="M68,60 Q75,65 80,60" />
+               <path d="M35,75 L35,85" />
+               <path d="M55,79 L58,89" />
+            </svg>
+         </div>
+         <!-- Character 3: Levitating Croissant (Middle Left margin) -->
+         <div class="absolute -right-26 top-[55%] w-24 h-24 opacity-15 pointer-events-none lg:block animate-float" style="animation-delay: 1.5s;">
+            <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M20,60 C15,50 30,25 50,25 C70,25 85,50 80,60 C75,55 65,52 50,52 C35,52 25,55 20,60 Z" />
+               <path d="M35,28 C30,35 32,45 42,48" />
+               <path d="M65,28 C70,35 68,45 58,48" />
+               <path d="M43,38 Q46,41 49,38" />
+               <path d="M51,38 Q54,41 57,38" />
+               <circle cx="40" cy="42" r="3" fill="#f59756" opacity="0.4" stroke="none" />
+               <circle cx="60" cy="42" r="3" fill="#f59756" opacity="0.4" stroke="none" />
+            </svg>
+         </div>
+         <!-- Character 4: Waving Take-Away Cup (Bottom Left margin) -->
+         <div class="absolute -right-20 bottom-[15%] w-24 h-24 opacity-15 pointer-events-none lg:block animate-float">
+            <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+               <polygon points="30,30 70,30 65,80 35,80" />
+               <path d="M28,30 L72,30 L70,22 L30,22 Z" fill="#eae6dd" />
+               <path d="M32,45 C45,45 55,45 68,45" />
+               <circle cx="43" cy="55" r="2.5" fill="#735647" />
+               <circle cx="57" cy="55" r="2.5" fill="#735647" />
+               <path d="M48,62 Q50,65 52,62" />
+               <path class="animate-wave-arm" d="M70,55 Q80,50 82,42" />
+               <path d="M30,55 Q20,52 16,58" />
+               <path d="M42,80 Q40,90 36,90" />
+               <path d="M58,80 Q60,90 64,90" />
+            </svg>
+         </div>
          <!-- Header -->
-         <header class="relative pb-6 border-b border-[#301f16]/30 mb-8 flex flex-col items-start w-full">
+         <header class="relative pb-6 border-b border-[#874230]/30 mb-8 flex flex-col items-start w-full">
             <div class="flex items-center gap-6">
                <div class="h-40 w-40 flex items-center justify-center shrink-0">
                   <img src="./static/logo2.jpg" alt="Cafe Logo" class="h-full w-full object-contain" onerror="this.style.display='none'">
                </div>
                <div class="space-y-1">
-                    <h1 style="font-family: 'Quattrocento', serif;" class="font-27-title tracking-tight leading-none text-[#301f16]">
-                        <span class="font-[700] text-7xl select-none">27</span>
-                        <span class="font-normal text-6xl select-none">cafe</span>
-                    </h1>
-   
-                    <h2 style="font-family: 'Quattrocento', serif;" class="text-[17px]  font-semibold text-[#301f16] pl-1">
-                            Cafe & Bar --since 2025
-                    </h2>
-              </div>
-               
+                  <h1 style="font-family: 'Revans', sans-serif;" class="font-27-title tracking-tight leading-none text-[#602D1F]">
+                     <span class="font-bold text-7xl select-none">27</span>
+                     <span class="font-normal text-6xl select-none">cafe</span>
+                  </h1>
+                  <p style="font-family: 'Revans', sans-serif;" class="text-[12px] tracking-[0.25em] font-semibold text-[#602D1F] pl-1">
+                     Cafe & Bar 
+                  </p>
+               </div>
             </div>
-            <div class="absolute top-2 right-0 hidden sm:flex items-center gap-4 text-[#301f16]/80">
+            <div class="absolute top-2 right-0 hidden sm:flex items-center gap-4 text-[#874230]/80">
                <svg class="w-8 h-8 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M18,8h1a4,4,0,0,1,0,8h-1" />
                   <path d="M2,8h16v9a4,4,0,0,1-4,4H6a4,4,0,0,1-4-4Z" />
@@ -91,17 +226,17 @@
                </svg>
             </div>
             <br>
-            <p class="font-bold text-[#301f16]">27 cafe မှ တစ်ဆိုင်လုံး 100% သဘာဝအသီးစစ်စစ်သာ အသုံးပြုထားပါသည်။</p>
+            <p class="font-bold text-[#874230]">27 cafe မှ တစ်ဆိုင်လုံး 100% သဘာဝအသီးစစ်စစ်သာ အသုံးပြုထားပါသည်။</p>
          </header>
          <!-- Service Summon Controls -->
-         <section class="border border-[#301f16]/30 bg-white/40 p-4 rounded-xl mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+         <section class="border border-[#874230]/30 bg-white/40 p-4 rounded-xl mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="text-center sm:text-left">
                <p class="font-27-title font-bold text-sm uppercase">Service Request</p>
                <p class="text-[10px] text-slate-500">Need help? Summon our waitstaff directly.</p>
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
-               <button onclick="summonService('Water')" class="flex-1 sm:flex-none bg-white hover:bg-slate-100 text-[#301f16] font-bold text-xs py-2 px-4 rounded-lg border border-[#301f16]/20 transition active:scale-95">Water</button>
-               <button onclick="summonService('Waiter')" class="flex-1 sm:flex-none bg-[#301f16] hover:bg-[#1E140C] text-white text-xs font-bold py-2 px-4 rounded-lg transition active:scale-95">Call Waiter</button>
+               <button onclick="summonService('Water')" class="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-[#874230] font-bold text-xs py-2.5 px-4 rounded-lg border border-[#874230]/20 transition active:scale-95">Water</button>
+               <button onclick="summonService('Waiter')" class="flex-1 sm:flex-none bg-[#874230] hover:bg-[#1E140C] text-white text-xs font-bold py-2.5 px-4 rounded-lg transition active:scale-95">Call Waiter</button>
             </div>
          </section>
          <!-- Dynamic Menu Container -->
@@ -111,13 +246,13 @@
                <!-- Populated dynamically -->
             </div>
             <!-- Clean Separator Line above juices -->
-            <hr class="border-[#301f16]/10 my-8">
+            <hr class="border-[#874230]/10 my-8">
             <!-- 2. Bottom Swipe-Aside Section (Fresh Juices, Cakes, etc. with Floating Photos) -->
             <div id="juice-categories-container" class="space-y-12">
                <!-- Populated dynamically -->
             </div>
             <!-- Card Bottom Stamp Footer (Your Custom Footer on Main Menu) -->
-            <footer class="mt-16 pt-4 border-t border-[#735647]/20 flex flex-col sm:flex-row justify-between items-center text-[10px] text-[#735647]/70 uppercase tracking-widest font-semibold gap-2">
+            <footer class="mt-16 pt-4 border-t border-[#874230]/20 flex flex-col sm:flex-row justify-between items-center text-[10px] text-[#874230]/70 uppercase tracking-widest font-semibold gap-2">
                <span class="truncate">Thank you for supporting 27 Cafe.</span>
                <span class="shrink-0">Tiktok-@27cafe.nbar</span>
             </footer>
@@ -130,20 +265,23 @@
             </div>
          </div>
       </div>
-      <!-- Sticky Centered Large Cart Bar -->
-      <div id="cart-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 hidden w-11/12 max-w-sm">
-         <button onclick="toggleCartModal(true)" class="w-full flex items-center justify-between bg-[#1E140C] hover:bg-[#2D1C13] text-white font-semibold py-4 px-6 rounded-full transition shadow-2xl active:scale-[0.98]">
-            <div class="flex items-center gap-2">
+      <!-- --- UPDATED: Sticky Centered Fully Responsive Cart Bar --- -->
+      <!-- Flex width (w-[90%]) and responsive scaling (max-w-xs to max-w-md) to layout beautifully on mobile and iPads -->
+      <!-- High Z-Index (z-[100]) forces rendering on top of all iPad Safari/Chrome overlays -->
+      <div id="cart-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] hidden w-[90%] sm:w-11/12 max-w-xs sm:max-w-sm md:max-w-md">
+         <button onclick="toggleCartModal(true)" class="w-full flex items-center justify-between bg-[#1E140C] hover:bg-[#2D1C13] text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-full transition shadow-2xl active:scale-[0.98]">
+            <div class="flex items-center gap-1.5 sm:gap-2">
                <!-- Shopping Bag Icon -->
-               <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+               <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 0 1-8 0" />
                </svg>
-               <span class="font-27-title text-sm tracking-wide">VIEW MY ORDER</span>
+               <!-- Clean fluid typography and whitespace-nowrap prevents button wrap on small phone viewports -->
+               <span class="font-27-title text-xs sm:text-sm md:text-base tracking-wide whitespace-nowrap uppercase">VIEW MY ORDER</span>
             </div>
-            <!-- Highlighted item count badge -->
-            <span class="bg-white text-[#1E140C] text-xs font-bold px-3 py-1 rounded-full shadow-inner">
+            <!-- Highlighted item count badge with shrink protection -->
+            <span class="bg-white text-[#1E140C] text-[10px] sm:text-xs font-bold px-2.5 sm:px-3.5 py-1 rounded-full shadow-inner shrink-0 whitespace-nowrap animate-scale">
             <span id="cart-count">0</span> items
             </span>
          </button>
@@ -151,21 +289,21 @@
       <!-- Review Tray Checkout Dialog (Optimized Mobile Drawer) -->
       <div id="cart-modal" class="fixed inset-0 bg-black/50 z-45 flex items-end justify-center hidden" onclick="closeCartOnBackdrop(event)">
          <!-- Elegant Card Drawer (Responsive p-4 on mobile, p-6 on tablet/desktop) -->
-         <div class="bg-[#eae6dd] border-t border-[#735647]/30 rounded-t-3xl w-full max-w-xl p-4 sm:p-6 space-y-5 max-h-[90vh] flex flex-col justify-between shadow-2xl" onclick="event.stopPropagation()">
+         <div class="bg-[#eae6dd] border-t border-[#874230]/30 rounded-t-3xl w-full max-w-xl p-4 sm:p-6 space-y-5 max-h-[90vh] flex flex-col justify-between shadow-2xl" onclick="event.stopPropagation()">
             <!-- Header (Playfair Display) -->
-            <div class="flex justify-between items-center pb-3 border-b border-[#735647]/10">
-               <h3 class="text-2xl font-27-title font-bold text-[#735647]">Your Order</h3>
+            <div class="flex justify-between items-center pb-3 border-b border-[#874230]/10">
+               <h3 class="text-2xl font-27-title font-bold text-[#874230]">Your Order</h3>
                <!-- Styled Close Icon with expanded touch target -->
-               <button onclick="toggleCartModal(false)" class="text-[#735647]/60 hover:text-[#735647] text-3xl font-light leading-none transition p-2">&times;</button>
+               <button onclick="toggleCartModal(false)" class="text-[#874230]/60 hover:text-[#874230] text-3xl font-light leading-none transition p-2">&times;</button>
             </div>
             <!-- Items list (Scrolls independently) -->
             <div id="cart-items" class="overflow-y-auto space-y-4 flex-1 pr-2 scrollbar-none divide-y-0">
                <!-- Cart items load here -->
             </div>
-            <hr class="border-[#735647]/20">
+            <hr class="border-[#874230]/20">
             <!-- Total Block -->
             <div class="pt-2">
-               <div class="flex justify-between font-27-title text-xl text-[#735647] font-bold">
+               <div class="flex justify-between font-27-title text-xl text-[#874230] font-bold">
                   <span>Total</span>
                   <span id="modal-total" class="font-extrabold text-2xl">0 Ks</span>
                </div>
@@ -179,13 +317,13 @@
       <!-- Simulated Gateway Payment Modal -->
       <div id="payment-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden p-4">
          <!-- Upgraded w-11/12 max-w-xs to prevent container clipping on small viewports -->
-         <div class="bg-[#eae6dd] border-4 border-[#735647]/30 rounded-2xl w-11/12 max-w-xs p-6 text-center space-y-4 shadow-2xl relative">
+         <div class="bg-[#eae6dd] border-4 border-[#874230]/30 rounded-2xl w-11/12 max-w-xs p-6 text-center space-y-4 shadow-2xl relative">
             <button onclick="document.getElementById('payment-modal').classList.add('hidden')" 
-               class="absolute top-3 right-3 text-[#735647]/60 hover:text-[#735647] text-2xl font-light leading-none p-2">
+               class="absolute top-3 right-3 text-[#874230]/60 hover:text-[#874230] text-2xl font-light leading-none p-2">
             &times;
             </button>
-            <div class="mx-auto w-12 h-12 rounded-full border border-[#735647]/20 bg-emerald-100 flex items-center justify-center text-emerald-800 font-black text-lg">✓</div>
-            <h3 class="font-27-title text-xl font-bold text-[#735647]">Authorize Bill</h3>
+            <div class="mx-auto w-12 h-12 rounded-full border border-[#874230]/20 bg-emerald-100 flex items-center justify-center text-emerald-800 font-black text-lg">✓</div>
+            <h3 class="font-27-title text-xl font-bold text-[#874230]">Authorize Bill</h3>
             <p class="text-xs text-slate-500">Simulating Secure Payment Handshake. Authorizing will release your order directly to the kitchen display screen.</p>
             <div class="border-2 border-[#161912] bg-white p-3 rounded-xl font-mono text-base font-bold">
                <span>Amount Due: </span><span id="pay-amount" class="text-amber-800">0 Ks</span>
@@ -193,8 +331,8 @@
             <button onclick="confirmPayment()" class="w-full border-2 border-[#161912] bg-[#1E140C] hover:bg-[#2D1C13] text-white font-retro-title py-2.5 rounded-lg text-sm transition active:scale-95">
             Confirm & Pay
             </button>
-            <hr class="border-[#735647]/20 my-2">
-            <div class="flex justify-between items-center text-[10px] text-[#735647]/70 uppercase tracking-widest font-semibold">
+            <hr class="border-[#874230]/20 my-2">
+            <div class="flex justify-between items-center text-[10px] text-[#874230]/70 uppercase tracking-widest font-semibold">
                <span class="truncate mr-2">Thank you for supporting 27 Cafe</span>
                <span class="shrink-0">@27cafe_user</span>
             </div>
@@ -299,13 +437,13 @@
                          return `
                              <!-- Floating Card with direct Tap-to-Order -->
                              <div class="snap-start flex-none w-44 sm:w-48 flex flex-col cursor-pointer active:scale-95 transition duration-200" onclick="${isSoldOut ? '' : `addToCartDirect(${item.id})`}">
-                                 <!-- Rounded Photo with deep soft drop shadow (Scaled up h-56) -->
-                                 <div class="relative h-48 sm:h-56 w-full rounded-3xl overflow-hidden shadow-xl border border-[#9d958c]/25 hover:shadow-2xl transition duration-300">
+                                 <!-- Rounded Photo with deep soft drop shadow (Scaled h-48 on mobile, h-56 on tablet) -->
+                                 <div class="relative h-44 sm:h-56 w-full rounded-3xl overflow-hidden shadow-xl border border-[#9d958c]/25 hover:shadow-2xl transition duration-300">
                                      <img src="${imgUrl}" class="h-full w-full object-cover" alt="${item.name}">
                                      
                                      <!-- Quantity Badge Overlay on Top-Left of the photo -->
                                      ${quantityInCart > 0 ? `
-                                         <div class="absolute top-3 left-3 bg-[#735647] text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md animate-scale">
+                                         <div class="absolute top-3 left-3 bg-[#874230] text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md animate-scale">
                                              ${quantityInCart}x
                                          </div>
                                      ` : ''}
@@ -317,17 +455,17 @@
                                      ` : ''}
                                  </div>
                                  <!-- Clean Name Centered Below -->
-                                 <h4 class="font-27-title font-black text-sm md:text-base text-[#735647] text-center mt-3 whitespace-normal leading-snug">${item.name}</h4>
+                                 <h4 class="font-27-title font-black text-xs sm:text-sm md:text-base text-[#874230] text-center mt-3 whitespace-normal leading-snug">${item.name}</h4>
                                  <!-- Price Centered Below Name -->
-                                 <p class="font-27-title font-extrabold text-sm md:text-base text-[#4b5a2c] text-center mt-1.5">${item.price.toFixed(0)} Ks</p>
+                                 <p class="font-27-title font-extrabold text-xs sm:text-sm md:text-base text-[#4b5a2c] text-center mt-1.5">${item.price.toFixed(0)} Ks</p>
                              </div>
                          `;
                      }).join("");
          
                      sectionDiv.innerHTML = `
                          <!-- Juice Swiper Header -->
-                         <div class="flex flex-col border-b-2 border-[#735647]/20 pb-3">
-                             <h3 class="font-27-title text-2xl font-bold uppercase tracking-wider">${categoryName}</h3>
+                         <div class="flex flex-col border-b-2 border-[#874230]/20 pb-3">
+                             <h3 class="font-27-title text-xl sm:text-2xl font-bold uppercase tracking-wider">${categoryName}</h3>
                              <span class="text-xs uppercase tracking-wider text-[#9d958c] font-semibold mt-1">Swipe to explore →</span>
                          </div>
                          <!-- Horizontal Swipe Wrapper -->
@@ -339,7 +477,7 @@
                      juiceContainer.appendChild(sectionDiv);
          
                  } else {
-                     // --- STANDARD CLASSY VERTICAL LISTS ---
+                     // --- STANDARD CLASSY VERTICAL LISTS (Fully Responsive layout and shrink protection) ---
                      const itemsHtml = items.map(item => {
                          const isSoldOut = item.stock !== null && item.stock <= 0;
          
@@ -348,21 +486,21 @@
          
                          return `
                              <div class="flex justify-between items-start text-sm py-4 cursor-pointer active:scale-[0.99] transition duration-150 border-b border-[#735647]/10" onclick="${isSoldOut ? '' : `addToCartDirect(${item.id})`}">
-                                 <div class="flex-1 pr-6">
+                                 <div class="flex-1 pr-4">
                                      <div class="flex items-center gap-2">
                                          <!-- Scaled up Item Name -->
-                                         <h4 class="font-27-title font-extrabold text-base md:text-lg text-[#735647] hover:text-[#9d958c] transition">${item.name}</h4>
+                                         <h4 class="font-27-title font-extrabold text-base md:text-lg text-[#874230] hover:text-[#9d958c] transition">${item.name}</h4>
                                          <!-- Dynamic inline item-count badge -->
                                          ${quantityInCart > 0 ? `
-                                             <span class="bg-[#735647] text-white text-xs font-bold px-2 py-0.5 rounded-full">${quantityInCart}x</span>
+                                             <span class="bg-[#874230] text-white text-xs font-bold px-2 py-0.5 rounded-full">${quantityInCart}x</span>
                                          ` : ''}
                                      </div>
                                      <!-- Scaled up Item Description -->
                                      <p class="text-xs md:text-sm text-slate-600 mt-1 leading-relaxed font-normal">${item.description || ''}</p>
-                                     ${item.stock !== null ? `<span class="text-[10px] bg-slate-200/50 text-[#735647] px-1.5 py-0.5 rounded font-mono">Stock: ${item.stock}</span>` : ''}
+                                     ${item.stock !== null ? `<span class="text-[10px] bg-slate-200/50 text-[#874230] px-1.5 py-0.5 rounded font-mono">Stock: ${item.stock}</span>` : ''}
                                  </div>
-                                 <!-- Scaled up Price display -->
-                                 <div class="flex items-center gap-2.5 font-27-title font-black text-base md:text-lg text-[#735647]">
+                                 <!-- Price display with shrink protection -->
+                                 <div class="flex items-center gap-2.5 font-27-title font-black text-base md:text-lg text-[#874230] shrink-0">
                                      <span class="text-slate-300 font-normal">|</span>
                                      <span>${item.price.toFixed(0)} Ks</span>
                                  </div>
@@ -495,19 +633,19 @@
                  const mathBreakdown = `${itemTotal.toFixed(0)} &times; ${cartItem.quantity} = ${rowSubtotal.toFixed(0)}`;
          
                  const div = document.createElement('div');
-                 div.className = "flex justify-between items-center py-3 text-sm gap-4";
+                 div.className = "flex justify-between items-center py-3 text-sm gap-2 sm:gap-4";
                  
                  div.innerHTML = `
                      <!-- Left: Product Name & Formula breakdown -->
-                     <div class="flex-1 min-w-[120px]">
-                         <p class="font-bold text-[#735647] text-base md:text-lg leading-tight">${cartItem.item.name}</p>
-                         <p class="text-xs text-slate-500 font-retro-typewriter mt-1">${mathBreakdown}</p>
+                     <div class="flex-1 min-w-[100px]">
+                         <p class="font-bold text-[#735647] text-sm sm:text-base md:text-lg leading-tight">${cartItem.item.name}</p>
+                         <p class="text-[10px] sm:text-xs text-slate-500 font-retro-typewriter mt-1">${mathBreakdown}</p>
                      </div>
                      
                      <!-- Right: Solid Dark Circular Adjusters (+ / -) -->
-                     <div class="flex items-center gap-3">
+                     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                          <button onclick="adjustCartItemQty(${index}, -1)" class="w-10 h-10 rounded-full bg-[#22150E] hover:bg-[#341D14] text-white flex items-center justify-center font-bold text-lg transition active:scale-90 shadow-sm">-</button>
-                         <span class="w-6 text-center font-bold text-base text-[#735647]">${cartItem.quantity}</span>
+                         <span class="w-6 text-center font-bold text-sm sm:text-base text-[#735647]">${cartItem.quantity}</span>
                          <button onclick="adjustCartItemQty(${index}, 1)" class="w-10 h-10 rounded-full bg-[#22150E] hover:bg-[#341D14] text-white flex items-center justify-center font-bold text-lg transition active:scale-90 shadow-sm">+</button>
                      </div>
                  `;
@@ -527,6 +665,7 @@
              }
          }
          
+         // Fixed: Fixed a tiny JS syntax typo where it said 'disply' instead of 'display'
          function removeCartItem(index) {
              cart.splice(index, 1);
              renderCartModalItems();
@@ -583,7 +722,7 @@
                  if (response.ok) {
                      const modal = document.getElementById('payment-modal');
                      if(modal){
-                         modal.style.disply ='none';
+                         modal.style.display ='none';
                          modal.classList.add('hidden');
                      }
                      
