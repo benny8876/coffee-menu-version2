@@ -672,7 +672,7 @@
          
                  receiptContainer.innerHTML = `
                      <div class="text-center border-b pb-3 border-dashed">
-                         <h2 class="text-lg font-bold">${bill.restaurant_name}</h2>
+                         <h2 class="text-lg font-bold">27 Cafe</h2>
                          <p class="text-[10px] text-slate-400">HISTORICAL TABLE SESSION RECEIPT</p>
                          <p class="text-[10px] text-slate-400">${bill.timestamp}</p>
                      </div>
@@ -917,7 +917,7 @@
          
                  receiptContainer.innerHTML = `
                      <div class="text-center border-b pb-3 border-dashed">
-                         <h2 class="text-lg font-bold">${receipt.restaurant_name}</h2>
+                         <h2 class="text-lg font-bold">27 Cafe</h2>
                          <p class="text-[10px] text-slate-400">Transaction ID: ${receipt.voucher_id}</p>
                          <p class="text-[10px] text-slate-400">${receipt.timestamp}</p>
                      </div>
@@ -931,10 +931,6 @@
                          <div class="flex justify-between">
                              <span>Subtotal</span>
                              <span>${receipt.subtotal.toFixed(2)} Ks</span>
-                         </div>
-                         <div class="flex justify-between">
-                             <span>Tax (10%)</span>
-                             <span>${receipt.tax_amount.toFixed(2)} Ks</span>
                          </div>
                          <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2 border-dashed">
                              <span>Grand Total</span>
