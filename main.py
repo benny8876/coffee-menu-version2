@@ -87,3 +87,9 @@ def seed_initial_data():
 @app.get("/")
 def root():
     return {"message": "Dine Inn System backend is active. Load /menu, /kitchen or /manager."}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    # Coolify ရဲ့ internal port ဖြစ်တဲ့ 3000 ပေါ်မှာ မောင်းပေးလိုက်တာပါ
+    uvicorn.run("main:app", host="0.0.0.0", port=3000)
