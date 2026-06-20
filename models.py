@@ -35,6 +35,7 @@ class MenuItem(Base):
     category = Column(String, nullable=False)
     is_available = Column(Boolean, default=True)
     stock = Column(Integer, nullable=True)
+    order_index = Column(Integer, default=0 , index=True)
     
     # NEW: Stores the server path of your uploaded menu item photos
     image_url = Column(String, nullable=True) 

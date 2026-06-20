@@ -131,6 +131,11 @@ def create_menu_item(
     db: Session = Depends(get_db),
     authenticated: bool = Depends(verify_manager_token),
 ):
+    # ၁။ လက်ရှိ Database ထဲမှာ အကြီးဆုံး order_index ကို ရှာမယ်
+    # အကယ်၍ Item တစ်ခုမှ မရှိသေးရင် 0 ကို ယူမယ်
+    max_index = db.query(func.max(models.MenuItem.order_index)).scalar() or 0
+    
+    # ၂။ အသစ်ထည့်မယ့် Item ရဲ့ order_index ကို max_index + 1 လို့ သတ်မှတ်လိုက်မယ်
     db_item = models.MenuItem(
         name=item.name,
         description=item.description,
@@ -139,9 +144,10 @@ def create_menu_item(
         is_available=item.is_available,
         stock=item.stock,
         image_url=item.image_url,
+        order_index=max_index + 1  # 🔥 ဒီနေရာလေးပဲ အဓိက ပြင်ရတာပါ
     )
     db.add(db_item)
-    db.flush()
+    db.flush() # ID ရဖို့အတွက် flush ခံမယ်
 
     for mod in item.modifiers:
         db_mod = models.MenuItemModifier(
@@ -172,6 +178,48 @@ def update_menu_item(
     db.commit()
     db.refresh(db_item)
     return db_item
+
+# --- Updated: Category-Aware & Sequential Index Swapping ---
+@router.post("/menu/items/{item_id}/move")
+async def move_menu_item(
+    item_id: int, 
+    direction: str, 
+    db: Session = Depends(get_db),
+    authenticated: bool = Depends(verify_manager_token)
+):
+    # 1. Locate the current item
+    current_item = db.query(models.MenuItem).filter(models.MenuItem.id == item_id).first()
+    if not current_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # 2. Fetch all items in the SAME category, sorted by their index and database ID
+    items_in_category = db.query(models.MenuItem).filter(
+        models.MenuItem.category == current_item.category
+    ).order_by(models.MenuItem.order_index.asc(), models.MenuItem.id.asc()).all()
+
+    # 3. Automatically assign sequential order_indices to fix default 0 values and duplicates
+    for idx, item in enumerate(items_in_category):
+        item.order_index = idx
+    db.flush()
+
+    # 4. Find the position of the current item in the sequential list
+    current_idx = items_in_category.index(current_item)
+
+    # 5. Determine the target index to swap with based on direction
+    if direction == "up" and current_idx > 0:
+        target_idx = current_idx - 1
+    elif direction == "down" and current_idx < len(items_in_category) - 1:
+        target_idx = current_idx + 1
+    else:
+        # Prevent moving up past the top item or down past the bottom item
+        return {"status": "no_change"}
+
+    # 6. Swap indices of current and target items
+    target_item = items_in_category[target_idx]
+    current_item.order_index, target_item.order_index = target_item.order_index, current_item.order_index
+
+    db.commit()
+    return {"status": "success"}
 
 
 # --- ALL ORDERS LOG ---

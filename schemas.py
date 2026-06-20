@@ -34,9 +34,8 @@ class MenuItemBase(BaseModel):
     category: str
     is_available: bool = True
     stock: Optional[int] = None
-    
-    # NEW: Schema supports dynamic image URL tracking
-    image_url: Optional[str] = None 
+    image_url: Optional[str] = None
+    order_index: Optional[int] = None # NEW: Tracks display order index
 
 class MenuItemCreate(MenuItemBase):
     modifiers: Optional[List[ModifierCreate]] = []

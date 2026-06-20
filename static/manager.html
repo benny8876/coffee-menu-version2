@@ -269,6 +269,14 @@
                   <input type="checkbox" id="edit-item-available" class="rounded text-amber-600 focus:ring-amber-500 h-4 w-4">
                   <label for="edit-item-available" class="text-sm font-semibold text-slate-600">Mark as available / in stock</label>
                </div>
+               <div class="flex gap-2 py-2">
+                  <button type="button" onclick="moveItem('up')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-lg text-sm transition">
+                  Move Up
+                  </button>
+                  <button type="button" onclick="moveItem('down')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-lg text-sm transition">
+                  Move Down
+                  </button>
+               </div>
                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg text-sm transition">
                Apply Changes
                </button>
@@ -868,6 +876,32 @@
              } catch (err) {
                  alert("Network error.");
              }
+         }
+         
+         async function moveItem(direction) {
+         const itemId = document.getElementById('edit-item-id').value;
+         
+         try {
+         const response = await fetch(`${API_BASE}/manager/menu/items/${itemId}/move?direction=${direction}`, {
+            method: 'POST',
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
+            }
+         });
+         
+         if (response.status === 401) { handleLogout(); return; }
+         
+         if (response.ok) {
+            // အောင်မြင်ရင် Table ကို ပြန်ဆွဲပြီး Modal ကို ပိတ်မယ်
+            await fetchMenuTable(); 
+            toggleEditModal(false);
+         } else {
+            alert("Could not move item. Make sure you added the move endpoint in your backend.");
+         }
+         } catch (err) {
+         alert("Network error. Please check your backend is running.");
+         }
          }
          
          async function fetchOrdersLog() {

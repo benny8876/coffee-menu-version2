@@ -18,7 +18,10 @@ def verify_table_token(table_id: int, token: str) -> bool:
 
 @router.get("/", response_model=List[schemas.MenuItemResponse])
 def get_available_menu(db: Session = Depends(get_db)):
-    return db.query(models.MenuItem).filter(models.MenuItem.is_available == True).all()
+    # Sort items sequentially based on their display indices
+    return db.query(models.MenuItem).filter(
+        models.MenuItem.is_available == True
+    ).order_by(models.MenuItem.order_index.asc()).all()
 
 @router.post("/order", response_model=schemas.OrderResponse, status_code=status.HTTP_201_CREATED)
 async def place_order(order_data: schemas.OrderCreate, db: Session = Depends(get_db)):
