@@ -64,7 +64,7 @@ def seed_initial_data():
 
     # Seed tables 1-10
     if not db.query(models.RestaurantTable).first():
-        tables = [models.RestaurantTable(number=i) for i in range(1, 11)]
+        tables = [models.RestaurantTable(number=i) for i in range(1, 12)]
         db.add_all(tables)
         db.commit()
 

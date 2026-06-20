@@ -99,6 +99,7 @@
                      <option value="8">Table 8</option>
                      <option value="9">Table 9</option>
                      <option value="10">Table 10</option>
+                     <option value="11">Table 11</option>
                   </select>
                   <button onclick="requestSignedToken()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition">
                   Generate Signed Link
@@ -118,7 +119,7 @@
                      <h2 class="text-lg font-bold mb-2 text-slate-800">Live Dining Sessions (Active Bills)</h2>
                      <p class="text-xs text-slate-400 mb-4">Consolidate multiple orders from the same table into a single master bill.</p>
                   </div>
-                  <div class="overflow-x-auto">
+                  <div class="overflow-y-auto max-h-[300px] border border-slate-100 rounded-lg">
                      <table class="w-full text-left border-collapse">
                         <thead>
                            <tr class="text-xs text-slate-400 border-b">
@@ -135,7 +136,7 @@
                <!-- Menu Inventory modifier -->
                <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                   <h2 class="text-lg font-bold mb-4 border-b pb-2">Modify Menu Items & Pricing</h2>
-                  <div class="overflow-x-auto">
+                  <div class="overflow-y-auto max-h-[350px] border border-slate-100 rounded-lg">
                      <table class="w-full text-left border-collapse">
                         <thead>
                            <tr class="text-xs text-slate-400 border-b">
