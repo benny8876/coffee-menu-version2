@@ -283,6 +283,15 @@
             <div id="cart-items" class="overflow-y-auto space-y-4 flex-1 pr-2 scrollbar-none divide-y-0">
                <!-- Cart items load here -->
             </div>
+            <div id="item-customization" class="p-4">
+                <p class="font-bold text-sm mb-2">Customization:</p>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <label><input type="radio" name="sugar" value="less"> Less Sugar</label>
+                    <label><input type="radio" name="sugar" value="more"> More Sugar</label>
+                    <label><input type="radio" name="ice" value="less"> Less Ice</label>
+                    <label><input type="radio" name="ice" value="more"> More Ice</label>
+                </div>
+            </div>
             <hr class="border-[#874230]/20">
             <!-- Total Block -->
             <div class="pt-2">
@@ -661,10 +670,19 @@
          }
          
          async function submitOrder() {
+
+            const sugar = document.querySelector('input[name="sugar"]:checked')?.value || ''; 
+            const ice = document.querySelector('input[name="ice"]:checked')?.value || '';
+
+            const noteText = [
+                sugar ? `${sugar} sugar` : '',
+                ice ? `${ice} ice` : ''
+            ].filter(Boolean).join(', ');
+
              const itemsPayload = cart.map(cartItem => ({
                  menu_item_id: cartItem.item.id,
                  quantity: cartItem.quantity,
-                 notes: "",
+                 notes: noteText,
                  modifier_ids: cartItem.selectedModifiers.map(m => m.id)
              }));
          

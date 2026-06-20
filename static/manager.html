@@ -100,6 +100,8 @@
                      <option value="9">Table 9</option>
                      <option value="10">Table 10</option>
                      <option value="11">Table 11</option>
+                     <option value="12">Table 12</option>
+                     <option value="13">Table 13</option>
                   </select>
                   <button onclick="requestSignedToken()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition">
                   Generate Signed Link
@@ -207,7 +209,12 @@
                <div class="grid grid-cols-3 gap-4">
                   <div>
                      <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
-                     <input type="text" id="add-item-category" placeholder="Main, Drink" required class="w-full bg-slate-100 border-none rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                     <input type="text"
+                            id="add-item-category"
+                            list="category-list"
+                            placeholder="Type category"
+                            required>
+                      <datalist id="category-list"></datalist>
                   </div>
                   <div>
                      <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Price (Ks)</label>
@@ -323,6 +330,8 @@
                  loginView.classList.add('hidden');
                  dashboardView.classList.remove('hidden');
                  
+                 loadCategories();
+
                  setDefaultDatePicker();
                  fetchAnalytics();
                  fetchMenuTable();
@@ -737,6 +746,19 @@
              }
              return null;
          }
+
+         async function loadCategories() {
+            const res = await fetch(`${API_BASE}/menu/`);
+            const items = await res.json();
+
+            const categories = [...new Set(items.map(i => i.category))];
+
+            const datalist = document.getElementById('category-list');
+
+            datalist.innerHTML = categories
+            .map(c => `<option value="${c}">`)
+            .join('');
+        }
          
         // --- Updated: Dynamic Category Grouping for Inventory Manager Table ---
         async function fetchMenuTable() {
@@ -798,6 +820,8 @@
                 console.error("Could not populate items.");
             }
         }
+
+
          
          function toggleAddModal(show) {
              const modal = document.getElementById('add-item-modal');
@@ -840,6 +864,7 @@
                      toggleAddModal(false);
                      document.getElementById('add-item-form').reset();
                      fetchMenuTable();
+                     loadCategories();
                  }
              } catch (err) {
                  alert("Network error.");
