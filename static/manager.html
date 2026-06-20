@@ -738,37 +738,66 @@
              return null;
          }
          
-         async function fetchMenuTable() {
-             try {
-                 const response = await fetch(`${API_BASE}/menu/`);
-                 menuItemsList = await response.json();
-                 
-                 const tbody = document.getElementById("menu-management-table");
-                 tbody.innerHTML = "";
-                 menuItemsList.forEach(item => {
-                     const stockLabel = item.stock !== null ? item.stock : "Infinite";
-                     const tr = document.createElement("tr");
-                     tr.className = "hover:bg-slate-50";
-                     tr.innerHTML = `
-                         <td class="py-3 font-semibold text-slate-800">${item.name}</td>
-                         <td class="py-3 text-slate-500">${item.category}</td>
-                         <td class="py-3 font-medium">${item.price.toFixed(2)} Ks</td>
-                         <td class="py-3 font-mono text-xs">${stockLabel}</td>
-                         <td class="py-3">
-                             <span class="px-2 py-0.5 rounded text-xs ${item.is_available ? 'bg-green-100 text-green-800':'bg-red-100 text-red-800'}">
-                                 ${item.is_available ? 'Active' : 'Sold Out'}
-                             </span>
-                         </td>
-                         <td class="py-3 text-right">
-                             <button onclick="openEditModal(${item.id})" class="text-amber-600 hover:text-amber-800 font-bold text-xs">Edit</button>
-                         </td>
-                     `;
-                     tbody.appendChild(tr);
-                 });
-             } catch (err) {
-                 console.error("Could not populate items.");
-             }
-         }
+        // --- Updated: Dynamic Category Grouping for Inventory Manager Table ---
+        async function fetchMenuTable() {
+            try {
+                const response = await fetch(`${API_BASE}/menu/`);
+                menuItemsList = await response.json();
+                
+                const tbody = document.getElementById("menu-management-table");
+                tbody.innerHTML = "";
+
+                if (menuItemsList.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-400 italic">No menu items found</td></tr>`;
+                    return;
+                }
+
+                // 1. Group database items by their category names dynamically
+                const categories = {};
+                menuItemsList.forEach(item => {
+                    if (!categories[item.category]) {
+                        categories[item.category] = [];
+                    }
+                    categories[item.category].push(item);
+                });
+
+                // 2. Loop through each category to render separate grouped sections
+                for (const [categoryName, items] of Object.entries(categories)) {
+                    
+                    // Create a styled full-width category sub-header row
+                    const headerRow = document.createElement("tr");
+                    headerRow.className = "bg-slate-100 font-bold text-xs text-slate-500 uppercase tracking-wider select-none";
+                    headerRow.innerHTML = `
+                        <td colspan="6" class="py-2.5 px-4 font-black border-y border-slate-200/60">${categoryName}</td>
+                    `;
+                    tbody.appendChild(headerRow);
+
+                    // Add all items belonging strictly to this category group
+                    items.forEach(item => {
+                        const stockLabel = item.stock !== null ? `${item.stock} units` : "Infinite";
+                        const tr = document.createElement("tr");
+                        tr.className = "hover:bg-slate-50 transition duration-150";
+                        tr.innerHTML = `
+                            <td class="py-3 px-4 font-semibold text-slate-800">${item.name}</td>
+                            <td class="py-3 text-slate-400 font-bold text-xs uppercase">${item.category}</td>
+                            <td class="py-3 font-black text-amber-600">${item.price.toFixed(0)} Ks</td>
+                            <td class="py-3 font-mono text-xs text-slate-500">${stockLabel}</td>
+                            <td class="py-3">
+                                <span class="px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider ${item.is_available ? 'bg-green-100 text-green-800':'bg-rose-100 text-rose-800'}">
+                                    ${item.is_available ? 'Active' : 'Sold Out'}
+                                </span>
+                            </td>
+                            <td class="py-3 text-right pr-4">
+                                <button onclick="openEditModal(${item.id})" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-1 px-3 rounded-lg transition active:scale-95">Edit</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error("Could not populate items.");
+            }
+        }
          
          function toggleAddModal(show) {
              const modal = document.getElementById('add-item-modal');
