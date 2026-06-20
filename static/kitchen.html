@@ -155,10 +155,14 @@
 
                     return `
                         <div class="border-b border-slate-700/50 pb-2">
-                            <div class="flex justify-between text-sm">
+                            <div class="text-sm">
                                 <span><b class="text-slate-200">${i.quantity}x</b> ${i.menu_item.name}</span>
-                                <span class="text-xs text-slate-400 italic">${i.notes || ''}</span>
                             </div>
+                            ${i.notes ? `
+                                <div class="mt-1 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded px-2 py-1">
+                                    📝 ${i.notes}
+                                </div>
+                            ` : ''}
                             ${modsSubtext}
                         </div>
                     `;

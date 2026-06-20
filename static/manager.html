@@ -532,7 +532,7 @@
                      tr.className = "hover:bg-slate-50";
                      tr.innerHTML = `
                          <td class="py-3 font-bold text-[#161912]">Table ${table.table_number}</td>
-                         <td class="py-3 text-slate-500 font-semibold">${table.active_orders_count} dockets</td>
+                         
                          <td class="py-3 font-semibold text-amber-600">${table.total_price.toFixed(2)} Ks</td>
                          <td class="py-3 text-right">
                              <button onclick="loadConsolidatedTableBill(${table.table_id})" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-black py-1 px-3 rounded-lg transition">Generate Master Bill</button>
@@ -696,7 +696,7 @@
                      </div>
                      <div class="text-xs">
                          <p><b>TABLE NUMBER:</b> Table ${bill.table_number}</p>
-                         <p class="text-[10px] text-slate-400">Dockets: ${bill.order_ids.map(id => `#${id}`).join(', ')}</p>
+                         
                      </div>
                      <div class="space-y-2 my-4">
                          ${itemsStr}

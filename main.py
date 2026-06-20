@@ -103,7 +103,7 @@ def seed_initial_data():
         #)
 
         #db.add_all([mod_less_sugar, mod_more_sugar, mod_less_ice, mod_more_ice])
-        #db.commit()
+        db.commit()
 
 
 @app.get("/")

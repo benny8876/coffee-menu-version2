@@ -13,7 +13,6 @@
       <style>
          /* --- STABLE STATIC BACKGROUND SYSTEM --- */
          body {
-         background-image: url('./static/bg_logo.jpg');
          background-size: cover;
          background-position: center;
          background-attachment: fixed;
@@ -59,6 +58,19 @@
          .animate-bounce-hop { animation: bounce-hop 3s ease-in-out infinite; }
          .animate-wave-arm { animation: wave-arm 2s ease-in-out infinite; transform-origin: bottom left; }
          .animate-steam { animation: steam-rise 2.5s ease-in-out infinite; }
+         .preset-chip {
+         font-size: 0.75rem;
+         padding: 0.4rem 0.75rem;
+         border-radius: 9999px;
+         border: 1px solid rgba(135, 66, 48, 0.25);
+         background: white;
+         color: #874230;
+         transition: background 0.15s, color 0.15s;
+         }
+         .preset-chip.active {
+         background: #874230;
+         color: white;
+         }
       </style>
    </head>
    <body class="text-[#874230] font-27-body min-h-screen select-none">
@@ -69,22 +81,22 @@
          <!-- --- BACKGROUND WATERMARKS --- -->
          <!-- Top-Left Retro Palm Leaf -->
          <div class="absolute -left-24 -top-20 w-[400px] sm:w-[500px] h-auto pointer-events-none opacity-20 text-[#434343]/80 z-0 select-none">
-            <img src="./static/corner1.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
+            <img src="/static/corner1.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
          </div>
          
          <!-- Top-Right Retro Monstera Leaf -->
          <div class="absolute -right-20 -top-12 w-56 sm:w-80 h-auto pointer-events-none opacity-20 text-[#6f8a38]/80 z-0 select-none">
-            <img src="./static/corner4.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
+            <img src="/static/corner4.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
          </div>
          
          <!-- Bottom-Left Retro Monstera Leaf -->
          <div class="absolute -left-20 -bottom-16 w-56 sm:w-80 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none ">
-            <img src="./static/corner3.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
+            <img src="/static/corner3.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
          </div>
          
          <!-- Bottom-Right Retro Palm Leaf -->
          <div class="absolute -right-16 -bottom-16 w-48 sm:w-72 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none ">
-            <img src="./static/corner5.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
+            <img src="/static/corner5.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
          </div>
 
          <!-- Checkerboard Top Accent -->
@@ -152,7 +164,7 @@
                <div class="flex items-center gap-6">
                   <!-- Scaled-down dynamic responsive heights to prevent layout crowding -->
                   <div class="h-20 sm:h-28 md:h-36 lg:h-40 w-auto flex items-center justify-center shrink-0">
-                     <img src="./static/logo2.jpg" alt="Cafe Logo" class="h-full w-full object-contain" onerror="this.style.display='none'">
+                     <img src="/static/logo2.jpg" alt="Cafe Logo" class="h-full w-full object-contain" onerror="this.style.display='none'">
                   </div>
                   <div class="space-y-1">
                      <h1 style="font-family: 'Revans', sans-serif;" class="font-27-title tracking-tight leading-none text-[#602D1F]">
@@ -283,15 +295,6 @@
             <div id="cart-items" class="overflow-y-auto space-y-4 flex-1 pr-2 scrollbar-none divide-y-0">
                <!-- Cart items load here -->
             </div>
-            <div id="item-customization" class="p-4">
-                <p class="font-bold text-sm mb-2">Customization:</p>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <label><input type="radio" name="sugar" value="less"> Less Sugar</label>
-                    <label><input type="radio" name="sugar" value="more"> More Sugar</label>
-                    <label><input type="radio" name="ice" value="less"> Less Ice</label>
-                    <label><input type="radio" name="ice" value="more"> More Ice</label>
-                </div>
-            </div>
             <hr class="border-[#874230]/20">
             <!-- Total Block -->
             <div class="pt-2">
@@ -303,6 +306,32 @@
             <!-- Place Order Action Button (Solid dark brown rounded button) -->
             <button onclick="submitOrder()" class="w-full bg-[#22150E] hover:bg-[#341D14] text-white font-retro-title py-4 rounded-2xl text-base font-bold transition active:scale-95 shadow-md">
             Place Order
+            </button>
+         </div>
+      </div>
+
+      <!-- Item Customization Modal -->
+      <div id="customize-modal" class="fixed inset-0 bg-black/50 z-[105] hidden flex items-end sm:items-center justify-center p-4" onclick="closeCustomizeModal()">
+         <div class="bg-[#eae6dd] rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center">
+               <h3 id="customize-item-name" class="text-xl font-27-title font-bold text-[#874230]">Item</h3>
+               <button onclick="closeCustomizeModal()" class="text-2xl text-[#874230]/60 leading-none p-1">&times;</button>
+            </div>
+            <p class="text-xs text-slate-500">Choose options or write what you want:</p>
+            <div class="flex flex-wrap gap-2" id="customize-presets">
+               <button type="button" data-preset="Less sugar" class="preset-chip">Less Sugar</button>
+               <button type="button" data-preset="More sugar" class="preset-chip">More Sugar</button>
+               <button type="button" data-preset="Less ice" class="preset-chip">Less Ice</button>
+               <button type="button" data-preset="More ice" class="preset-chip">More Ice</button>
+               <button type="button" data-preset="Less sweet" class="preset-chip">Less Sweet</button>
+               <button type="button" data-preset="More sweet" class="preset-chip">More Sweet</button>
+            </div>
+            <textarea id="customize-notes" rows="3" maxlength="200"
+               placeholder="Example: extra hot, no foam, allergy note..."
+               class="w-full rounded-xl border border-[#874230]/20 p-3 text-sm bg-white text-[#874230] resize-none"></textarea>
+            <button onclick="confirmAddToCart()"
+               class="w-full bg-[#22150E] hover:bg-[#341D14] text-white font-bold py-3 rounded-xl transition active:scale-95">
+               Add to Cart
             </button>
          </div>
       </div>
@@ -344,6 +373,8 @@
          let menuItems = [];
          let cart = []; 
          let pendingOrderId = null;
+         let pendingCustomizeItemId = null;
+         let selectedPresets = new Set();
          
          // Aesthetic default fallback images if no photo is uploaded by the manager
          const juiceImages = {
@@ -355,13 +386,9 @@
              "berry": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=400&q=80",
              "apple": "https://images.unsplash.com/photo-1512484776495-a09d92e87c3b?auto=format&fit=crop&w=400&q=80",
              "pineapple": "https://images.unsplash.com/photo-1589733901241-5e53429e145e?auto=format&fit=crop&w=400&q=80",
-             "default": "https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=400&q=80",
-         
-             // --- NEW: Dynamic Cake and Bakery Fallbacks ---
              "cake": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=400&q=80",
              "dessert": "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=400&q=80",
              "bakery": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
-         
              "default": "https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=400&q=80"
          };
          
@@ -383,12 +410,15 @@
              await fetchMenu();
          }
          
+         function getItemQuantityInCart(itemId) {
+             return cart.filter(c => c.item.id === itemId).reduce((sum, c) => sum + c.quantity, 0);
+         }
+         
          async function fetchMenu() {
              try {
                  const response = await fetch(`${API_BASE}/menu/`);
                  menuItems = await response.json();
                  renderMenu();
-                 renderStaticAddonsList();
              } catch (err) {
                  console.error("Failed to query catalog.");
              }
@@ -409,6 +439,7 @@
              });
          
              for (const [categoryName, items] of Object.entries(categories)) {
+                items.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
                 const normalizedCategory = categoryName.toLowerCase();
                 
                 // Matches "juice", "fresh juice", "cake", "dessert", "bakery", etc.
@@ -426,12 +457,11 @@
                          const isSoldOut = item.stock !== null && item.stock <= 0;
                          const imgUrl = item.image_url ? item.image_url : getJuiceImage(item.name);
          
-                         const cartItem = cart.find(c => c.item.id === item.id);
-                         const quantityInCart = cartItem ? cartItem.quantity : 0;
+                         const quantityInCart = getItemQuantityInCart(item.id);
          
                          return `
-                             <!-- Floating Card with direct Tap-to-Order -->
-                             <div class="snap-start flex-none w-44 sm:w-48 flex flex-col cursor-pointer active:scale-95 transition duration-200" onclick="${isSoldOut ? '' : `addToCartDirect(${item.id})`}">
+                             <!-- Floating Card with Tap-to-Customize -->
+                             <div class="snap-start flex-none w-44 sm:w-48 flex flex-col cursor-pointer active:scale-95 transition duration-200" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
                                  <!-- Rounded Photo with deep soft drop shadow (Scaled h-48 on mobile, h-56 on tablet) -->
                                  <div class="relative h-44 sm:h-56 w-full rounded-3xl overflow-hidden shadow-xl border border-[#9d958c]/25 hover:shadow-2xl transition duration-300">
                                      <img src="${imgUrl}" class="h-full w-full object-cover" alt="${item.name}">
@@ -476,11 +506,10 @@
                      const itemsHtml = items.map(item => {
                          const isSoldOut = item.stock !== null && item.stock <= 0;
          
-                         const cartItem = cart.find(c => c.item.id === item.id);
-                         const quantityInCart = cartItem ? cartItem.quantity : 0;
+                         const quantityInCart = getItemQuantityInCart(item.id);
          
                          return `
-                             <div class="flex justify-between items-start text-sm py-4 cursor-pointer active:scale-[0.99] transition duration-150 border-b border-[#735647]/10" onclick="${isSoldOut ? '' : `addToCartDirect(${item.id})`}">
+                             <div class="flex justify-between items-start text-sm py-4 cursor-pointer active:scale-[0.99] transition duration-150 border-b border-[#735647]/10" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
                                  <div class="flex-1 pr-4">
                                      <div class="flex items-center gap-2">
                                          <!-- Scaled up Item Name -->
@@ -516,54 +545,52 @@
              }
          }
          
-         // Render dynamic ADD-ONS Card
-         function renderStaticAddonsList() {
-             const container = document.getElementById('addons-list-container');
-             container.innerHTML = "";
-         
-             const allModifiersMap = {};
-             menuItems.forEach(item => {
-                 item.modifiers.forEach(mod => {
-                     allModifiersMap[mod.name] = mod.price;
-                 });
-             });
-         
-             const uniqueModifiers = Object.entries(allModifiersMap);
-             if (uniqueModifiers.length === 0) {
-                 container.innerHTML = `<p class="text-xs text-slate-100 italic text-center">No additional add-ons today.</p>`;
-                 return;
-             }
-         
-             uniqueModifiers.forEach(([name, price]) => {
-                 const div = document.createElement('div');
-                 div.className = "flex justify-between border-b border-white/20 pb-2 text-sm md:text-base";
-                 div.innerHTML = `
-                     <span class="font-medium">${name}</span>
-                     <span class="font-bold">${price.toFixed(0)} Ks</span>
-                 `;
-                 container.appendChild(div);
-             });
-         }
-         
-         // Handles high-speed tap-to-add order placement
-         function addToCartDirect(itemId) {
+         function openCustomizeModal(itemId) {
              const item = menuItems.find(i => i.id === itemId);
              if (!item) return;
          
-             const matchedCartItem = cart.find(cartItem => cartItem.item.id === itemId);
+             pendingCustomizeItemId = itemId;
+             selectedPresets.clear();
+             document.getElementById('customize-item-name').innerText = item.name;
+             document.getElementById('customize-notes').value = '';
+             document.querySelectorAll('.preset-chip').forEach(btn => btn.classList.remove('active'));
+             document.getElementById('customize-modal').classList.remove('hidden');
+         }
          
-             if (matchedCartItem) {
-                 matchedCartItem.quantity += 1;
+         function closeCustomizeModal() {
+             pendingCustomizeItemId = null;
+             selectedPresets.clear();
+             document.getElementById('customize-modal').classList.add('hidden');
+         }
+         
+         function buildItemNotes() {
+             const customText = document.getElementById('customize-notes').value.trim();
+             const parts = [...selectedPresets];
+             if (customText) parts.push(customText);
+             return parts.join(', ');
+         }
+         
+         function confirmAddToCart() {
+             const item = menuItems.find(i => i.id === pendingCustomizeItemId);
+             if (!item) return;
+         
+             const notes = buildItemNotes();
+             const matched = cart.find(c => c.item.id === item.id && (c.notes || '') === notes);
+         
+             if (matched) {
+                 matched.quantity += 1;
              } else {
                  cart.push({
-                     item: item,
-                     selectedModifiers: [], 
-                     quantity: 1
+                     item,
+                     quantity: 1,
+                     notes,
+                     selectedModifiers: []
                  });
              }
          
+             closeCustomizeModal();
              updateCartSummary();
-              
+             renderMenu();
          }
          
          function updateCartSummary() {
@@ -634,6 +661,7 @@
                      <!-- Left: Product Name & Formula breakdown -->
                      <div class="flex-1 min-w-[100px]">
                          <p class="font-bold text-[#735647] text-sm sm:text-base md:text-lg leading-tight">${cartItem.item.name}</p>
+                         ${cartItem.notes ? `<p class="text-xs text-amber-700 mt-1">📝 ${cartItem.notes}</p>` : ''}
                          <p class="text-[10px] sm:text-xs text-slate-500 font-retro-typewriter mt-1">${mathBreakdown}</p>
                      </div>
                      
@@ -656,33 +684,24 @@
              } else {
                  renderCartModalItems();
                  updateCartSummary();
-                 
+                 renderMenu();
              }
          }
          
-         // Fixed: Fixed a tiny JS syntax typo where it said 'disply' instead of 'display'
          function removeCartItem(index) {
              cart.splice(index, 1);
              renderCartModalItems();
              updateCartSummary();
+             renderMenu();
              
              if (cart.length === 0) toggleCartModal(false);
          }
          
          async function submitOrder() {
-
-            const sugar = document.querySelector('input[name="sugar"]:checked')?.value || ''; 
-            const ice = document.querySelector('input[name="ice"]:checked')?.value || '';
-
-            const noteText = [
-                sugar ? `${sugar} sugar` : '',
-                ice ? `${ice} ice` : ''
-            ].filter(Boolean).join(', ');
-
              const itemsPayload = cart.map(cartItem => ({
                  menu_item_id: cartItem.item.id,
                  quantity: cartItem.quantity,
-                 notes: noteText,
+                 notes: cartItem.notes || null,
                  modifier_ids: cartItem.selectedModifiers.map(m => m.id)
              }));
          
@@ -725,13 +744,10 @@
                  });
                  if (response.ok) {
                      const modal = document.getElementById('payment-modal');
-                     if(modal){
-                         modal.style.display ='none';
-                         modal.classList.add('hidden');
-                     }
+                     modal.classList.add('hidden');
                      
                      cart = [];
-                     updateCartSummary(); // Clears floating bar automatically
+                     updateCartSummary();
                      fetchMenu();
                  } else {
                      alert("Authorization failed on payment gateway.");
@@ -753,6 +769,19 @@
                  console.error("Alert dispatch failed.");
              }
          }
+         
+         document.getElementById('customize-presets').addEventListener('click', (e) => {
+             const btn = e.target.closest('[data-preset]');
+             if (!btn) return;
+             const val = btn.dataset.preset;
+             if (selectedPresets.has(val)) {
+                 selectedPresets.delete(val);
+                 btn.classList.remove('active');
+             } else {
+                 selectedPresets.add(val);
+                 btn.classList.add('active');
+             }
+         });
          
          verifyAndLoad();
       </script>
