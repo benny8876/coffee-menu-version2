@@ -4,19 +4,18 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, time, timezone, timedelta
 from typing import Optional, List
-import csv, io, hmac, hashlib, shutil, uuid
+import csv, io, hashlib, shutil, uuid
 import os
 from database import get_db
 import models, schemas
+import security
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
 router = APIRouter(prefix="/manager", tags=["Manager Panel"])
-SECRET_KEY = b"restaurant_super_secret_signing_key_2026"
 MYANMAR_TZ = timezone(timedelta(hours=6, minutes=30))
-SECURE_SESSION_TOKEN = "secure_manager_session_token_2026_xyz"
 
 # Hashing utility
 def hash_password(password: str) -> str:
@@ -31,7 +30,7 @@ def verify_manager_token(authorization: Optional[str] = Header(None)):
         )
     try:
         token_type, token = authorization.split(" ")
-        if token_type.lower() != "bearer" or token != SECURE_SESSION_TOKEN:
+        if token_type.lower() != "bearer" or token != security.MANAGER_SESSION_TOKEN:
             raise ValueError()
     except (ValueError, AttributeError):
         raise HTTPException(
@@ -51,7 +50,7 @@ def manager_login(credentials: schemas.LoginRequest, db: Session = Depends(get_d
     if not admin or admin.password_hash != hash_password(credentials.password):
         raise HTTPException(status_code=401, detail="Invalid username or password.")
 
-    return {"token": SECURE_SESSION_TOKEN}
+    return {"token": security.MANAGER_SESSION_TOKEN}
 
 
 # --- NEW: Change Password API Endpoint ---
@@ -115,13 +114,35 @@ def generate_table_qr_token(
     if not table:
         raise HTTPException(status_code=404, detail="Table does not exist.")
 
-    token = hmac.new(SECRET_KEY, str(table.id).encode(), hashlib.sha256).hexdigest()
+    token = security.generate_table_token(table.id)
     return {
         "table_id": table.id,
         "table_number": table.number,
         "secure_token": token,
         "qr_link": f"/menu?table={table.id}&token={token}",
     }
+
+
+@router.get("/tables/qr-links")
+def get_all_table_qr_links(
+    db: Session = Depends(get_db),
+    authenticated: bool = Depends(verify_manager_token),
+):
+    tables = (
+        db.query(models.RestaurantTable)
+        .filter(models.RestaurantTable.is_active == True)
+        .order_by(models.RestaurantTable.number.asc())
+        .all()
+    )
+    return [
+        {
+            "table_id": table.id,
+            "table_number": table.number,
+            "secure_token": security.generate_table_token(table.id),
+            "qr_link": f"/menu?table={table.id}&token={security.generate_table_token(table.id)}",
+        }
+        for table in tables
+    ]
 
 
 # --- INVENTORY CREATION ---

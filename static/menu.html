@@ -740,7 +740,12 @@
          async function confirmPayment() {
              try {
                  const response = await fetch(`${API_BASE}/menu/order/${pendingOrderId}/mock-pay`, {
-                     method: 'POST'
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                         table_id: parseInt(tableId),
+                         token: secureToken
+                     })
                  });
                  if (response.ok) {
                      const modal = document.getElementById('payment-modal');
@@ -759,7 +764,7 @@
          
          async function summonService(type) {
              try {
-                 const response = await fetch(`${API_BASE}/menu/call-waiter?table_id=${tableId}&request_type=${type}`, {
+                 const response = await fetch(`${API_BASE}/menu/call-waiter?table_id=${tableId}&request_type=${type}&token=${encodeURIComponent(secureToken)}`, {
                      method: 'POST'
                  });
                  if (response.ok) {

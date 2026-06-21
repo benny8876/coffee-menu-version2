@@ -13,6 +13,13 @@ class PasswordChangeRequest(BaseModel):
     old_password: str
     new_password: str
 
+class KitchenLoginRequest(BaseModel):
+    pin: str
+
+class MockPayRequest(BaseModel):
+    table_id: int
+    token: str
+
 # --- Modifiers ---
 class ModifierBase(BaseModel):
     name: str
