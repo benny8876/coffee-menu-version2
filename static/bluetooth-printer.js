@@ -55,7 +55,7 @@
         out += ESC + '@';
         out += ESC + 'a' + '\x01';
 
-        const title = receipt.restaurant_name || '27 Cafe & Bar';
+        const title = receipt.restaurant_name || '27 Cafe ';
         out += center(title);
 
         if (receipt.voucher_id) {
@@ -96,9 +96,6 @@
         out += dashedLine();
         out += padLine('Subtotal', formatMoney(receipt.subtotal));
 
-        if (receipt.tax_amount != null) {
-            out += padLine('Tax (10%)', formatMoney(receipt.tax_amount));
-        }
 
         out += ESC + 'E' + '\x01';
         out += padLine('GRAND TOTAL', formatMoney(receipt.grand_total));
@@ -111,7 +108,7 @@
 
         out += ESC + 'a' + '\x01';
         out += '\nThank you!\n';
-        out += center('27 Cafe & Bar');
+        out += center('27 Cafe ');
         out += '\n\n\n';
         out += GS + 'V' + '\x00';
 
