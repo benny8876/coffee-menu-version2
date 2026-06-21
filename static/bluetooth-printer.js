@@ -55,7 +55,7 @@
         out += ESC + '@';
         out += ESC + 'a' + '\x01';
 
-        const title = receipt.restaurant_name || '27 Cafe ';
+        const title ='27 Cafe ';
         out += center(title);
 
         if (receipt.voucher_id) {
