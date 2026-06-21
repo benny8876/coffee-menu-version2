@@ -263,7 +263,7 @@ def print_voucher(
         raise HTTPException(status_code=404, detail="Order not found")
 
     voucher_data = {
-        "restaurant_name": "27 Cafe & Bar",
+        "restaurant_name": "27 Cafe",
         "voucher_id": f"REC-{order.id:06d}",
         "timestamp": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
         "table_number": order.table.number,
@@ -277,8 +277,7 @@ def print_voucher(
             for item in order.items
         ],
         "subtotal": order.total_price,
-        "tax_amount": round(order.total_price * 0.10, 2),
-        "grand_total": round(order.total_price * 1.10, 2),
+        "grand_total": order.total_price,
         "status": order.status.value,
     }
     return voucher_data
@@ -374,15 +373,14 @@ def get_consolidated_table_bill(
     table_num = active_orders[0].table.number
 
     return {
-        "restaurant_name": "27 Cafe & Bar",
+        "restaurant_name": "27 Cafe",
         "table_id": table_id,
         "table_number": table_num,
         "order_ids": order_ids,
         "timestamp": datetime.now(MYANMAR_TZ).strftime("%Y-%m-%d %H:%M:%S"),
         "items": list(consolidated_items.values()),
         "subtotal": grand_total,
-        "tax_amount": round(grand_total * 0.10, 2),
-        "grand_total": round(grand_total * 1.10, 2),
+        "grand_total": grand_total,
     }
 
 
@@ -512,15 +510,14 @@ def get_historical_table_bill(
     table_num = orders[0].table.number
 
     return {
-        "restaurant_name": "27 Cafe & Bar",
+        "restaurant_name": "27 Cafe",
         "table_id": table_id,
         "table_number": table_num,
         "order_ids": order_ids,
         "timestamp": datetime.now(MYANMAR_TZ).strftime("%Y-%m-%d %H:%M:%S"),
         "items": list(consolidated_items.values()),
         "subtotal": grand_total,
-        "tax_amount": round(grand_total * 0.10, 2),
-        "grand_total": round(grand_total * 1.10, 2),
+        "grand_total": grand_total,
     }
 
 
