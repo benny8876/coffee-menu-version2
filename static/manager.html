@@ -312,6 +312,8 @@
       <script>
          const API_BASE = `${window.location.origin}/api/v1`;
          let menuItemsList = [];
+         let managerWs = null;
+         let activeTablesPollId = null;
          
          function getAuthHeaders() {
              const token = localStorage.getItem('manager_token');
@@ -342,7 +344,66 @@
                  loadQrTableSelect();
                  fetchOrdersLog();
                  fetchSettledTablesHistory();
+                 connectManagerWS();
+                 startActiveTablesPolling();
+                 reconnectBluetoothPrinter();
              }
+         }
+
+         function refreshLiveDashboard() {
+             fetchActiveTables();
+             fetchOrdersLog();
+         }
+
+         function handleManagerWsEvent(data) {
+             if (data.event === 'new_order' || data.event === 'status_update') {
+                 refreshLiveDashboard();
+             } else if (data.event === 'table_settled') {
+                 refreshLiveDashboard();
+                 fetchSettledTablesHistory();
+                 fetchAnalytics();
+             }
+         }
+
+         function connectManagerWS() {
+             const token = localStorage.getItem('manager_token');
+             if (!token) return;
+
+             if (managerWs) {
+                 managerWs.close();
+                 managerWs = null;
+             }
+
+             const WS_URL = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v1/manager/ws?token=${encodeURIComponent(token)}`;
+             managerWs = new WebSocket(WS_URL);
+
+             managerWs.onopen = () => {
+                 refreshLiveDashboard();
+             };
+
+             managerWs.onmessage = (event) => {
+                 try {
+                     handleManagerWsEvent(JSON.parse(event.data));
+                 } catch (err) {
+                     console.error('Manager websocket message error', err);
+                 }
+             };
+
+             managerWs.onclose = () => {
+                 managerWs = null;
+                 setTimeout(connectManagerWS, 5000);
+             };
+         }
+
+         function startActiveTablesPolling() {
+             if (activeTablesPollId) {
+                 clearInterval(activeTablesPollId);
+             }
+             activeTablesPollId = setInterval(refreshLiveDashboard, 15000);
+         }
+
+         function reconnectBluetoothPrinter() {
+             BluetoothPrinter.tryReconnectStoredPrinter(getBluetoothStatusEl()).catch(() => {});
          }
          
          async function handleLogin(event) {

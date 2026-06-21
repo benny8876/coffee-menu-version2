@@ -25,6 +25,8 @@
         },
     ];
 
+    const PRINTER_ID_KEY = 'bluetooth_printer_device_id';
+
     let bluetoothDevice = null;
     let writeCharacteristic = null;
     let currentReceipt = null;
@@ -136,24 +138,83 @@
         throw new Error('No writable printer characteristic found. Check that the printer supports BLE printing.');
     }
 
+    async function connectToDevice(device) {
+        bluetoothDevice = device;
+        bluetoothDevice.addEventListener('gattserverdisconnected', onGattDisconnected);
+        const server = await bluetoothDevice.gatt.connect();
+        writeCharacteristic = await findWritableCharacteristic(server);
+        localStorage.setItem(PRINTER_ID_KEY, device.id);
+        return bluetoothDevice.name || 'Bluetooth printer';
+    }
+
+    function onGattDisconnected() {
+        writeCharacteristic = null;
+    }
+
+    function updatePrinterStatus(statusEl, text, className) {
+        if (!statusEl) return;
+        statusEl.innerText = text;
+        statusEl.className = className;
+    }
+
+    async function tryReconnectStoredPrinter(statusEl) {
+        if (!navigator.bluetooth || !navigator.bluetooth.getDevices) {
+            return false;
+        }
+
+        const savedId = localStorage.getItem(PRINTER_ID_KEY);
+        if (!savedId) {
+            return false;
+        }
+
+        const devices = await navigator.bluetooth.getDevices();
+        const device = devices.find((entry) => entry.id === savedId);
+        if (!device) {
+            return false;
+        }
+
+        try {
+            updatePrinterStatus(statusEl, 'Reconnecting to printer...', 'text-xs text-blue-600');
+            const printerName = await connectToDevice(device);
+            updatePrinterStatus(
+                statusEl,
+                `Connected: ${printerName}`,
+                'text-xs text-emerald-600 font-semibold'
+            );
+            return true;
+        } catch (err) {
+            writeCharacteristic = null;
+            return false;
+        }
+    }
+
     async function connectBluetoothPrinter() {
         if (!navigator.bluetooth) {
             throw new Error('Web Bluetooth is not supported. Use Chrome on Android over HTTPS.');
         }
 
         const optionalServices = PRINTER_PROFILES.map((profile) => profile.service);
-        bluetoothDevice = await navigator.bluetooth.requestDevice({
+        const device = await navigator.bluetooth.requestDevice({
             acceptAllDevices: true,
             optionalServices,
         });
 
-        bluetoothDevice.addEventListener('gattserverdisconnected', () => {
-            writeCharacteristic = null;
-        });
+        return connectToDevice(device);
+    }
 
-        const server = await bluetoothDevice.gatt.connect();
-        writeCharacteristic = await findWritableCharacteristic(server);
-        return bluetoothDevice.name || 'Bluetooth printer';
+    async function ensurePrinterConnected(statusEl) {
+        if (writeCharacteristic && bluetoothDevice?.gatt?.connected) {
+            return getPrinterName();
+        }
+
+        writeCharacteristic = null;
+
+        const reconnected = await tryReconnectStoredPrinter(statusEl);
+        if (reconnected) {
+            return getPrinterName();
+        }
+
+        return connectPrinterWithStatus(statusEl);
     }
 
     async function sendEscPosData(data) {
@@ -185,17 +246,20 @@
     }
 
     async function connectPrinterWithStatus(statusEl) {
-        if (statusEl) {
-            statusEl.innerText = 'Searching for printer...';
-            statusEl.className = 'text-xs text-blue-600';
+        const reconnected = await tryReconnectStoredPrinter(statusEl);
+        if (reconnected) {
+            return getPrinterName();
         }
+
+        updatePrinterStatus(statusEl, 'Searching for printer...', 'text-xs text-blue-600');
 
         const printerName = await connectBluetoothPrinter();
 
-        if (statusEl) {
-            statusEl.innerText = `Connected: ${printerName}`;
-            statusEl.className = 'text-xs text-emerald-600 font-semibold';
-        }
+        updatePrinterStatus(
+            statusEl,
+            `Connected: ${printerName}`,
+            'text-xs text-emerald-600 font-semibold'
+        );
 
         return printerName;
     }
@@ -205,22 +269,18 @@
             throw new Error('No receipt loaded. Open a receipt first.');
         }
 
-        if (!writeCharacteristic) {
-            await connectPrinterWithStatus(statusEl);
-        }
+        updatePrinterStatus(statusEl, 'Printing...', 'text-xs text-blue-600');
 
-        if (statusEl) {
-            statusEl.innerText = 'Printing...';
-            statusEl.className = 'text-xs text-blue-600';
-        }
+        await ensurePrinterConnected(statusEl);
 
         const data = buildEscPosReceipt(currentReceipt);
         await sendEscPosData(data);
 
-        if (statusEl) {
-            statusEl.innerText = `Printed on ${getPrinterName()}`;
-            statusEl.className = 'text-xs text-emerald-600 font-semibold';
-        }
+        updatePrinterStatus(
+            statusEl,
+            `Printed on ${getPrinterName()}`,
+            'text-xs text-emerald-600 font-semibold'
+        );
     }
 
     global.BluetoothPrinter = {
@@ -228,6 +288,7 @@
         buildEscPosReceipt,
         connectBluetoothPrinter,
         connectPrinterWithStatus,
+        tryReconnectStoredPrinter,
         printCurrentReceipt,
         isPrinterConnected,
         getPrinterName,

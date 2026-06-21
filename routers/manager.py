@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -9,6 +9,7 @@ import os
 from database import get_db
 import models, schemas
 import security
+from websocket import manager_ws
 from table_labels import RESTAURANT_NAME, get_table_label
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -389,7 +390,7 @@ def get_consolidated_table_bill(
 
 # --- SETTLE TABLE BILL ---
 @router.post("/tables/{table_id}/settle")
-def settle_table_bill(
+async def settle_table_bill(
     table_id: int,
     db: Session = Depends(get_db),
     authenticated: bool = Depends(verify_manager_token),
@@ -420,6 +421,9 @@ def settle_table_bill(
 
     db.commit()
     table_label = get_table_label(active_orders[0].table)
+    await manager_ws.broadcast(
+        {"event": "table_settled", "table_id": table_id, "table_number": table_label}
+    )
     return {"message": f"Table {table_label} settled."}
 
 
@@ -872,3 +876,22 @@ def export_daily_report(
     filename = f"business_summary_{target_date.strftime('%Y-%m-%d')}.pdf"
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
     return StreamingResponse(buffer, media_type="application/pdf", headers=headers)
+
+
+@router.websocket("/ws")
+async def manager_websocket_endpoint(websocket: WebSocket):
+    token = websocket.query_params.get("token")
+    if not security.verify_manager_ws_token(token):
+        await websocket.close(code=1008, reason="Manager authentication required")
+        return
+
+    await manager_ws.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        print(f"LOG: [Manager WebSocket] Unexpected connection break: {e}")
+    finally:
+        manager_ws.disconnect(websocket)
