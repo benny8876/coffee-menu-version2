@@ -93,6 +93,7 @@ class OrderItemResponse(BaseModel):
 class TableResponse(BaseModel):
     id: int
     number: int
+    label: str
     class Config:
         from_attributes = True
 

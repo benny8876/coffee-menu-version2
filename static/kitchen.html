@@ -321,7 +321,7 @@
                     <span class="text-xs text-slate-400">${timeStr}</span>
                 </div>
                 <div class="bg-slate-900/40 p-2 rounded-lg text-center">
-                    <h3 class="font-bold text-lg text-white">Table ${order.table.number}</h3>
+                    <h3 class="font-bold text-lg text-white">Table ${order.table.label}</h3>
                 </div>
                 <div class="space-y-1 my-2">
                     ${itemsHtml}
@@ -402,7 +402,7 @@
                 if (data.event === "service_request") {
                     triggerStaffSummonAlert(data.table_number, data.request);
                 } else if (data.event === "new_order") {
-                    const tableNumber = data.order && data.order.table ? data.order.table.number : null;
+                    const tableNumber = data.order && data.order.table ? data.order.table.label : null;
                     playNewOrderChime(tableNumber);
                     fetchOrders();
                 } else {
