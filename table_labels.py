@@ -2,8 +2,8 @@
 
 # Section A (7 tables) + Section B (6 tables) = 13 tables
 TABLE_LABELS = [
-    "A1", "A2", "A3", "A4", "A5", "A6", "A7",
-    "B1", "B2", "B3", "B4", "B5", "B6",
+    "A1", "A2", "B1", "B2", "C1", "C2", "D1",
+    "D2", "V-1", "V-2", "Order", "Main", "Extra",
 ]
 
 RESTAURANT_NAME = "27 Cafe & Bar"
