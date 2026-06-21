@@ -40,6 +40,7 @@
     </header>
 
     <section id="alerts-container" class="max-w-7xl mx-auto px-6 mt-4 space-y-2"></section>
+    <div id="new-order-flash" class="fixed inset-0 pointer-events-none z-40 hidden bg-amber-400/30"></div>
 
     <main class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
@@ -74,6 +75,25 @@
         const API_BASE = `${window.location.origin}/api/v1`;
         let kitchenToken = sessionStorage.getItem('kitchen_token');
         let audioCtx = null;
+        const ALERT_VOLUME = 1.0;
+
+        function ensureAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function markAudioActive() {
+            const banner = document.getElementById('audio-status-banner');
+            if (banner) {
+                banner.innerText = "🔊 Audio Active";
+                banner.className = "text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg";
+            }
+        }
 
         function getAuthHeaders() {
             return {
@@ -106,6 +126,8 @@
                 kitchenToken = data.token;
                 sessionStorage.setItem('kitchen_token', kitchenToken);
                 showLoginGate(false);
+                ensureAudioContext();
+                markAudioActive();
                 fetchOrders();
                 connectWS();
             } catch (err) {
@@ -125,45 +147,77 @@
         });
 
         document.body.addEventListener('click', () => {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            const banner = document.getElementById('audio-status-banner');
-            if (banner) {
-                banner.innerText = "🔊 Audio Active";
-                banner.className = "text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg";
-            }
+            ensureAudioContext();
+            markAudioActive();
         }, { once: true });
 
-        function playNewOrderChime() {
+        function playTone(ctx, frequency, startTime, duration, volume = ALERT_VOLUME) {
+            const oscillator = ctx.createOscillator();
+            const gain = ctx.createGain();
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(frequency, startTime);
+            gain.gain.setValueAtTime(volume, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+            oscillator.connect(gain);
+            gain.connect(ctx.destination);
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration);
+        }
+
+        function flashNewOrderScreen() {
+            const flash = document.getElementById('new-order-flash');
+            if (!flash) return;
+            flash.classList.remove('hidden');
+            setTimeout(() => flash.classList.add('hidden'), 900);
+        }
+
+        function vibrateNewOrderAlert() {
+            if (navigator.vibrate) {
+                navigator.vibrate([400, 120, 400, 120, 400, 120, 600]);
+            }
+        }
+
+        function showNewOrderBanner(tableNumber) {
+            const container = document.getElementById('alerts-container');
+            const alertBox = document.createElement('div');
+            alertBox.className = "bg-amber-500 text-slate-900 font-black p-4 rounded-xl flex justify-between items-center shadow-lg animate-bounce border-2 border-amber-300";
+            alertBox.innerHTML = `
+                <span>🍳 NEW ORDER${tableNumber ? ` - Table ${tableNumber}` : ''}!</span>
+                <button onclick="this.parentElement.remove()" class="bg-slate-900/20 hover:bg-slate-900/30 text-slate-900 font-black px-3 py-1 rounded-lg text-xs">Dismiss</button>
+            `;
+            container.prepend(alertBox);
+            setTimeout(() => alertBox.remove(), 12000);
+        }
+
+        function playNewOrderChime(tableNumber) {
             try {
-                const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = ensureAudioContext();
                 if (ctx.state === 'suspended') return;
 
-                const osc1 = ctx.createOscillator();
-                const gain1 = ctx.createGain();
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
-                gain1.gain.setValueAtTime(0.15, ctx.currentTime);
-                gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-                osc1.connect(gain1);
-                gain1.connect(ctx.destination);
-                osc1.start();
-                osc1.stop(ctx.currentTime + 0.3);
+                const now = ctx.currentTime;
+                const pattern = [
+                    { freq: 880, start: 0, duration: 0.18 },
+                    { freq: 988, start: 0.22, duration: 0.18 },
+                    { freq: 1175, start: 0.44, duration: 0.18 },
+                    { freq: 880, start: 0.72, duration: 0.18 },
+                    { freq: 988, start: 0.94, duration: 0.18 },
+                    { freq: 1175, start: 1.16, duration: 0.28 },
+                ];
 
-                const osc2 = ctx.createOscillator();
-                const gain2 = ctx.createGain();
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-                gain2.gain.setValueAtTime(0.15, ctx.currentTime + 0.1);
-                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-                osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc2.start(ctx.currentTime + 0.1);
-                osc2.stop(ctx.currentTime + 0.5);
+                pattern.forEach((tone) => {
+                    playTone(ctx, tone.freq, now + tone.start, tone.duration, ALERT_VOLUME);
+                });
+
+                setTimeout(() => {
+                    const repeatAt = ctx.currentTime;
+                    pattern.forEach((tone) => {
+                        playTone(ctx, tone.freq, repeatAt + tone.start, tone.duration, ALERT_VOLUME);
+                    });
+                }, 1500);
+
+                vibrateNewOrderAlert();
+                flashNewOrderScreen();
+                showNewOrderBanner(tableNumber);
             } catch (e) {
                 console.error("Audio synthesis blocked: ", e);
             }
@@ -310,15 +364,10 @@
 
         function playWaiterAlertSound() {
             try {
-                const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = ensureAudioContext();
                 if (ctx.state === 'suspended') return;
 
-                const oscillator = ctx.createOscillator();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, ctx.currentTime);
-                oscillator.connect(ctx.destination);
-                oscillator.start();
-                oscillator.stop(ctx.currentTime + 0.15);
+                playTone(ctx, 880, ctx.currentTime, 0.2, 0.8);
             } catch (e) {
                 console.error(e);
             }
@@ -353,7 +402,8 @@
                 if (data.event === "service_request") {
                     triggerStaffSummonAlert(data.table_number, data.request);
                 } else if (data.event === "new_order") {
-                    playNewOrderChime();
+                    const tableNumber = data.order && data.order.table ? data.order.table.number : null;
+                    playNewOrderChime(tableNumber);
                     fetchOrders();
                 } else {
                     fetchOrders();
