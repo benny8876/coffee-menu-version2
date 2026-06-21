@@ -90,19 +90,7 @@
                <p class="text-xs text-slate-400 mb-4">Generates cryptographically signed URLs for tables, preventing billing spoofing.</p>
                <div class="flex flex-wrap items-center gap-3">
                   <select id="qr-table-select" class="bg-slate-100 border-none rounded px-4 py-2.5 text-sm font-semibold outline-none">
-                     <option value="1">Table 1</option>
-                     <option value="2">Table 2</option>
-                     <option value="3">Table 3</option>
-                     <option value="4">Table 4</option>
-                     <option value="5">Table 5</option>
-                     <option value="6">Table 6</option>
-                     <option value="7">Table 7</option>
-                     <option value="8">Table 8</option>
-                     <option value="9">Table 9</option>
-                     <option value="10">Table 10</option>
-                     <option value="11">Table 11</option>
-                     <option value="12">Table 12</option>
-                     <option value="13">Table 13</option>
+                     <option value="">Loading tables...</option>
                   </select>
                   <button onclick="requestSignedToken()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition">
                   Generate Signed Link
@@ -351,6 +339,7 @@
                  fetchAnalytics();
                  fetchMenuTable();
                  fetchActiveTables(); 
+                 loadQrTableSelect();
                  fetchOrdersLog();
                  fetchSettledTablesHistory();
              }
@@ -503,6 +492,26 @@
          }
          }
          
+         async function loadQrTableSelect() {
+             try {
+                 const response = await fetch(`${API_BASE}/manager/tables/qr-links`, {
+                     headers: getAuthHeaders()
+                 });
+
+                 if (response.status === 401) { handleLogout(); return; }
+
+                 if (response.ok) {
+                     const links = await response.json();
+                     const select = document.getElementById('qr-table-select');
+                     select.innerHTML = links.map(entry =>
+                         `<option value="${entry.table_id}">Table ${entry.table_number}</option>`
+                     ).join('');
+                 }
+             } catch (err) {
+                 console.error("Failed to load table list for QR generator.");
+             }
+         }
+
          async function requestSignedToken() {
              const selectId = document.getElementById('qr-table-select').value;
              try {
@@ -734,7 +743,7 @@
          
                  receiptContainer.innerHTML = `
                      <div class="text-center border-b pb-3 border-dashed">
-                         <h2 class="text-lg font-bold">27 Cafe</h2>
+                         <h2 class="text-lg font-bold">27 Cafe & Bar</h2>
                          <p class="text-[10px] text-slate-400">HISTORICAL TABLE SESSION RECEIPT</p>
                          <p class="text-[10px] text-slate-400">${bill.timestamp}</p>
                      </div>
@@ -1019,7 +1028,7 @@
                      card.className = "bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex justify-between items-center";
                      card.innerHTML = `
                          <div>
-                             <p class="font-bold text-slate-800">Order ID #${order.id} - Table ${order.table.number}</p>
+                             <p class="font-bold text-slate-800">Order ID #${order.id} - Table ${order.table.label}</p>
                              <p class="text-xs text-slate-400">Total: ${order.total_price.toFixed(2)} Ks| Status: <span class="capitalize font-semibold text-amber-600">${order.status}</span></p>
                          </div>
                          <button onclick="loadReceipt(${order.id})" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Receipt</button>
@@ -1051,7 +1060,7 @@
          
                  receiptContainer.innerHTML = `
                      <div class="text-center border-b pb-3 border-dashed">
-                         <h2 class="text-lg font-bold">27 Cafe</h2>
+                         <h2 class="text-lg font-bold">27 Cafe & Bar</h2>
                          <p class="text-[10px] text-slate-400">Transaction ID: ${receipt.voucher_id}</p>
                          <p class="text-[10px] text-slate-400">${receipt.timestamp}</p>
                      </div>

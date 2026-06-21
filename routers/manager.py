@@ -9,6 +9,7 @@ import os
 from database import get_db
 import models, schemas
 import security
+from table_labels import RESTAURANT_NAME, get_table_label
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -117,7 +118,7 @@ def generate_table_qr_token(
     token = security.generate_table_token(table.id)
     return {
         "table_id": table.id,
-        "table_number": table.number,
+        "table_number": get_table_label(table),
         "secure_token": token,
         "qr_link": f"/menu?table={table.id}&token={token}",
     }
@@ -137,7 +138,7 @@ def get_all_table_qr_links(
     return [
         {
             "table_id": table.id,
-            "table_number": table.number,
+            "table_number": get_table_label(table),
             "secure_token": security.generate_table_token(table.id),
             "qr_link": f"/menu?table={table.id}&token={security.generate_table_token(table.id)}",
         }
@@ -263,10 +264,10 @@ def print_voucher(
         raise HTTPException(status_code=404, detail="Order not found")
 
     voucher_data = {
-        "restaurant_name": "27 Cafe & Bar",
+        "restaurant_name": RESTAURANT_NAME,
         "voucher_id": f"REC-{order.id:06d}",
         "timestamp": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-        "table_number": order.table.number,
+        "table_number": get_table_label(order.table),
         "items": [
             {
                 "name": item.menu_item.name,
@@ -309,7 +310,7 @@ def get_active_tables(
         if t_id not in tables_map:
             tables_map[t_id] = {
                 "table_id": t_id,
-                "table_number": order.table.number,
+                "table_number": get_table_label(order.table),
                 "active_orders_count": 0,
                 "total_price": 0.0,
             }
@@ -371,10 +372,10 @@ def get_consolidated_table_bill(
             consolidated_items[item_key]["quantity"] += item.quantity
             grand_total += item_unit_price * item.quantity
 
-    table_num = active_orders[0].table.number
+    table_num = get_table_label(active_orders[0].table)
 
     return {
-        "restaurant_name": "27 Cafe & Bar",
+        "restaurant_name": RESTAURANT_NAME,
         "table_id": table_id,
         "table_number": table_num,
         "order_ids": order_ids,
@@ -418,7 +419,8 @@ def settle_table_bill(
         order.settled_at = now_settled_time
 
     db.commit()
-    return {"message": f"Table {table_id} settled."}
+    table_label = get_table_label(active_orders[0].table)
+    return {"message": f"Table {table_label} settled."}
 
 
 # --- GET TABLE BILLS HISTORY ---
@@ -444,7 +446,7 @@ def get_settled_tables_history(
         if key not in history_map:
             history_map[key] = {
                 "table_id": order.table_id,
-                "table_number": order.table.number,
+                "table_number": get_table_label(order.table),
                 "settled_at": order.settled_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "settled_at_iso": iso_time,
                 "order_ids": [],
@@ -509,10 +511,10 @@ def get_historical_table_bill(
             consolidated_items[item_key]["quantity"] += item.quantity
             grand_total += item_unit_price * item.quantity
 
-    table_num = orders[0].table.number
+    table_num = get_table_label(orders[0].table)
 
     return {
-        "restaurant_name": "27 Cafe & Bar",
+        "restaurant_name": RESTAURANT_NAME,
         "table_id": table_id,
         "table_number": table_num,
         "order_ids": order_ids,
@@ -643,10 +645,10 @@ def export_daily_report(
         .order_by(models.RestaurantTable.number.asc())
         .all()
     )
-    table_revenue = {t.number: 0.0 for t in tables}
+    table_revenue = {get_table_label(t): 0.0 for t in tables}
     for order in completed_orders:
-        t_num = order.table.number
-        table_revenue[t_num] = table_revenue.get(t_num, 0.0) + order.total_price
+        t_label = get_table_label(order.table)
+        table_revenue[t_label] = table_revenue.get(t_label, 0.0) + order.total_price
 
     # 3. Aggregate Top Selling Products
     popular_items = (
@@ -791,10 +793,10 @@ def export_daily_report(
             Paragraph("Accumulated Sales (Ks)", th_style),
         ]
     ]
-    for t_num, rev in sorted(table_revenue.items()):
+    for t_label, rev in sorted(table_revenue.items()):
         table_data.append(
             [
-                Paragraph(f"Table {t_num}", cell_text_style),
+                Paragraph(f"Table {t_label}", cell_text_style),
                 Paragraph(
                     f"{rev:.2f}Ks", cell_bold_style if rev > 0 else cell_text_style
                 ),

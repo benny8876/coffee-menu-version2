@@ -24,6 +24,7 @@ class RestaurantTable(Base):
     __tablename__ = "tables"
     id = Column(Integer, primary_key=True, index=True)
     number = Column(Integer, unique=True, nullable=False)
+    label = Column(String, unique=True, nullable=True)
     is_active = Column(Boolean, default=True)
 
 class MenuItem(Base):

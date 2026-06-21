@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import models, os
+from sqlalchemy import inspect, text
 from database import engine, SessionLocal
+from table_labels import TABLE_LABELS, label_for_number
 from routers import menu, kitchen, manager
 import hashlib  # Add to imports
 
@@ -52,8 +54,30 @@ def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
 
+def migrate_table_labels():
+    inspector = inspect(engine)
+    if "tables" not in inspector.get_table_names():
+        return
+
+    columns = [col["name"] for col in inspector.get_columns("tables")]
+    if "label" not in columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE tables ADD COLUMN label VARCHAR"))
+
+    db = SessionLocal()
+    try:
+        tables = db.query(models.RestaurantTable).all()
+        for table in tables:
+            if not table.label:
+                table.label = label_for_number(table.number)
+        db.commit()
+    finally:
+        db.close()
+
+
 @app.on_event("startup")
 def seed_initial_data():
+    migrate_table_labels()
     db = SessionLocal()
 
     # NEW: Seeds default manager credentials on first database creation
@@ -64,9 +88,12 @@ def seed_initial_data():
         db.add(default_admin)
         db.commit()
 
-    # Seed tables 1-10
+    # Seed tables A1–A7 and B1–B6
     if not db.query(models.RestaurantTable).first():
-        tables = [models.RestaurantTable(number=i) for i in range(1, 14)]
+        tables = [
+            models.RestaurantTable(number=i + 1, label=label)
+            for i, label in enumerate(TABLE_LABELS)
+        ]
         db.add_all(tables)
         db.commit()
 

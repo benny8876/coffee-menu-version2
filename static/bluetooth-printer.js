@@ -55,7 +55,7 @@
         out += ESC + '@';
         out += ESC + 'a' + '\x01';
 
-        const title ='27 Cafe ';
+        const title = receipt.restaurant_name || '27 Cafe & Bar';
         out += center(title);
 
         if (receipt.voucher_id) {
@@ -108,7 +108,7 @@
 
         out += ESC + 'a' + '\x01';
         out += '\nThank you!\n';
-        out += center('27 Cafe ');
+        out += center(receipt.restaurant_name || '27 Cafe & Bar');
         out += '\n\n\n';
         out += GS + 'V' + '\x00';
 

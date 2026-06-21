@@ -5,6 +5,7 @@ from database import get_db
 import models, schemas
 from websocket import manager_ws
 import security
+from table_labels import get_table_label
 
 router = APIRouter(prefix="/menu", tags=["Menu (Client)"])
 
@@ -153,7 +154,7 @@ async def call_waiter(
     await manager_ws.broadcast(
         {
             "event": "service_request",
-            "table_number": table.number,
+            "table_number": get_table_label(table),
             "request": request_type,
         }
     )
