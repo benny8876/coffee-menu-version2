@@ -7,6 +7,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
+    <!-- Staff Login Gate -->
+    <div id="login-gate" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-6">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-sm shadow-2xl">
+            <h1 class="text-2xl font-black text-emerald-400 mb-2">Kitchen Access</h1>
+            <p class="text-xs text-slate-400 mb-6">Enter staff PIN to view and manage orders.</p>
+            <input type="password" id="kitchen-pin-input" placeholder="Kitchen PIN"
+                class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-sm mb-4 outline-none focus:border-emerald-500">
+            <button onclick="loginKitchen()" class="w-full bg-emerald-600 hover:bg-emerald-700 py-3 rounded-lg font-bold text-sm transition">
+                Unlock Kitchen Panel
+            </button>
+            <p id="login-error" class="text-rose-400 text-xs mt-3 hidden"></p>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-lg">
         <div>
@@ -14,7 +28,7 @@
             <p class="text-xs text-slate-400">Paid and validated orders monitor</p>
         </div>
         <div class="flex items-center gap-4">
-            <!-- Audio Permission Helper Label -->
+            <button onclick="logoutKitchen()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-slate-300">Logout</button>
             <span id="audio-status-banner" class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg">
                 🔔 Click anywhere to enable alert sounds
             </span>
@@ -25,14 +39,9 @@
         </div>
     </header>
 
-    <!-- Summon Alerts Banner -->
-    <section id="alerts-container" class="max-w-7xl mx-auto px-6 mt-4 space-y-2">
-        <!-- Live Staff Service calls print here -->
-    </section>
+    <section id="alerts-container" class="max-w-7xl mx-auto px-6 mt-4 space-y-2"></section>
 
-    <!-- Main Board -->
     <main class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Pending Queue -->
         <div class="bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">
@@ -42,7 +51,6 @@
             <div id="pending-orders" class="space-y-4 max-h-[70vh] overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Preparing Queue -->
         <div class="bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-blue-400 flex items-center gap-2">
@@ -52,7 +60,6 @@
             <div id="preparing-orders" class="space-y-4 max-h-[70vh] overflow-y-auto pr-1"></div>
         </div>
 
-        <!-- Served Queue -->
         <div class="bg-slate-800/50 rounded-2xl p-4 border border-slate-700">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
@@ -65,12 +72,58 @@
 
     <script>
         const API_BASE = `${window.location.origin}/api/v1`;
-        const WS_URL = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/api/v1/kitchen/ws`;
-
-        // Safe Audio Context setup
+        let kitchenToken = sessionStorage.getItem('kitchen_token');
         let audioCtx = null;
 
-        // Automatically unlock the AudioContext on first page interaction
+        function getAuthHeaders() {
+            return {
+                'Authorization': `Bearer ${kitchenToken}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        function showLoginGate(show) {
+            document.getElementById('login-gate').classList.toggle('hidden', !show);
+        }
+
+        async function loginKitchen() {
+            const pin = document.getElementById('kitchen-pin-input').value;
+            const errorEl = document.getElementById('login-error');
+            errorEl.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_BASE}/kitchen/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin })
+                });
+                if (!response.ok) {
+                    errorEl.innerText = 'Invalid PIN. Please try again.';
+                    errorEl.classList.remove('hidden');
+                    return;
+                }
+                const data = await response.json();
+                kitchenToken = data.token;
+                sessionStorage.setItem('kitchen_token', kitchenToken);
+                showLoginGate(false);
+                fetchOrders();
+                connectWS();
+            } catch (err) {
+                errorEl.innerText = 'Connection failed. Please retry.';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function logoutKitchen() {
+            sessionStorage.removeItem('kitchen_token');
+            kitchenToken = null;
+            location.reload();
+        }
+
+        document.getElementById('kitchen-pin-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') loginKitchen();
+        });
+
         document.body.addEventListener('click', () => {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -78,7 +131,6 @@
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            // Remove helper badge once sounds are authorized
             const banner = document.getElementById('audio-status-banner');
             if (banner) {
                 banner.innerText = "🔊 Audio Active";
@@ -86,51 +138,56 @@
             }
         }, { once: true });
 
-        // Dual-tone chime synthesized dynamically (sounds like an electronic "ding-ding")
         function playNewOrderChime() {
             try {
                 const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-                if (ctx.state === 'suspended') return; // Exit silently if browser hasn't been clicked yet
+                if (ctx.state === 'suspended') return;
 
-                // First chime note: C5 (523.25 Hz)
                 const osc1 = ctx.createOscillator();
                 const gain1 = ctx.createGain();
                 osc1.type = 'sine';
                 osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
                 gain1.gain.setValueAtTime(0.15, ctx.currentTime);
-                gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3); // Fade out
-                
+                gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
                 osc1.connect(gain1);
                 gain1.connect(ctx.destination);
                 osc1.start();
                 osc1.stop(ctx.currentTime + 0.3);
 
-                // Second chime note: E5 (659.25 Hz) delayed slightly
                 const osc2 = ctx.createOscillator();
                 const gain2 = ctx.createGain();
                 osc2.type = 'sine';
                 osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
                 gain2.gain.setValueAtTime(0.15, ctx.currentTime + 0.1);
-                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5); // Fade out
-                
+                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
                 osc2.connect(gain2);
                 gain2.connect(ctx.destination);
                 osc2.start(ctx.currentTime + 0.1);
                 osc2.stop(ctx.currentTime + 0.5);
-
             } catch (e) {
                 console.error("Audio synthesis blocked: ", e);
             }
         }
 
         async function fetchOrders() {
+            if (!kitchenToken) return;
             try {
-                const response = await fetch(`${API_BASE}/kitchen/orders`);
+                const response = await fetch(`${API_BASE}/kitchen/orders`, {
+                    headers: getAuthHeaders()
+                });
+                if (response.status === 401) {
+                    logoutKitchen();
+                    return;
+                }
                 const orders = await response.json();
                 renderOrders(orders);
             } catch (err) {
                 console.error("Failed to query records.");
             }
+        }
+
+        function cancelButton(orderId) {
+            return `<button onclick="cancelOrder(${orderId})" class="w-full bg-rose-600/80 hover:bg-rose-700 py-1.5 rounded-lg text-xs font-bold transition mt-2">Cancel Order</button>`;
         }
 
         function renderOrders(orders) {
@@ -170,17 +227,22 @@
 
                 let actionsHtml = "";
                 if (order.status === "pending") {
-                    actionsHtml = `<button onclick="updateStatus(${order.id}, 'preparing')" class="w-full bg-blue-600 hover:bg-blue-700 py-1.5 rounded-lg text-xs font-bold transition">Start Cooking</button>`;
+                    actionsHtml = `
+                        <button onclick="updateStatus(${order.id}, 'preparing')" class="w-full bg-blue-600 hover:bg-blue-700 py-1.5 rounded-lg text-xs font-bold transition">Start Cooking</button>
+                        ${cancelButton(order.id)}
+                    `;
                     pendingCount++;
                     card.innerHTML = createCardTemplate(order, itemsHtml, actionsHtml);
                     pendingDiv.appendChild(card);
                 } else if (order.status === "preparing") {
-                    actionsHtml = `<button onclick="updateStatus(${order.id}, 'served')" class="w-full bg-emerald-600 hover:bg-emerald-700 py-1.5 rounded-lg text-xs font-bold transition">Mark Ready</button>`;
+                    actionsHtml = `
+                        <button onclick="updateStatus(${order.id}, 'served')" class="w-full bg-emerald-600 hover:bg-emerald-700 py-1.5 rounded-lg text-xs font-bold transition">Mark Ready</button>
+                        ${cancelButton(order.id)}
+                    `;
                     preparingCount++;
                     card.innerHTML = createCardTemplate(order, itemsHtml, actionsHtml);
                     preparingDiv.appendChild(card);
-                } else if  (order.status === "served") {
-                    // No action button here. The card stays here for reference until the manager settles the table bill.
+                } else if (order.status === "served") {
                     actionsHtml = `
                     <div class="w-full text-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-1.5 rounded-lg text-xs font-bold">
                     ✓ Food Delivered to Table
@@ -189,7 +251,7 @@
                     servedCount++;
                     card.innerHTML = createCardTemplate(order, itemsHtml, actionsHtml);
                     servedDiv.appendChild(card);
-                    }
+                }
             });
 
             document.getElementById("count-pending").innerText = pendingCount;
@@ -219,7 +281,8 @@
         async function updateStatus(orderId, nextStatus) {
             try {
                 await fetch(`${API_BASE}/kitchen/orders/${orderId}/status?status=${nextStatus}`, {
-                    method: 'PATCH'
+                    method: 'PATCH',
+                    headers: getAuthHeaders()
                 });
                 fetchOrders();
             } catch (err) {
@@ -227,7 +290,24 @@
             }
         }
 
-        // Separate service beep alert for waiter calls (Single pitch)
+        async function cancelOrder(orderId) {
+            if (!confirm('Cancel this order? Stock will be restored.')) return;
+            try {
+                const response = await fetch(`${API_BASE}/kitchen/orders/${orderId}/cancel`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                if (response.ok) {
+                    fetchOrders();
+                } else {
+                    const err = await response.json();
+                    alert(err.detail || 'Could not cancel order.');
+                }
+            } catch (err) {
+                console.error("Failed to cancel order.");
+            }
+        }
+
         function playWaiterAlertSound() {
             try {
                 const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
@@ -253,11 +333,12 @@
                 <button onclick="this.parentElement.remove()" class="bg-white/20 hover:bg-white/30 text-white font-black px-3 py-1 rounded-lg text-xs">Dismiss</button>
             `;
             container.appendChild(alertBox);
-
             playWaiterAlertSound();
         }
 
         function connectWS() {
+            if (!kitchenToken) return;
+            const WS_URL = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/api/v1/kitchen/ws?token=${encodeURIComponent(kitchenToken)}`;
             const ws = new WebSocket(WS_URL);
             const statusIndicator = document.getElementById("ws-indicator");
             const statusLabel = document.getElementById("ws-status");
@@ -272,7 +353,7 @@
                 if (data.event === "service_request") {
                     triggerStaffSummonAlert(data.table_number, data.request);
                 } else if (data.event === "new_order") {
-                    playNewOrderChime(); // Play dual-tone order chime
+                    playNewOrderChime();
                     fetchOrders();
                 } else {
                     fetchOrders();
@@ -286,8 +367,13 @@
             };
         }
 
-        fetchOrders();
-        connectWS();
+        if (kitchenToken) {
+            showLoginGate(false);
+            fetchOrders();
+            connectWS();
+        } else {
+            showLoginGate(true);
+        }
     </script>
 </body>
 </html>

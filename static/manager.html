@@ -106,11 +106,18 @@
                   <button onclick="requestSignedToken()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition">
                   Generate Signed Link
                   </button>
+                  <button onclick="requestAllTableLinks()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition">
+                  Generate All Table Links
+                  </button>
                </div>
                <div id="qr-output-container" class="mt-4 p-4 bg-slate-50 border rounded-xl hidden text-sm font-semibold space-y-2">
                   <p class="text-xs text-slate-400 uppercase font-bold">Secure Path Signature:</p>
                   <input type="text" id="signed-url-input" readonly class="w-full bg-white p-2 border rounded font-mono text-xs select-all text-amber-600">
                   <a id="signed-url-anchor" target="_blank" class="inline-block text-xs bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-200">Open Secure Menu Panel</a>
+               </div>
+               <div id="all-qr-links-container" class="mt-4 hidden">
+                  <p class="text-xs text-slate-400 uppercase font-bold mb-2">All Table Secure Links</p>
+                  <div id="all-qr-links-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
                </div>
             </section>
             <!-- Split Grid Workspace -->
@@ -507,6 +514,33 @@
                  }
              } catch (err) {
                  alert("Signature generation request failed.");
+             }
+         }
+
+         async function requestAllTableLinks() {
+             try {
+                 const response = await fetch(`${API_BASE}/manager/tables/qr-links`, {
+                     headers: getAuthHeaders()
+                 });
+
+                 if (response.status === 401) { handleLogout(); return; }
+
+                 if (response.ok) {
+                     const links = await response.json();
+                     const listEl = document.getElementById('all-qr-links-list');
+                     listEl.innerHTML = links.map(entry => {
+                         const fullLink = `${window.location.origin}${entry.qr_link}`;
+                         return `
+                             <div class="p-3 bg-slate-50 border rounded-lg">
+                                 <p class="text-xs font-bold text-slate-700 mb-1">Table ${entry.table_number}</p>
+                                 <input type="text" readonly value="${fullLink}" class="w-full bg-white p-2 border rounded font-mono text-[10px] select-all text-amber-600">
+                             </div>
+                         `;
+                     }).join('');
+                     document.getElementById('all-qr-links-container').classList.remove('hidden');
+                 }
+             } catch (err) {
+                 alert("Failed to load table links.");
              }
          }
          
