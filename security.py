@@ -60,6 +60,10 @@ def verify_kitchen_ws_token(token: Optional[str] = Query(None)) -> bool:
     return True
 
 
+def verify_manager_ws_token(token: Optional[str]) -> bool:
+    return bool(token and token == MANAGER_SESSION_TOKEN)
+
+
 async def reject_unauthorized_kitchen_ws(websocket: WebSocket) -> None:
     await websocket.close(code=1008, reason="Kitchen authentication required")
 
