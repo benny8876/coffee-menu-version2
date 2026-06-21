@@ -98,7 +98,7 @@
 
 
         out += ESC + 'E' + '\x01';
-        out += padLine('GRAND TOTAL', formatMoney(receipt.grand_total));
+        out += padLine('GRAND TOTAL', formatMoney(receipt.subtotal));
         out += ESC + 'E' + '\x00';
         out += dashedLine();
 
