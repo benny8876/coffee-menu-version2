@@ -93,9 +93,6 @@
             });
         });
 
-        out += dashedLine();
-        out += padLine('Subtotal', formatMoney(receipt.subtotal));
-
 
         out += ESC + 'E' + '\x01';
         out += padLine('GRAND TOTAL', formatMoney(receipt.subtotal));
