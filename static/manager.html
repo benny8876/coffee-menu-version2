@@ -5,6 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Manager Dashboard</title>
       <script src="https://cdn.tailwindcss.com"></script>
+      <script src="/static/bluetooth-printer.js"></script>
    </head>
    <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
       <!-- 1. SECURE LOGIN VIEW (Centered, shown if unauthenticated) -->
@@ -303,8 +304,15 @@
             <button onclick="toggleReceiptModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl print:hidden">&times;</button>
             <div id="receipt-payload" class="space-y-4"></div>
             <div id="receipt-actions" class="mt-6 space-y-2 print:hidden">
+               <p id="bluetooth-printer-status" class="text-xs text-slate-500 text-center"></p>
+               <button onclick="connectBluetoothPrinter()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
+               Connect Bluetooth Printer
+               </button>
+               <button onclick="printReceiptBluetooth()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-sm">
+               Print to Bluetooth Printer
+               </button>
                <button onclick="window.print()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm">
-               Print Receipt
+               Print Receipt (Browser)
                </button>
                <button id="settle-bill-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm hidden">
                Settle & Close Table Bill
@@ -588,6 +596,7 @@
                  if (response.status === 401) { handleLogout(); return; }
          
                  const bill = await response.json();
+                 BluetoothPrinter.setCurrentReceipt(bill);
                  const receiptContainer = document.getElementById("receipt-payload");
                  const itemsStr = bill.items.map(i => {
                      const modsLabel = i.modifiers.length > 0 ? `<div class="text-[10px] text-slate-500 pl-4">+ ${i.modifiers.join(', ')}</div>` : "";
@@ -707,6 +716,7 @@
                  if (response.status === 401) { handleLogout(); return; }
          
                  const bill = await response.json();
+                 BluetoothPrinter.setCurrentReceipt(bill);
                  const receiptContainer = document.getElementById("receipt-payload");
                  const itemsStr = bill.items.map(i => {
                      const modsLabel = i.modifiers.length > 0 ? `<div class="text-[10px] text-slate-500 pl-4">+ ${i.modifiers.join(', ')}</div>` : "";
@@ -1030,6 +1040,7 @@
                  if (response.status === 401) { handleLogout(); return; }
          
                  const receipt = await response.json();
+                 BluetoothPrinter.setCurrentReceipt(receipt);
                  const receiptContainer = document.getElementById("receipt-payload");
                  const itemsStr = receipt.items.map(i => `
                      <div class="flex justify-between text-xs border-b border-dashed pb-1">
@@ -1073,6 +1084,30 @@
              const modal = document.getElementById('receipt-modal');
              if (show) modal.classList.remove('hidden');
              else modal.classList.add('hidden');
+         }
+
+         function getBluetoothStatusEl() {
+             return document.getElementById('bluetooth-printer-status');
+         }
+
+         async function connectBluetoothPrinter() {
+             try {
+                 await BluetoothPrinter.connectPrinterWithStatus(getBluetoothStatusEl());
+             } catch (err) {
+                 const statusEl = getBluetoothStatusEl();
+                 statusEl.innerText = err.message || 'Could not connect to printer.';
+                 statusEl.className = 'text-xs text-rose-600';
+             }
+         }
+
+         async function printReceiptBluetooth() {
+             try {
+                 await BluetoothPrinter.printCurrentReceipt(getBluetoothStatusEl());
+             } catch (err) {
+                 const statusEl = getBluetoothStatusEl();
+                 statusEl.innerText = err.message || 'Bluetooth print failed.';
+                 statusEl.className = 'text-xs text-rose-600';
+             }
          }
          
          // Initialize session protection on page load
