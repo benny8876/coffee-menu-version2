@@ -11,13 +11,45 @@
       <link href="https://fonts.cdnfonts.com/css/revans" rel="stylesheet">
       <script src="https://cdn.tailwindcss.com"></script>
       <style>
-         /* --- STABLE STATIC BACKGROUND SYSTEM --- */
+         /* --- MOBILE-FRIENDLY SCROLL --- */
+         html {
+         -webkit-text-size-adjust: 100%;
+         }
          body {
-         background-size: cover;
-         background-position: center;
-         background-attachment: fixed;
-         background-repeat: no-repeat;
          background-color: #ffffff;
+         overflow-x: hidden;
+         overscroll-behavior-y: none;
+         -webkit-overflow-scrolling: touch;
+         touch-action: pan-y;
+         }
+         /* Decorations stay fixed so they don't repaint while scrolling */
+         .menu-deco-layer {
+         position: fixed;
+         inset: 0;
+         overflow: hidden;
+         pointer-events: none;
+         z-index: 0;
+         contain: strict;
+         }
+         /* Let vertical swipes pass through horizontal photo carousels */
+         .menu-h-scroll {
+         overflow-x: auto;
+         overflow-y: hidden;
+         -webkit-overflow-scrolling: touch;
+         overscroll-behavior-x: contain;
+         touch-action: pan-x;
+         }
+         .menu-category-section {
+         content-visibility: auto;
+         contain-intrinsic-size: auto 320px;
+         }
+         @media (hover: none) and (pointer: coarse) {
+         .animate-float,
+         .animate-bounce-hop,
+         .animate-wave-arm,
+         .animate-steam {
+         animation: none !important;
+         }
          }
          .menu-safe-x {
          padding-left: max(1.25rem, env(safe-area-inset-left));
@@ -82,28 +114,28 @@
    </head>
    <body class="text-[#874230] font-27-body min-h-screen select-none">
       
-      <!-- 1. MASTER WRAPPER (Handles relative positioning and overflow containment safely) -->
-      <div class="relative min-h-screen w-full overflow-x-hidden">
+      <!-- Fixed decoration layer (does not scroll with menu content) -->
+      <div class="menu-deco-layer" aria-hidden="true">
          
          <!-- --- BACKGROUND WATERMARKS --- -->
          <!-- Top-Left Retro Palm Leaf -->
          <div class="absolute -left-24 -top-20 w-[400px] sm:w-[500px] h-auto pointer-events-none opacity-20 text-[#434343]/80 z-0 select-none">
-            <img src="/static/corner1.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
+            <img src="/static/corner1.jpg" class="w-full h-full object-contain object-right-top" alt="" loading="lazy" decoding="async">
          </div>
          
          <!-- Top-Right Retro Monstera Leaf -->
          <div class="absolute -right-20 -top-12 w-56 sm:w-80 h-auto pointer-events-none opacity-20 text-[#6f8a38]/80 z-0 select-none">
-            <img src="/static/corner4.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
+            <img src="/static/corner4.jpg" class="w-full h-full object-contain object-right-top" alt="" loading="lazy" decoding="async">
          </div>
          
          <!-- Bottom-Left Retro Monstera Leaf -->
          <div class="absolute -left-20 -bottom-16 w-56 sm:w-80 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none ">
-            <img src="/static/corner3.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
+            <img src="/static/corner3.jpg" class="w-full h-full object-contain object-right-top" alt="" loading="lazy" decoding="async">
          </div>
          
          <!-- Bottom-Right Retro Palm Leaf -->
          <div class="absolute -right-16 -bottom-16 w-48 sm:w-72 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none ">
-            <img src="/static/corner5.jpg" class="w-full h-full object-contain object-right-top" alt="Background Leaf">
+            <img src="/static/corner5.jpg" class="w-full h-full object-contain object-right-top" alt="" loading="lazy" decoding="async">
          </div>
 
          <!-- Checkerboard Top Accent -->
@@ -111,7 +143,7 @@
          
          <!-- --- CARTOON ILLUSTRATION OVERLAYS --- -->
          <!-- Character 1: Floating Happy Steaming Mug (Top Right margin) -->
-         <div class="absolute right-28 top-24 w-16 h-16 opacity-20 pointer-events-none md:block animate-float">
+         <div class="hidden md:block absolute right-28 top-24 w-16 h-16 opacity-20 pointer-events-none animate-float">
             <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                <path d="M30,40 H70 V75 C70,82 60,82 50,82 C40,82 30,82 30,75 Z" />
                <path d="M70,48 C78,48 78,65 70,65" />
@@ -123,7 +155,7 @@
             </svg>
          </div>
          <!-- Character 2: Dancing Coffee Bean (Middle Right margin) -->
-         <div class="absolute -right-25 top-[35%] w-20 h-20 opacity-15 pointer-events-none lg:block animate-bounce-hop">
+         <div class="hidden lg:block absolute -right-25 top-[35%] w-20 h-20 opacity-15 pointer-events-none animate-bounce-hop">
             <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                <path d="M35,25 C15,35 15,65 35,75 C55,85 85,85 85,55 C85,25 55,15 35,25 Z" fill="#eae6dd" />
                <path d="M35,25 Q50,50 65,75" stroke-dasharray="3,3" />
@@ -137,7 +169,7 @@
             </svg>
          </div>
          <!-- Character 3: Levitating Croissant (Middle Left margin) -->
-         <div class="absolute -right-26 top-[55%] w-24 h-24 opacity-15 pointer-events-none lg:block animate-float" style="animation-delay: 1.5s;">
+         <div class="hidden lg:block absolute -right-26 top-[55%] w-24 h-24 opacity-15 pointer-events-none animate-float" style="animation-delay: 1.5s;">
             <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                <path d="M20,60 C15,50 30,25 50,25 C70,25 85,50 80,60 C75,55 65,52 50,52 C35,52 25,55 20,60 Z" />
                <path d="M35,28 C30,35 32,45 42,48" />
@@ -149,7 +181,7 @@
             </svg>
          </div>
          <!-- Character 4: Waving Take-Away Cup (Bottom Left margin) -->
-         <div class="absolute -right-20 bottom-[15%] w-24 h-24 opacity-15 pointer-events-none lg:block animate-float">
+         <div class="hidden lg:block absolute -right-20 bottom-[15%] w-24 h-24 opacity-15 pointer-events-none animate-float">
             <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                <polygon points="30,30 70,30 65,80 35,80" />
                <path d="M28,30 L72,30 L70,22 L30,22 Z" fill="#eae6dd" />
@@ -163,9 +195,11 @@
                <path d="M58,80 Q60,90 64,90" />
             </svg>
          </div>
+      </div>
 
-         <!-- Paper Container Contents -->
-         <div class="relative z-10 flex flex-col justify-between min-h-screen menu-safe-x menu-safe-bottom pt-[max(1rem,env(safe-area-inset-top))]">
+      <!-- Scrollable menu content -->
+      <div class="relative z-10 min-h-screen w-full">
+         <div class="flex flex-col justify-between min-h-screen menu-safe-x menu-safe-bottom pt-[max(1rem,env(safe-area-inset-top))]">
             <!-- Header -->
             <header class="relative pb-6 border-b border-[#874230]/30 mb-6 sm:mb-8 flex flex-col items-start w-full">
                <div class="flex items-center gap-3 sm:gap-6 w-full min-w-0">
@@ -292,7 +326,7 @@
                <button onclick="toggleCartModal(false)" class="text-[#874230]/60 hover:text-[#874230] text-3xl font-light leading-none transition p-2">&times;</button>
             </div>
             <!-- Items list (Scrolls independently) -->
-            <div id="cart-items" class="overflow-y-auto space-y-4 flex-1 pr-2 scrollbar-none divide-y-0">
+            <div id="cart-items" class="overflow-y-auto space-y-4 flex-1 pr-2 scrollbar-none divide-y-0" style="-webkit-overflow-scrolling: touch;">
                <!-- Cart items load here -->
             </div>
             <hr class="border-[#874230]/20">
@@ -429,8 +463,8 @@
                 items.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
                 const isPhotoCategory = categoryUsesPhotoLayout(items);
          
-                const sectionDiv = document.createElement('div');
-                sectionDiv.className = "space-y-4 relative";
+               const sectionDiv = document.createElement('div');
+               sectionDiv.className = "menu-category-section space-y-4 relative";
          
                 if (isPhotoCategory) {
                      const cardsHtml = items.map(item => {
@@ -441,10 +475,10 @@
          
                          return `
                              <!-- Floating Card with Tap-to-Customize -->
-                             <div class="snap-start flex-none w-44 sm:w-48 flex flex-col cursor-pointer active:scale-95 transition duration-200" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
-                                 <!-- Rounded Photo with deep soft drop shadow (Scaled h-48 on mobile, h-56 on tablet) -->
-                                 <div class="relative h-44 sm:h-56 w-full rounded-3xl overflow-hidden shadow-xl border border-[#9d958c]/25 hover:shadow-2xl transition duration-300">
-                                     <img src="${imgUrl}" class="h-full w-full object-cover" alt="${item.name}">
+                             <div class="snap-start flex-none w-44 sm:w-48 flex flex-col cursor-pointer sm:active:scale-95 sm:transition sm:duration-200" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
+                                 <!-- Rounded Photo with soft drop shadow -->
+                                 <div class="relative h-44 sm:h-56 w-full rounded-3xl overflow-hidden shadow-md sm:shadow-xl border border-[#9d958c]/25">
+                                     <img src="${imgUrl}" class="h-full w-full object-cover" alt="${item.name}" loading="lazy" decoding="async">
                                      
                                      <!-- Quantity Badge Overlay on Top-Left of the photo -->
                                      ${quantityInCart > 0 ? `
@@ -472,7 +506,7 @@
                              <h3 class="font-27-title text-xl sm:text-2xl font-bold uppercase tracking-wider">${categoryName}</h3>
                              <span class="text-xs uppercase tracking-wider text-[#9d958c] font-semibold mt-1">Swipe to explore →</span>
                          </div>
-                         <div class="grid grid-rows-2 grid-flow-col overflow-x-auto snap-x snap-mandatory gap-y-4 gap-x-4 scrollbar-none py-2 -mx-1 px-1">
+                         <div class="menu-h-scroll grid grid-rows-2 grid-flow-col snap-x snap-mandatory gap-y-4 gap-x-4 scrollbar-none py-2 -mx-1 px-1">
                              ${cardsHtml}
                          </div>
                      `;
@@ -487,7 +521,7 @@
                          const quantityInCart = getItemQuantityInCart(item.id);
          
                          return `
-                             <div class="flex justify-between items-start text-sm py-4 cursor-pointer active:scale-[0.99] transition duration-150 border-b border-[#735647]/10 px-1" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
+                             <div class="flex justify-between items-start text-sm py-4 cursor-pointer sm:active:scale-[0.99] sm:transition sm:duration-150 border-b border-[#735647]/10 px-1" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
                                  <div class="flex-1 pr-4 min-w-0">
                                      <div class="flex items-center gap-2">
                                          <!-- Scaled up Item Name -->
