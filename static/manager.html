@@ -134,6 +134,36 @@
                <!-- Menu Inventory modifier -->
                <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                   <h2 class="text-lg font-bold mb-4 border-b pb-2">Modify Menu Items & Pricing</h2>
+                  <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mb-3">
+                     <div class="relative flex-1 min-w-[200px]">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                           <circle cx="11" cy="11" r="7"></circle>
+                           <path stroke-linecap="round" d="M20 20l-3-3"></path>
+                        </svg>
+                        <input
+                           type="search"
+                           id="menu-item-search"
+                           placeholder="Search by name or category..."
+                           oninput="applyMenuFilters()"
+                           class="w-full bg-slate-100 border-none rounded-lg pl-9 pr-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-amber-500"
+                        >
+                     </div>
+                     <select
+                        id="menu-category-filter"
+                        onchange="applyMenuFilters()"
+                        class="bg-slate-100 border-none rounded-lg px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500 min-w-[160px]"
+                     >
+                        <option value="">All categories</option>
+                     </select>
+                     <button
+                        type="button"
+                        onclick="clearMenuFilters()"
+                        class="border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold py-2.5 px-4 rounded-lg text-sm transition"
+                     >
+                        Clear
+                     </button>
+                  </div>
+                  <p id="menu-filter-count" class="text-xs text-slate-400 mb-3"></p>
                   <div class="overflow-y-auto max-h-[350px] border border-slate-100 rounded-lg">
                      <table class="w-full text-left border-collapse">
                         <thead>
@@ -899,64 +929,149 @@
             .join('');
         }
          
+        // --- Menu table: search + category filter ---
+        function populateMenuCategoryFilter() {
+            const select = document.getElementById('menu-category-filter');
+            if (!select) return;
+
+            const currentValue = select.value;
+            const categories = [...new Set(menuItemsList.map((item) => item.category))].sort((a, b) =>
+                a.localeCompare(b)
+            );
+
+            select.innerHTML = '';
+            const allOption = document.createElement('option');
+            allOption.value = '';
+            allOption.textContent = 'All categories';
+            select.appendChild(allOption);
+
+            categories.forEach((category) => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                select.appendChild(option);
+            });
+
+            if (currentValue && categories.includes(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function getFilteredMenuItems() {
+            const query = (document.getElementById('menu-item-search')?.value || '').trim().toLowerCase();
+            const categoryFilter = document.getElementById('menu-category-filter')?.value || '';
+
+            return menuItemsList.filter((item) => {
+                const matchesCategory = !categoryFilter || item.category === categoryFilter;
+                const haystack = `${item.name} ${item.category}`.toLowerCase();
+                const matchesQuery = !query || haystack.includes(query);
+                return matchesCategory && matchesQuery;
+            });
+        }
+
+        function updateMenuFilterCount(visibleCount, totalCount) {
+            const countEl = document.getElementById('menu-filter-count');
+            if (!countEl) return;
+
+            const query = (document.getElementById('menu-item-search')?.value || '').trim();
+            const categoryFilter = document.getElementById('menu-category-filter')?.value || '';
+            const isFiltering = Boolean(query || categoryFilter);
+
+            if (!isFiltering) {
+                countEl.innerText = `Showing all ${totalCount} item${totalCount === 1 ? '' : 's'}`;
+                return;
+            }
+
+            countEl.innerText = `Showing ${visibleCount} of ${totalCount} item${totalCount === 1 ? '' : 's'}`;
+        }
+
+        function renderMenuTable(items) {
+            const tbody = document.getElementById('menu-management-table');
+            tbody.innerHTML = '';
+
+            if (menuItemsList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-400 italic">No menu items found</td></tr>`;
+                updateMenuFilterCount(0, 0);
+                return;
+            }
+
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-400 italic">No items match your search</td></tr>`;
+                updateMenuFilterCount(0, menuItemsList.length);
+                return;
+            }
+
+            const categories = {};
+            items.forEach((item) => {
+                if (!categories[item.category]) {
+                    categories[item.category] = [];
+                }
+                categories[item.category].push(item);
+            });
+
+            for (const [categoryName, categoryItems] of Object.entries(categories)) {
+                const headerRow = document.createElement('tr');
+                headerRow.className = 'bg-slate-100 font-bold text-xs text-slate-500 uppercase tracking-wider select-none';
+                headerRow.innerHTML = `
+                    <td colspan="6" class="py-2.5 px-4 font-black border-y border-slate-200/60">${escapeHtml(categoryName)}</td>
+                `;
+                tbody.appendChild(headerRow);
+
+                categoryItems.forEach((item) => {
+                    const stockLabel = item.stock !== null ? `${item.stock} units` : 'Infinite';
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50 transition duration-150';
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 font-semibold text-slate-800">${escapeHtml(item.name)}</td>
+                        <td class="py-3 text-slate-400 font-bold text-xs uppercase">${escapeHtml(item.category)}</td>
+                        <td class="py-3 font-black text-amber-600">${item.price.toFixed(0)} Ks</td>
+                        <td class="py-3 font-mono text-xs text-slate-500">${stockLabel}</td>
+                        <td class="py-3">
+                            <span class="px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider ${item.is_available ? 'bg-green-100 text-green-800' : 'bg-rose-100 text-rose-800'}">
+                                ${item.is_available ? 'Active' : 'Sold Out'}
+                            </span>
+                        </td>
+                        <td class="py-3 text-right pr-4">
+                            <button onclick="openEditModal(${item.id})" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-1 px-3 rounded-lg transition active:scale-95">Edit</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            updateMenuFilterCount(items.length, menuItemsList.length);
+        }
+
+        function applyMenuFilters() {
+            renderMenuTable(getFilteredMenuItems());
+        }
+
+        function clearMenuFilters() {
+            const searchInput = document.getElementById('menu-item-search');
+            const categorySelect = document.getElementById('menu-category-filter');
+            if (searchInput) searchInput.value = '';
+            if (categorySelect) categorySelect.value = '';
+            applyMenuFilters();
+        }
+
         // --- Updated: Dynamic Category Grouping for Inventory Manager Table ---
         async function fetchMenuTable() {
             try {
                 const response = await fetch(`${API_BASE}/menu/`);
                 menuItemsList = await response.json();
-                
-                const tbody = document.getElementById("menu-management-table");
-                tbody.innerHTML = "";
 
-                if (menuItemsList.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-400 italic">No menu items found</td></tr>`;
-                    return;
-                }
-
-                // 1. Group database items by their category names dynamically
-                const categories = {};
-                menuItemsList.forEach(item => {
-                    if (!categories[item.category]) {
-                        categories[item.category] = [];
-                    }
-                    categories[item.category].push(item);
-                });
-
-                // 2. Loop through each category to render separate grouped sections
-                for (const [categoryName, items] of Object.entries(categories)) {
-                    
-                    // Create a styled full-width category sub-header row
-                    const headerRow = document.createElement("tr");
-                    headerRow.className = "bg-slate-100 font-bold text-xs text-slate-500 uppercase tracking-wider select-none";
-                    headerRow.innerHTML = `
-                        <td colspan="6" class="py-2.5 px-4 font-black border-y border-slate-200/60">${categoryName}</td>
-                    `;
-                    tbody.appendChild(headerRow);
-
-                    // Add all items belonging strictly to this category group
-                    items.forEach(item => {
-                        const stockLabel = item.stock !== null ? `${item.stock} units` : "Infinite";
-                        const tr = document.createElement("tr");
-                        tr.className = "hover:bg-slate-50 transition duration-150";
-                        tr.innerHTML = `
-                            <td class="py-3 px-4 font-semibold text-slate-800">${item.name}</td>
-                            <td class="py-3 text-slate-400 font-bold text-xs uppercase">${item.category}</td>
-                            <td class="py-3 font-black text-amber-600">${item.price.toFixed(0)} Ks</td>
-                            <td class="py-3 font-mono text-xs text-slate-500">${stockLabel}</td>
-                            <td class="py-3">
-                                <span class="px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider ${item.is_available ? 'bg-green-100 text-green-800':'bg-rose-100 text-rose-800'}">
-                                    ${item.is_available ? 'Active' : 'Sold Out'}
-                                </span>
-                            </td>
-                            <td class="py-3 text-right pr-4">
-                                <button onclick="openEditModal(${item.id})" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-1 px-3 rounded-lg transition active:scale-95">Edit</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                }
+                populateMenuCategoryFilter();
+                applyMenuFilters();
             } catch (err) {
-                console.error("Could not populate items.");
+                console.error('Could not populate items.');
             }
         }
 
