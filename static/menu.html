@@ -110,6 +110,34 @@
          background: #874230;
          color: white;
          }
+         /* Center logo watermark — soft radial fade like corner textures */
+         .menu-center-logo {
+         position: absolute;
+         left: 50%;
+         top: 50%;
+         transform: translate(-50%, -50%);
+         width: min(52vw, 220px);
+         pointer-events: none;
+         opacity: 0.14;
+         }
+         @media (min-width: 640px) {
+         .menu-center-logo {
+         width: min(38vw, 280px);
+         opacity: 0.12;
+         }
+         }
+         @media (min-width: 768px) {
+         .menu-center-logo {
+         width: min(32vw, 320px);
+         }
+         }
+         .menu-center-logo img {
+         width: 100%;
+         height: auto;
+         object-fit: contain;
+         -webkit-mask-image: radial-gradient(ellipse 75% 75% at center, #000 25%, rgba(0, 0, 0, 0.55) 50%, transparent 78%);
+         mask-image: radial-gradient(ellipse 75% 75% at center, #000 25%, rgba(0, 0, 0, 0.55) 50%, transparent 78%);
+         }
       </style>
    </head>
    <body class="text-[#874230] font-27-body min-h-screen select-none">
@@ -136,6 +164,11 @@
          <!-- Bottom-Right Retro Palm Leaf -->
          <div class="absolute -right-16 -bottom-16 w-48 sm:w-72 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none ">
             <img src="/static/corner5.jpg" class="w-full h-full object-contain object-right-top" alt="" loading="lazy" decoding="async">
+         </div>
+
+         <!-- Center Logo Watermark -->
+         <div class="menu-center-logo select-none" aria-hidden="true">
+            <img src="/static/logo2.jpg" alt="" loading="lazy" decoding="async">
          </div>
 
          <!-- Checkerboard Top Accent -->
