@@ -2,7 +2,7 @@
 <html lang="en">
    <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <title>27 Cafe & Bar- Menu</title>
       <!-- Google Fonts for classy Serif and modern numerical layouts -->
       <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +17,14 @@
          background-position: center;
          background-attachment: fixed;
          background-repeat: no-repeat;
-         background-color: #ffffff; /* Fallback */
+         background-color: #ffffff;
+         }
+         .menu-safe-x {
+         padding-left: max(1.25rem, env(safe-area-inset-left));
+         padding-right: max(1.25rem, env(safe-area-inset-right));
+         }
+         .menu-safe-bottom {
+         padding-bottom: max(6rem, env(safe-area-inset-bottom));
          }
          .font-27-title {
          font-family: 'Revans', serif;
@@ -158,21 +165,20 @@
          </div>
 
          <!-- Paper Container Contents -->
-         <div class="relative z-10 flex flex-col justify-between min-h-screen">
+         <div class="relative z-10 flex flex-col justify-between min-h-screen menu-safe-x menu-safe-bottom pt-[max(1rem,env(safe-area-inset-top))]">
             <!-- Header -->
-            <header class="relative pb-6 border-b border-[#874230]/30 mb-8 flex flex-col items-start w-full">
-               <div class="flex items-center gap-6">
-                  <!-- Scaled-down dynamic responsive heights to prevent layout crowding -->
-                  <div class="h-20 sm:h-28 md:h-36 lg:h-40 w-auto flex items-center justify-center shrink-0">
-                     <img src="/static/logo2.jpg" alt="Cafe Logo" class="h-full w-full object-contain" onerror="this.style.display='none'">
+            <header class="relative pb-6 border-b border-[#874230]/30 mb-6 sm:mb-8 flex flex-col items-start w-full">
+               <div class="flex items-center gap-3 sm:gap-6 w-full min-w-0">
+                  <div class="h-16 w-16 sm:h-28 sm:w-28 md:h-36 md:w-36 shrink-0 flex items-center justify-center">
+                     <img src="/static/logo2.jpg" alt="27 Cafe & Bar Logo" class="h-full w-full object-contain">
                   </div>
-                  <div class="space-y-1">
+                  <div class="space-y-1 min-w-0 flex-1">
                      <h1 style="font-family: 'Revans', sans-serif;" class="font-27-title tracking-tight leading-none text-[#602D1F]">
-                        <span class="font-bold text-5xl sm:text-7xl select-none">27</span>
-                        <span class="font-normal text-4xl sm:text-6xl select-none">cafe</span>
+                        <span class="font-bold text-4xl sm:text-7xl select-none">27</span>
+                        <span class="font-normal text-3xl sm:text-6xl select-none">cafe</span>
                      </h1>
-                     <p style="font-family: 'Revans', sans-serif;" class="text-[12px] tracking-[0.25em] font-semibold text-[#602D1F] pl-1">
-                        Cafe & Bar 
+                     <p style="font-family: 'Revans', sans-serif;" class="text-[11px] sm:text-[12px] tracking-[0.2em] sm:tracking-[0.25em] font-semibold text-[#602D1F]">
+                        Cafe & Bar
                      </p>
                   </div>
                </div>
@@ -192,14 +198,14 @@
                      <path d="M57,20 Q60,15 57,10" />
                   </svg>
                </div>
-               <div class="flex items-center justify-end gap-2 mb-2 text-[#602D1F]/80 w-full" style="font-family: 'Revans', sans-serif;">
+               <div class="flex items-center justify-end gap-2 mt-4 mb-2 text-[#602D1F]/80 w-full pr-1" style="font-family: 'Revans', sans-serif;">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                   <p class="text-xs sm:text-sm font-medium tracking-wide">Opening Daily 9:00 AM - 8:00 PM</p>
                </div>
 
-               <p class="font-bold text-[#874230] text-sm sm:text-base leading-relaxed">27 cafe မှ တစ်ဆိုင်လုံး 100% သဘာဝအသီးစစ်စစ်သာ အသုံးပြုထားပါသည်။</p>
+               <p class="font-bold text-[#874230] text-sm sm:text-base leading-relaxed pr-1">27 cafe မှ တစ်ဆိုင်လုံး 100% သဘာဝအသီးစစ်စစ်သာ အသုံးပြုထားပါသည်။</p>
 
             </header>
 
@@ -221,34 +227,28 @@
                <div id="standard-categories-container" class="space-y-8">
                   <!-- Populated dynamically -->
                </div>
-               <!-- Clean Separator Line above juices -->
+               <!-- Clean Separator Line above photo sections -->
                <hr class="border-[#874230]/10 my-8">
-               <!-- 2. Bottom Swipe-Aside Section (Fresh Juices, Cakes, etc. with Floating Photos) -->
-               <div id="juice-categories-container" class="space-y-6">
+               <!-- 2. Bottom Swipe-Aside Section (items with uploaded photos) -->
+               <div id="photo-categories-container" class="space-y-6">
                   <!-- Populated dynamically -->
                </div>
                <!-- Card Bottom Stamp Footer (Your Custom Footer on Main Menu) -->
-               <footer class="mt-16 pt-4 border-t border-[#874230]/20 flex flex-col sm:flex-row justify-between items-center text-[12px] text-[#874230]/70 uppercase tracking-widest font-semibold gap-2">
+               <footer class="mt-16 pt-4 border-t border-[#874230]/20 flex flex-col sm:flex-row justify-between items-start sm:items-center text-[11px] sm:text-[12px] text-[#874230]/70 uppercase tracking-widest font-semibold gap-3 px-1">
                   <span class="truncate">Thank you for supporting 27 Cafe.</span>
                   <span class="shrink-0">
                     Tiktok-<a href="https://www.tiktok.com/@27cafe.nbar" target="_blank"> 👉 @27cafe.nbar</a>
                 </span>
                </footer>
-               <footer class="mt-16 pt-4 border-t border-[#874230]/20 flex flex-col sm:flex-row justify-between items-center text-[12px] text-[#ff1e29]/70 uppercase tracking-widest font-semibold gap-2">
-                  <span class="font-bold truncate">***အသိပေးကြေညာချက်***</span>
-                  <span class="shrink-0">ဆိုင်တွင် ဝန်ဆောင်မှုအဆင်ပြေမှုများသာမက
-                        မပြေမှုများလည်း ရှိပါက
-                        Telegram မှတစ်ဆင့် လွယ်ကူစွာ တိုင်ကြားပေးနိုင်ပါသည်။
-                        သင်၏ အကြံပြုချက်နှင့် တိုင်ကြားချက်များသည်
-                        ကျွန်ုပ်တို၏ ဝန်ဆောင်မှုများကို
-                        ပိုမိုကောင်းမွန်အောင် မြှင့်တင်ရာတွင် အရေးပါလှပါသည်။
-                 </span>
-                 <a href = "https://t.me/cafe27muse/">  Telegram username - 👉 @cafe27muse</a>
+               <footer class="mt-8 pt-4 border-t border-[#874230]/20 flex flex-col gap-3 text-[11px] sm:text-[12px] text-[#ff1e29]/70 uppercase tracking-wide font-semibold px-1 leading-relaxed">
+                  <span class="font-bold">***အသိပေးကြေညာချက်***</span>
+                  <span>ဆိုင်တွင် ဝန်ဆောင်မှုအဆင်ပြေမှုများသာမက မပြေမှုများလည်း ရှိပါက Telegram မှတစ်ဆင့် လွယ်ကူစွာ တိုင်ကြားပေးနိုင်ပါသည်။ သင်၏ အကြံပြုချက်နှင့် တိုင်ကြားချက်များသည် ကျွန်ုပ်တို၏ ဝန်ဆောင်မှုများကို ပိုမိုကောင်းမွန်အောင် မြှင့်တင်ရာတွင် အရေးပါလှပါသည်။</span>
+                 <a href="https://t.me/cafe27muse/" class="normal-case tracking-normal">Telegram username - 👉 @cafe27muse</a>
                </footer>
             </div>
 
             <!-- Security Warning State -->
-            <div id="security-warning" class="hidden">
+            <div id="security-warning" class="hidden px-1">
                <div class="border border-red-300 bg-red-50 text-red-900 p-8 rounded-2xl text-center space-y-3">
                   <h3 class="text-lg font-27-title font-bold uppercase">Access Blocked</h3>
                   <p class="text-xs">Please scan a secure table QR code printed on your table to view our dining card and place orders.</p>
@@ -261,7 +261,7 @@
 
       <!-- Sticky Centered Fully Responsive Cart Bar -->
       <!-- High Z-Index (z-[100]) forces rendering on top of all iPad Safari/Chrome viewport layers -->
-      <div id="cart-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] hidden w-[90%] sm:w-11/12 max-w-xs sm:max-w-sm md:max-w-md">
+      <div id="cart-bar" class="fixed z-[100] hidden left-1/2 -translate-x-1/2 w-[min(90%,calc(100%-2.5rem))] sm:w-11/12 max-w-xs sm:max-w-sm md:max-w-md" style="bottom: max(1.5rem, env(safe-area-inset-bottom));">
          <button onclick="toggleCartModal(true)" class="w-full flex items-center justify-between bg-[#1E140C] hover:bg-[#2D1C13] text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-full transition shadow-2xl active:scale-[0.98]">
             <div class="flex items-center gap-1.5 sm:gap-2">
                <!-- Shopping Bag Icon -->
@@ -376,28 +376,15 @@
          let pendingCustomizeItemId = null;
          let selectedPresets = new Set();
          
-         // Aesthetic default fallback images if no photo is uploaded by the manager
-         const juiceImages = {
-             "squeeze": "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=400&q=80",
-             "orange": "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=400&q=80",
-             "trio": "https://images.unsplash.com/photo-1582281298055-e25b84a30b0b?auto=format&fit=crop&w=400&q=80",
-             "garden": "https://images.unsplash.com/photo-1628556264797-122e2392761a?auto=format&fit=crop&w=400&q=80",
-             "lemon": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80",
-             "berry": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=400&q=80",
-             "apple": "https://images.unsplash.com/photo-1512484776495-a09d92e87c3b?auto=format&fit=crop&w=400&q=80",
-             "pineapple": "https://images.unsplash.com/photo-1589733901241-5e53429e145e?auto=format&fit=crop&w=400&q=80",
-             "cake": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=400&q=80",
-             "dessert": "https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=400&q=80",
-             "bakery": "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=400&q=80",
-             "default": "https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=400&q=80"
-         };
-         
-         function getJuiceImage(name) {
-             const lowercaseName = name.toLowerCase();
-             for (const [key, url] of Object.entries(juiceImages)) {
-                 if (lowercaseName.includes(key)) return url;
-             }
-             return juiceImages.default;
+         // Neutral placeholder when a photo-card item has no uploaded image yet
+         const PLACEHOLDER_IMAGE = '/static/logo2.jpg';
+
+         function getItemImage(item) {
+             return item.image_url || PLACEHOLDER_IMAGE;
+         }
+
+         function categoryUsesPhotoLayout(items) {
+             return items.some((item) => Boolean(item.image_url));
          }
          
          async function verifyAndLoad() {
@@ -427,10 +414,10 @@
          // --- RENDER DYNAMIC 27 CAFE STRUCTURES ---
          function renderMenu() {
              const standardContainer = document.getElementById('standard-categories-container');
-             const juiceContainer = document.getElementById('juice-categories-container');
+             const photoContainer = document.getElementById('photo-categories-container');
          
              standardContainer.innerHTML = "";
-             juiceContainer.innerHTML = "";
+             photoContainer.innerHTML = "";
          
              const categories = {};
              menuItems.forEach(item => {
@@ -440,22 +427,15 @@
          
              for (const [categoryName, items] of Object.entries(categories)) {
                 items.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
-                const normalizedCategory = categoryName.toLowerCase();
-                
-                // Matches "juice", "fresh juice", "cake", "dessert", "bakery", etc.
-                const isPhotoCategory = normalizedCategory.includes('juice') || 
-                                        normalizedCategory.includes('cake') || 
-                                        normalizedCategory.includes('dessert') || 
-                                        normalizedCategory.includes('bakery');
+                const isPhotoCategory = categoryUsesPhotoLayout(items);
          
                 const sectionDiv = document.createElement('div');
                 sectionDiv.className = "space-y-4 relative";
          
                 if (isPhotoCategory) {
-                     // --- DYNAMIC FRESH JUICES CAROUSEL (FLOATING STYLE & EXPANDED CARD PROPORTIONS) ---
                      const cardsHtml = items.map(item => {
                          const isSoldOut = item.stock !== null && item.stock <= 0;
-                         const imgUrl = item.image_url ? item.image_url : getJuiceImage(item.name);
+                         const imgUrl = getItemImage(item);
          
                          const quantityInCart = getItemQuantityInCart(item.id);
          
@@ -488,18 +468,16 @@
                      }).join("");
          
                      sectionDiv.innerHTML = `
-                         <!-- Juice Swiper Header -->
                          <div class="flex flex-col border-b-2 border-[#874230]/20 pb-3">
                              <h3 class="font-27-title text-xl sm:text-2xl font-bold uppercase tracking-wider">${categoryName}</h3>
                              <span class="text-xs uppercase tracking-wider text-[#9d958c] font-semibold mt-1">Swipe to explore →</span>
                          </div>
-                         <!-- Horizontal Swipe Wrapper - 2 Rows for Photo-based items -->
-                         <div class="grid grid-rows-2 grid-flow-col overflow-x-auto snap-x snap-mandatory gap-y-4 gap-x-5 scrollbar-none py-2 px-1">
+                         <div class="grid grid-rows-2 grid-flow-col overflow-x-auto snap-x snap-mandatory gap-y-4 gap-x-4 scrollbar-none py-2 -mx-1 px-1">
                              ${cardsHtml}
                          </div>
                      `;
                      
-                     juiceContainer.appendChild(sectionDiv);
+                     photoContainer.appendChild(sectionDiv);
          
                  } else {
                      // --- STANDARD CLASSY VERTICAL LISTS (Fully Responsive layout and shrink protection) ---
@@ -509,8 +487,8 @@
                          const quantityInCart = getItemQuantityInCart(item.id);
          
                          return `
-                             <div class="flex justify-between items-start text-sm py-4 cursor-pointer active:scale-[0.99] transition duration-150 border-b border-[#735647]/10" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
-                                 <div class="flex-1 pr-4">
+                             <div class="flex justify-between items-start text-sm py-4 cursor-pointer active:scale-[0.99] transition duration-150 border-b border-[#735647]/10 px-1" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
+                                 <div class="flex-1 pr-4 min-w-0">
                                      <div class="flex items-center gap-2">
                                          <!-- Scaled up Item Name -->
                                          <h4 class="font-27-title font-extrabold text-base md:text-lg text-[#874230] hover:text-[#9d958c] transition">${item.name}</h4>
