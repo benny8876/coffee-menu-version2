@@ -405,7 +405,30 @@
          }
 
          function reconnectBluetoothPrinter() {
-             BluetoothPrinter.tryReconnectStoredPrinter(getBluetoothStatusEl()).catch(() => {});
+             const statusEl = getBluetoothStatusEl();
+             if (!localStorage.getItem('bluetooth_printer_device_id')) {
+                 if (statusEl) {
+                     statusEl.innerText = 'No saved printer yet. Tap Connect Bluetooth Printer.';
+                     statusEl.className = 'text-xs text-slate-500 text-center';
+                 }
+                 return Promise.resolve(false);
+             }
+
+             return BluetoothPrinter.tryReconnectStoredPrinterWithRetries(statusEl, 3, 700);
+         }
+
+         function setupBluetoothLifecycleHooks() {
+             window.addEventListener('pageshow', () => {
+                 if (localStorage.getItem('manager_token')) {
+                     reconnectBluetoothPrinter();
+                 }
+             });
+
+             document.addEventListener('visibilitychange', () => {
+                 if (document.visibilityState === 'visible' && localStorage.getItem('manager_token')) {
+                     reconnectBluetoothPrinter();
+                 }
+             });
          }
          
          async function handleLogin(event) {
@@ -1182,6 +1205,8 @@
              }
          }
          
+         setupBluetoothLifecycleHooks();
+
          // Initialize session protection on page load
          checkAuthState();
       </script>

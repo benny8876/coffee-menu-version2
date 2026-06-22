@@ -75,23 +75,49 @@
         const API_BASE = `${window.location.origin}/api/v1`;
         let kitchenToken = sessionStorage.getItem('kitchen_token');
         let audioCtx = null;
+        let audioUnlocked = sessionStorage.getItem('kitchen_audio_unlocked') === '1';
         const ALERT_VOLUME = 1.0;
 
-        function ensureAudioContext() {
+        async function ensureAudioContext() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
             if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+                await audioCtx.resume();
             }
             return audioCtx;
         }
 
         function markAudioActive() {
+            audioUnlocked = true;
+            sessionStorage.setItem('kitchen_audio_unlocked', '1');
             const banner = document.getElementById('audio-status-banner');
             if (banner) {
                 banner.innerText = "🔊 Audio Active";
                 banner.className = "text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg";
+            }
+        }
+
+        async function unlockKitchenAlerts() {
+            await ensureAudioContext();
+            markAudioActive();
+            if ('Notification' in window && Notification.permission === 'default') {
+                try {
+                    await Notification.requestPermission();
+                } catch (err) {
+                    console.warn('Notification permission request failed', err);
+                }
+            }
+        }
+
+        function showBackgroundNotification(title, body) {
+            if (!document.hidden || !('Notification' in window) || Notification.permission !== 'granted') {
+                return;
+            }
+            try {
+                new Notification(title, { body, tag: 'kitchen-alert' });
+            } catch (err) {
+                console.warn('Background notification failed', err);
             }
         }
 
@@ -126,8 +152,7 @@
                 kitchenToken = data.token;
                 sessionStorage.setItem('kitchen_token', kitchenToken);
                 showLoginGate(false);
-                ensureAudioContext();
-                markAudioActive();
+                await unlockKitchenAlerts();
                 fetchOrders();
                 connectWS();
             } catch (err) {
@@ -147,9 +172,14 @@
         });
 
         document.body.addEventListener('click', () => {
-            ensureAudioContext();
-            markAudioActive();
+            unlockKitchenAlerts();
         }, { once: true });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && audioUnlocked) {
+                ensureAudioContext().catch((err) => console.warn('Audio resume failed', err));
+            }
+        });
 
         function playTone(ctx, frequency, startTime, duration, volume = ALERT_VOLUME) {
             const oscillator = ctx.createOscillator();
@@ -189,35 +219,49 @@
             setTimeout(() => alertBox.remove(), 12000);
         }
 
-        function playNewOrderChime(tableNumber) {
-            try {
-                const ctx = ensureAudioContext();
-                if (ctx.state === 'suspended') return;
+        function playChimePattern(ctx) {
+            const now = ctx.currentTime;
+            const pattern = [
+                { freq: 880, start: 0, duration: 0.18 },
+                { freq: 988, start: 0.22, duration: 0.18 },
+                { freq: 1175, start: 0.44, duration: 0.18 },
+                { freq: 880, start: 0.72, duration: 0.18 },
+                { freq: 988, start: 0.94, duration: 0.18 },
+                { freq: 1175, start: 1.16, duration: 0.28 },
+            ];
 
-                const now = ctx.currentTime;
-                const pattern = [
-                    { freq: 880, start: 0, duration: 0.18 },
-                    { freq: 988, start: 0.22, duration: 0.18 },
-                    { freq: 1175, start: 0.44, duration: 0.18 },
-                    { freq: 880, start: 0.72, duration: 0.18 },
-                    { freq: 988, start: 0.94, duration: 0.18 },
-                    { freq: 1175, start: 1.16, duration: 0.28 },
-                ];
+            pattern.forEach((tone) => {
+                playTone(ctx, tone.freq, now + tone.start, tone.duration, ALERT_VOLUME);
+            });
 
+            setTimeout(() => {
+                if (ctx.state !== 'running') return;
+                const repeatAt = ctx.currentTime;
                 pattern.forEach((tone) => {
-                    playTone(ctx, tone.freq, now + tone.start, tone.duration, ALERT_VOLUME);
+                    playTone(ctx, tone.freq, repeatAt + tone.start, tone.duration, ALERT_VOLUME);
                 });
+            }, 1500);
+        }
 
-                setTimeout(() => {
-                    const repeatAt = ctx.currentTime;
-                    pattern.forEach((tone) => {
-                        playTone(ctx, tone.freq, repeatAt + tone.start, tone.duration, ALERT_VOLUME);
-                    });
-                }, 1500);
+        async function playNewOrderChime(tableNumber) {
+            vibrateNewOrderAlert();
+            flashNewOrderScreen();
+            showNewOrderBanner(tableNumber);
+            showBackgroundNotification(
+                'New Kitchen Order',
+                tableNumber ? `Table ${tableNumber} placed a new order.` : 'A new order just arrived.'
+            );
 
-                vibrateNewOrderAlert();
-                flashNewOrderScreen();
-                showNewOrderBanner(tableNumber);
+            if (!audioUnlocked) {
+                return;
+            }
+
+            try {
+                const ctx = await ensureAudioContext();
+                if (ctx.state !== 'running') {
+                    return;
+                }
+                playChimePattern(ctx);
             } catch (e) {
                 console.error("Audio synthesis blocked: ", e);
             }
@@ -362,11 +406,16 @@
             }
         }
 
-        function playWaiterAlertSound() {
-            try {
-                const ctx = ensureAudioContext();
-                if (ctx.state === 'suspended') return;
+        async function playWaiterAlertSound() {
+            if (!audioUnlocked) {
+                return;
+            }
 
+            try {
+                const ctx = await ensureAudioContext();
+                if (ctx.state !== 'running') {
+                    return;
+                }
                 playTone(ctx, 880, ctx.currentTime, 0.2, 0.8);
             } catch (e) {
                 console.error(e);
@@ -382,6 +431,10 @@
                 <button onclick="this.parentElement.remove()" class="bg-white/20 hover:bg-white/30 text-white font-black px-3 py-1 rounded-lg text-xs">Dismiss</button>
             `;
             container.appendChild(alertBox);
+            showBackgroundNotification(
+                'Service Request',
+                `Table ${tableNum} requested ${serviceRequest}.`
+            );
             playWaiterAlertSound();
         }
 
@@ -419,6 +472,9 @@
 
         if (kitchenToken) {
             showLoginGate(false);
+            if (audioUnlocked) {
+                markAudioActive();
+            }
             fetchOrders();
             connectWS();
         } else {

@@ -30,6 +30,9 @@
     let bluetoothDevice = null;
     let writeCharacteristic = null;
     let currentReceipt = null;
+    let lastStatusEl = null;
+    let reconnectTimer = null;
+    let reconnectInFlight = false;
 
     function padLine(left, right) {
         const leftText = String(left);
@@ -139,16 +142,50 @@
     }
 
     async function connectToDevice(device) {
+        if (bluetoothDevice && bluetoothDevice !== device) {
+            bluetoothDevice.removeEventListener('gattserverdisconnected', onGattDisconnected);
+        }
+
         bluetoothDevice = device;
+        bluetoothDevice.removeEventListener('gattserverdisconnected', onGattDisconnected);
         bluetoothDevice.addEventListener('gattserverdisconnected', onGattDisconnected);
+
         const server = await bluetoothDevice.gatt.connect();
         writeCharacteristic = await findWritableCharacteristic(server);
         localStorage.setItem(PRINTER_ID_KEY, device.id);
         return bluetoothDevice.name || 'Bluetooth printer';
     }
 
+    function scheduleAutoReconnect() {
+        if (reconnectTimer || reconnectInFlight) {
+            return;
+        }
+
+        if (!localStorage.getItem(PRINTER_ID_KEY)) {
+            return;
+        }
+
+        reconnectTimer = setTimeout(async () => {
+            reconnectTimer = null;
+            reconnectInFlight = true;
+            try {
+                await tryReconnectStoredPrinter(lastStatusEl);
+            } finally {
+                reconnectInFlight = false;
+            }
+        }, 800);
+    }
+
     function onGattDisconnected() {
         writeCharacteristic = null;
+        if (lastStatusEl) {
+            updatePrinterStatus(
+                lastStatusEl,
+                'Printer disconnected. Reconnecting...',
+                'text-xs text-amber-600'
+            );
+        }
+        scheduleAutoReconnect();
     }
 
     function updatePrinterStatus(statusEl, text, className) {
@@ -158,6 +195,10 @@
     }
 
     async function tryReconnectStoredPrinter(statusEl) {
+        if (statusEl) {
+            lastStatusEl = statusEl;
+        }
+
         if (!navigator.bluetooth || !navigator.bluetooth.getDevices) {
             return false;
         }
@@ -165,6 +206,15 @@
         const savedId = localStorage.getItem(PRINTER_ID_KEY);
         if (!savedId) {
             return false;
+        }
+
+        if (writeCharacteristic && bluetoothDevice?.gatt?.connected && bluetoothDevice.id === savedId) {
+            updatePrinterStatus(
+                statusEl,
+                `Connected: ${getPrinterName()}`,
+                'text-xs text-emerald-600 font-semibold'
+            );
+            return true;
         }
 
         const devices = await navigator.bluetooth.getDevices();
@@ -186,6 +236,29 @@
             writeCharacteristic = null;
             return false;
         }
+    }
+
+    async function tryReconnectStoredPrinterWithRetries(statusEl, maxAttempts = 3, delayMs = 600) {
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+            const connected = await tryReconnectStoredPrinter(statusEl);
+            if (connected) {
+                return true;
+            }
+
+            if (attempt < maxAttempts) {
+                await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+            }
+        }
+
+        if (statusEl && localStorage.getItem(PRINTER_ID_KEY)) {
+            updatePrinterStatus(
+                statusEl,
+                'Printer not connected. Tap Connect Bluetooth Printer.',
+                'text-xs text-amber-600'
+            );
+        }
+
+        return false;
     }
 
     async function connectBluetoothPrinter() {
@@ -289,6 +362,7 @@
         connectBluetoothPrinter,
         connectPrinterWithStatus,
         tryReconnectStoredPrinter,
+        tryReconnectStoredPrinterWithRetries,
         printCurrentReceipt,
         isPrinterConnected,
         getPrinterName,
