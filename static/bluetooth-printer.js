@@ -1,11 +1,16 @@
 /**
  * Bluetooth thermal printer support for Android Chrome (Web Bluetooth API).
- * Formats receipt JSON as ESC/POS and sends to paired BLE printers.
+ * Renders receipts as raster images so Myanmar Unicode prints correctly.
  */
 (function (global) {
     const ESC = '\x1B';
     const GS = '\x1D';
-    const LINE_WIDTH = 32;
+    const PRINTER_WIDTH = 384;
+    const PADDING_X = 12;
+    const FONT_FAMILY = '"Noto Sans Myanmar", sans-serif';
+    const DEFAULT_FONT_SIZE = 22;
+    const LINE_HEIGHT = 30;
+    const RASTER_BAND_HEIGHT = 24;
 
     const PRINTER_PROFILES = [
         {
@@ -33,88 +38,277 @@
     let lastStatusEl = null;
     let reconnectTimer = null;
     let reconnectInFlight = false;
-
-    function padLine(left, right) {
-        const leftText = String(left);
-        const rightText = String(right);
-        const spaces = Math.max(1, LINE_WIDTH - leftText.length - rightText.length);
-        return leftText + ' '.repeat(spaces) + rightText + '\n';
-    }
-
-    function center(text) {
-        const value = String(text);
-        const padding = Math.max(0, Math.floor((LINE_WIDTH - value.length) / 2));
-        return ' '.repeat(padding) + value + '\n';
-    }
-
-    function dashedLine() {
-        return '-'.repeat(LINE_WIDTH) + '\n';
-    }
+    let fontReadyPromise = null;
 
     function formatMoney(amount) {
         return `${Number(amount).toFixed(0)} Ks`;
     }
 
-    function buildEscPosReceipt(receipt) {
-        let out = '';
-        out += ESC + '@';
-        out += ESC + 'a' + '\x01';
+    function ensureMyanmarFont() {
+        if (!fontReadyPromise) {
+            fontReadyPromise = (async () => {
+                try {
+                    await document.fonts.load(`700 24px ${FONT_FAMILY}`);
+                    await document.fonts.load(`400 22px ${FONT_FAMILY}`);
+                } catch (err) {
+                    console.warn('Myanmar font preload failed; using system fallback.', err);
+                }
+            })();
+        }
+        return fontReadyPromise;
+    }
 
+    function setFont(ctx, size, bold) {
+        ctx.font = `${bold ? '700' : '400'} ${size}px ${FONT_FAMILY}`;
+    }
+
+    function wrapText(ctx, text, maxWidth) {
+        const value = String(text);
+        const lines = [];
+        let current = '';
+
+        for (const char of value) {
+            const candidate = current + char;
+            if (ctx.measureText(candidate).width > maxWidth && current) {
+                lines.push(current);
+                current = char;
+            } else {
+                current = candidate;
+            }
+        }
+
+        if (current) {
+            lines.push(current);
+        }
+
+        return lines.length ? lines : [''];
+    }
+
+    function buildReceiptLayout(receipt) {
         const title = receipt.restaurant_name || '27 Cafe & Bar';
-        out += center(title);
+        const rows = [];
+
+        rows.push({ type: 'text', text: title, align: 'center', bold: true, size: 26 });
+        rows.push({ type: 'gap', height: 6 });
 
         if (receipt.voucher_id) {
-            out += center(receipt.voucher_id);
+            rows.push({ type: 'text', text: receipt.voucher_id, align: 'center', size: 20 });
         } else if (receipt.order_ids && receipt.order_ids.length) {
-            out += center('TABLE SESSION INVOICE');
+            rows.push({ type: 'text', text: 'TABLE SESSION INVOICE', align: 'center', size: 20 });
         }
 
         if (receipt.timestamp) {
-            out += center(receipt.timestamp);
+            rows.push({ type: 'text', text: receipt.timestamp, align: 'center', size: 18 });
         }
 
-        out += ESC + 'a' + '\x00';
-        out += dashedLine();
-        out += `Table: ${receipt.table_number}\n`;
+        rows.push({ type: 'rule' });
+        rows.push({ type: 'text', text: `Table: ${receipt.table_number}`, align: 'left' });
 
         if (receipt.order_ids && receipt.order_ids.length) {
-            out += `Orders: ${receipt.order_ids.map((id) => `#${id}`).join(', ')}\n`;
+            rows.push({
+                type: 'text',
+                text: `Orders: ${receipt.order_ids.map((id) => `#${id}`).join(', ')}`,
+                align: 'left',
+                size: 20,
+            });
         }
 
-        out += dashedLine();
+        rows.push({ type: 'rule' });
 
         (receipt.items || []).forEach((item) => {
             const subtotal = item.subtotal != null
                 ? item.subtotal
                 : item.quantity * item.unit_price;
-            out += padLine(`${item.name} x${item.quantity}`, formatMoney(subtotal));
+            rows.push({
+                type: 'pair',
+                left: `${item.name} x${item.quantity}`,
+                right: formatMoney(subtotal),
+            });
 
-            const mods = item.modifiers || [];
-            mods.forEach((mod) => {
+            (item.modifiers || []).forEach((mod) => {
                 const modName = typeof mod === 'string' ? mod : mod.name;
                 if (modName) {
-                    out += `  + ${modName}\n`;
+                    rows.push({ type: 'text', text: `  + ${modName}`, align: 'left', size: 20 });
                 }
             });
         });
 
-
-        out += ESC + 'E' + '\x01';
-        out += padLine('GRAND TOTAL', formatMoney(receipt.subtotal));
-        out += ESC + 'E' + '\x00';
-        out += dashedLine();
+        rows.push({ type: 'rule' });
+        rows.push({
+            type: 'pair',
+            left: 'GRAND TOTAL',
+            right: formatMoney(receipt.subtotal),
+            bold: true,
+            size: 24,
+        });
+        rows.push({ type: 'rule' });
 
         if (receipt.status) {
-            out += `Status: ${receipt.status}\n`;
+            rows.push({ type: 'text', text: `Status: ${receipt.status}`, align: 'left', size: 20 });
         }
 
-        out += ESC + 'a' + '\x01';
-        out += '\nThank you!\n';
-        out += center(receipt.restaurant_name || '27 Cafe & Bar');
-        out += '\n\n\n';
-        out += GS + 'V' + '\x00';
+        rows.push({ type: 'gap', height: 8 });
+        rows.push({ type: 'text', text: 'Thank you!', align: 'center', bold: true });
+        rows.push({ type: 'text', text: title, align: 'center', size: 20 });
+        rows.push({ type: 'gap', height: 24 });
 
-        return new TextEncoder().encode(out);
+        return rows;
+    }
+
+    function measureReceiptHeight(ctx, rows) {
+        const contentWidth = PRINTER_WIDTH - PADDING_X * 2;
+        let height = PADDING_X;
+
+        rows.forEach((row) => {
+            if (row.type === 'gap') {
+                height += row.height;
+                return;
+            }
+
+            if (row.type === 'rule') {
+                height += 16;
+                return;
+            }
+
+            const size = row.size || DEFAULT_FONT_SIZE;
+            setFont(ctx, size, Boolean(row.bold));
+
+            if (row.type === 'pair') {
+                const leftLines = wrapText(ctx, row.left, contentWidth * 0.62);
+                height += Math.max(leftLines.length, 1) * (size + 8);
+                return;
+            }
+
+            const lines = wrapText(ctx, row.text, contentWidth);
+            height += lines.length * (size + 8);
+        });
+
+        return height + PADDING_X;
+    }
+
+    function drawReceiptRows(ctx, rows) {
+        const contentWidth = PRINTER_WIDTH - PADDING_X * 2;
+        let y = PADDING_X + DEFAULT_FONT_SIZE;
+
+        rows.forEach((row) => {
+            if (row.type === 'gap') {
+                y += row.height;
+                return;
+            }
+
+            if (row.type === 'rule') {
+                ctx.fillRect(PADDING_X, y - 8, contentWidth, 2);
+                y += 16;
+                return;
+            }
+
+            const size = row.size || DEFAULT_FONT_SIZE;
+            setFont(ctx, size, Boolean(row.bold));
+
+            if (row.type === 'pair') {
+                const leftLines = wrapText(ctx, row.left, contentWidth * 0.62);
+                leftLines.forEach((line, index) => {
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'alphabetic';
+                    ctx.fillText(line, PADDING_X, y);
+                    if (index === leftLines.length - 1) {
+                        ctx.textAlign = 'right';
+                        ctx.fillText(row.right, PRINTER_WIDTH - PADDING_X, y);
+                    }
+                    y += size + 8;
+                });
+                return;
+            }
+
+            const lines = wrapText(ctx, row.text, contentWidth);
+            lines.forEach((line) => {
+                ctx.textAlign = row.align === 'center' ? 'center' : 'left';
+                ctx.textBaseline = 'alphabetic';
+                const x = row.align === 'center' ? PRINTER_WIDTH / 2 : PADDING_X;
+                ctx.fillText(line, x, y);
+                y += size + 8;
+            });
+        });
+    }
+
+    async function renderReceiptCanvas(receipt) {
+        await ensureMyanmarFont();
+
+        const measureCanvas = document.createElement('canvas');
+        measureCanvas.width = PRINTER_WIDTH;
+        measureCanvas.height = 10;
+        const measureCtx = measureCanvas.getContext('2d');
+
+        const rows = buildReceiptLayout(receipt);
+        const height = measureReceiptHeight(measureCtx, rows);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = PRINTER_WIDTH;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#000000';
+        drawReceiptRows(ctx, rows);
+
+        return canvas;
+    }
+
+    function appendBytes(target, bytes) {
+        target.push(...bytes);
+    }
+
+    function canvasToEscPosRaster(canvas) {
+        const ctx = canvas.getContext('2d');
+        const { width, height } = canvas;
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const bytesPerRow = Math.ceil(width / 8);
+        const output = [];
+
+        appendBytes(output, [0x1b, 0x40]);
+
+        for (let bandStart = 0; bandStart < height; bandStart += RASTER_BAND_HEIGHT) {
+            const bandHeight = Math.min(RASTER_BAND_HEIGHT, height - bandStart);
+            const bandBytes = [];
+
+            for (let row = 0; row < bandHeight; row += 1) {
+                const y = bandStart + row;
+                const rowBytes = new Uint8Array(bytesPerRow);
+
+                for (let x = 0; x < width; x += 1) {
+                    const pixelIndex = (y * width + x) * 4;
+                    const luminance = (
+                        imageData.data[pixelIndex] * 0.299
+                        + imageData.data[pixelIndex + 1] * 0.587
+                        + imageData.data[pixelIndex + 2] * 0.114
+                    );
+
+                    if (luminance < 168) {
+                        const byteIndex = Math.floor(x / 8);
+                        rowBytes[byteIndex] |= 0x80 >> (x % 8);
+                    }
+                }
+
+                bandBytes.push(...rowBytes);
+            }
+
+            const xL = bytesPerRow & 0xff;
+            const xH = (bytesPerRow >> 8) & 0xff;
+            const yL = bandHeight & 0xff;
+            const yH = (bandHeight >> 8) & 0xff;
+
+            appendBytes(output, [0x1d, 0x76, 0x30, 0x00, xL, xH, yL, yH]);
+            appendBytes(output, bandBytes);
+        }
+
+        appendBytes(output, [0x1d, 0x56, 0x00]);
+        return new Uint8Array(output);
+    }
+
+    async function buildEscPosReceipt(receipt) {
+        const canvas = await renderReceiptCanvas(receipt);
+        return canvasToEscPosRaster(canvas);
     }
 
     async function findWritableCharacteristic(server) {
@@ -295,7 +489,7 @@
             throw new Error('Printer not connected. Tap "Connect Printer" first.');
         }
 
-        const chunkSize = 100;
+        const chunkSize = 180;
         for (let i = 0; i < data.length; i += chunkSize) {
             const chunk = data.slice(i, i + chunkSize);
             if (writeCharacteristic.properties.writeWithoutResponse) {
@@ -342,11 +536,13 @@
             throw new Error('No receipt loaded. Open a receipt first.');
         }
 
-        updatePrinterStatus(statusEl, 'Printing...', 'text-xs text-blue-600');
+        updatePrinterStatus(statusEl, 'Preparing receipt...', 'text-xs text-blue-600');
 
         await ensurePrinterConnected(statusEl);
 
-        const data = buildEscPosReceipt(currentReceipt);
+        const data = await buildEscPosReceipt(currentReceipt);
+
+        updatePrinterStatus(statusEl, 'Printing...', 'text-xs text-blue-600');
         await sendEscPosData(data);
 
         updatePrinterStatus(
