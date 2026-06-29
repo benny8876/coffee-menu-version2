@@ -9,6 +9,29 @@
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700&display=swap" rel="stylesheet">
       <script src="https://cdn.tailwindcss.com"></script>
       <script src="/static/bluetooth-printer.js"></script>
+      <style>
+         .table-floor-grid {
+         display: grid;
+         grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+         gap: 0.75rem;
+         align-items: stretch;
+         width: 100%;
+         }
+         @media (min-width: 640px) {
+         .table-floor-grid {
+         grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+         gap: 1rem;
+         }
+         }
+         @media (min-width: 1024px) {
+         .table-floor-grid {
+         grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+         }
+         }
+         .table-floor-tile {
+         min-width: 0;
+         }
+      </style>
    </head>
    <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
       <!-- 1. SECURE LOGIN VIEW (Centered, shown if unauthenticated) -->
@@ -39,7 +62,7 @@
          <header class="bg-white border-b px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                <h1 class="text-2xl font-black text-slate-800">Management Panel</h1>
-               <p class="text-xs text-slate-400">Inventory control, financials, and logs</p>
+               <p class="text-xs text-slate-400">Revenue, live bills, QR, menu, and order history</p>
             </div>
             <!-- Action Tools -->
             <div class="flex flex-wrap items-center gap-3">
@@ -49,9 +72,6 @@
                </div>
                <button onclick="exportReport()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
                Export to PDF
-               </button>
-               <button onclick="toggleAddModal(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
-               + Add Menu Item
                </button>
                <!-- Change Password Trigger -->
                <button onclick="togglePasswordModal(true)" class="border-2 border-slate-600/30 hover:border-slate-650 hover:bg-slate-100 text-slate-700 font-bold py-1.5 px-4 rounded-lg text-sm transition">
@@ -63,8 +83,18 @@
                </button>
             </div>
          </header>
+         <nav class="bg-white border-b px-6 md:px-8">
+            <div class="max-w-7xl mx-auto flex flex-wrap gap-2 py-3">
+               <button type="button" data-panel="main" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-800 text-white">Main</button>
+               <button type="button" data-panel="qr" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">QR Panel</button>
+               <button type="button" data-panel="orders" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">Single Tickets</button>
+               <button type="button" data-panel="menu" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">Update Menu</button>
+            </div>
+         </nav>
          <!-- Main Content -->
          <main class="max-w-7xl mx-auto p-6 space-y-8">
+            <!-- MAIN PANEL -->
+            <div id="panel-main" class="manager-panel space-y-8">
             <!-- Dashboard Metrics Row - Upgraded to 4 Columns -->
             <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
@@ -87,7 +117,36 @@
                   </ol>
                </div>
             </section>
-            <!-- Dynamic Table QR Cryptographic Link Generator Section -->
+            <div class="space-y-8">
+               <!-- Active Dining Sessions (COMBINED TABLE BILLS) -->
+               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6 flex flex-col w-full min-w-0">
+                  <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                     <div class="min-w-0">
+                        <h2 class="text-lg font-bold text-slate-800">Live Dining Sessions (Active Bills)</h2>
+                        <p class="text-xs text-slate-400 mt-1">Table cards appear when a customer starts an order.</p>
+                     </div>
+                     <div id="table-floor-legend" class="hidden flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-wide shrink-0">
+                        <span class="inline-flex items-center gap-1.5 text-emerald-700"><span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Live</span>
+                     </div>
+                  </div>
+                  <div id="table-floor-empty" class="hidden py-10 text-center text-slate-400 italic text-sm border border-dashed border-slate-200 rounded-xl">
+                     No live dining sessions right now
+                  </div>
+                  <div id="table-floor-grid" class="hidden table-floor-grid overflow-y-auto max-h-[min(70vh,32rem)] w-full min-w-0">
+                     <!-- Populated dynamically -->
+                  </div>
+               </section>
+               <!-- Settled Table Sessions (Grouped Tables) -->
+               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6 w-full min-w-0">
+                  <h2 class="text-lg font-bold mb-2 text-slate-800">Settled Table Sessions Record (Grouped)</h2>
+                  <p class="text-xs text-slate-400 mb-4">View master receipts of historical dining sessions closed together.</p>
+                  <div class="space-y-3 overflow-y-auto max-h-[420px]" id="settled-tables-history-log"></div>
+               </section>
+            </div>
+            </div>
+
+            <!-- QR PANEL -->
+            <div id="panel-qr" class="manager-panel hidden space-y-8">
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                <h2 class="text-lg font-bold mb-2 text-slate-800">Tamper-Proof Dining QR Generator</h2>
                <p class="text-xs text-slate-400 mb-4">Generates cryptographically signed URLs for tables, preventing billing spoofing.</p>
@@ -112,31 +171,26 @@
                   <div id="all-qr-links-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
                </div>
             </section>
-            <!-- Split Grid Workspace -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-               <!-- Active Dining Sessions (COMBINED TABLE BILLS) -->
-               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
-                  <div>
-                     <h2 class="text-lg font-bold mb-2 text-slate-800">Live Dining Sessions (Active Bills)</h2>
-                     <p class="text-xs text-slate-400 mb-4">Consolidate multiple orders from the same table into a single master bill.</p>
-                  </div>
-                  <div class="overflow-y-auto max-h-[300px] border border-slate-100 rounded-lg">
-                     <table class="w-full text-left border-collapse">
-                        <thead>
-                           <tr class="text-xs text-slate-400 border-b">
-                              <th class="py-2">Table Number</th>
-                              <th class="py-2">Active Dockets</th>
-                              <th class="py-2">Total Accumulated</th>
-                              <th class="py-2 text-right">Bill Action</th>
-                           </tr>
-                        </thead>
-                        <tbody id="active-tables-tbody" class="text-sm divide-y"></tbody>
-                     </table>
-                  </div>
-               </section>
-               <!-- Menu Inventory modifier -->
+            </div>
+
+            <!-- SINGLE TICKETS PANEL -->
+            <div id="panel-orders" class="manager-panel hidden space-y-8">
                <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                  <h2 class="text-lg font-bold mb-4 border-b pb-2">Modify Menu Items & Pricing</h2>
+                  <h2 class="text-lg font-bold mb-2 text-slate-800">Consolidated Orders Record (Single Tickets)</h2>
+                  <p class="text-xs text-slate-400 mb-4">View independent order dockets individually.</p>
+                  <div class="space-y-3 overflow-y-auto max-h-[70vh]" id="orders-record-log"></div>
+               </section>
+            </div>
+
+            <!-- UPDATE MENU PANEL -->
+            <div id="panel-menu" class="manager-panel hidden space-y-8">
+               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 border-b pb-4">
+                     <h2 class="text-lg font-bold text-slate-800">Modify Menu Items & Pricing</h2>
+                     <button onclick="toggleAddModal(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition shrink-0">
+                     + Add Menu Item
+                     </button>
+                  </div>
                   <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mb-3">
                      <div class="relative flex-1 min-w-[200px]">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -167,7 +221,7 @@
                      </button>
                   </div>
                   <p id="menu-filter-count" class="text-xs text-slate-400 mb-3"></p>
-                  <div class="overflow-y-auto max-h-[350px] border border-slate-100 rounded-lg">
+                  <div class="overflow-y-auto max-h-[65vh] border border-slate-100 rounded-lg">
                      <table class="w-full text-left border-collapse">
                         <thead>
                            <tr class="text-xs text-slate-400 border-b">
@@ -182,21 +236,6 @@
                         <tbody id="menu-management-table" class="text-sm divide-y"></tbody>
                      </table>
                   </div>
-               </section>
-            </div>
-            <!-- Historical Sections Row -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-               <!-- Left: Settled Table Sessions (Grouped Tables) -->
-               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                  <h2 class="text-lg font-bold mb-2 text-slate-800">Settled Table Sessions Record (Grouped)</h2>
-                  <p class="text-xs text-slate-400 mb-4">View master receipts of historical dining sessions closed together.</p>
-                  <div class="space-y-3 overflow-y-auto max-h-[400px]" id="settled-tables-history-log"></div>
-               </section>
-               <!-- Right: Single Tickets History Log -->
-               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                  <h2 class="text-lg font-bold mb-2 text-slate-800">Consolidated Orders Record (Single Tickets)</h2>
-                  <p class="text-xs text-slate-400 mb-4">View independent order dockets individually.</p>
-                  <div class="space-y-3 overflow-y-auto max-h-[400px]" id="orders-record-log"></div>
                </section>
             </div>
          </main>
@@ -327,16 +366,18 @@
             <button onclick="toggleReceiptModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl print:hidden">&times;</button>
             <div id="receipt-payload" class="space-y-4"></div>
             <div id="receipt-actions" class="mt-6 space-y-2 print:hidden">
-               <p id="bluetooth-printer-status" class="text-xs text-slate-500 text-center"></p>
-               <button onclick="connectBluetoothPrinter()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
-               Connect Bluetooth Printer
-               </button>
-               <button onclick="printReceiptBluetooth()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-sm">
-               Print to Bluetooth Printer
-               </button>
-               <button onclick="window.print()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm">
-               Print Receipt (Browser)
-               </button>
+               <div id="receipt-print-actions" class="space-y-2">
+                  <p id="bluetooth-printer-status" class="text-xs text-slate-500 text-center"></p>
+                  <button onclick="connectBluetoothPrinter()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
+                  Connect Bluetooth Printer
+                  </button>
+                  <button onclick="printReceiptBluetooth()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-sm">
+                  Print to Bluetooth Printer
+                  </button>
+                  <button onclick="window.print()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-sm">
+                  Print Receipt (Browser)
+                  </button>
+               </div>
                <button id="settle-bill-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm hidden">
                Settle & Close Table Bill
                </button>
@@ -346,10 +387,52 @@
       <!-- JavaScript logic -->
       <script>
          const API_BASE = `${window.location.origin}/api/v1`;
+         const MANAGER_PANEL_KEY = 'manager_active_panel';
          let menuItemsList = [];
          let managerWs = null;
          let activeTablesPollId = null;
          
+         function showManagerPanel(panelId) {
+             const validPanels = ['main', 'qr', 'orders', 'menu'];
+             const activePanel = validPanels.includes(panelId) ? panelId : 'main';
+
+             document.querySelectorAll('.manager-panel').forEach((panel) => {
+                 panel.classList.add('hidden');
+             });
+             document.getElementById(`panel-${activePanel}`)?.classList.remove('hidden');
+
+             document.querySelectorAll('.panel-tab').forEach((button) => {
+                 const isActive = button.dataset.panel === activePanel;
+                 button.className = isActive
+                     ? 'panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-800 text-white'
+                     : 'panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200';
+             });
+
+             sessionStorage.setItem(MANAGER_PANEL_KEY, activePanel);
+
+             if (activePanel === 'qr') {
+                 loadQrTableSelect();
+             } else if (activePanel === 'orders') {
+                 fetchOrdersLog();
+             } else if (activePanel === 'menu') {
+                 fetchMenuTable();
+                 loadCategories();
+             } else {
+                 fetchAnalytics();
+                 fetchActiveTables();
+                 fetchSettledTablesHistory();
+             }
+         }
+
+         function initManagerNavigation() {
+             document.querySelectorAll('.panel-tab').forEach((button) => {
+                 button.addEventListener('click', () => showManagerPanel(button.dataset.panel));
+             });
+
+             const savedPanel = sessionStorage.getItem(MANAGER_PANEL_KEY) || 'main';
+             showManagerPanel(savedPanel);
+         }
+
          function getAuthHeaders() {
              const token = localStorage.getItem('manager_token');
              return {
@@ -375,10 +458,11 @@
                  setDefaultDatePicker();
                  fetchAnalytics();
                  fetchMenuTable();
-                 fetchActiveTables(); 
+                 fetchActiveTables();
                  loadQrTableSelect();
                  fetchOrdersLog();
                  fetchSettledTablesHistory();
+                 initManagerNavigation();
                  connectManagerWS();
                  startActiveTablesPolling();
                  reconnectBluetoothPrinter();
@@ -680,41 +764,101 @@
              }
          }
          
+         function renderTableFloorGrid(activeTables) {
+             const grid = document.getElementById('table-floor-grid');
+             const emptyState = document.getElementById('table-floor-empty');
+             const legend = document.getElementById('table-floor-legend');
+             if (!grid || !emptyState) return;
+
+             grid.innerHTML = '';
+
+             if (!activeTables.length) {
+                 grid.classList.add('hidden');
+                 emptyState.classList.remove('hidden');
+                 legend?.classList.add('hidden');
+                 return;
+             }
+
+             emptyState.classList.add('hidden');
+             grid.classList.remove('hidden');
+             legend?.classList.remove('hidden');
+
+             activeTables.forEach((table) => {
+                 const tile = document.createElement('div');
+                 tile.className = 'table-floor-tile rounded-2xl border-2 border-emerald-500 bg-emerald-50 p-3 sm:p-4 flex flex-col items-stretch text-center gap-1.5 shadow-sm h-full';
+
+                 tile.innerHTML = `
+                     <div class="flex flex-col items-center gap-1.5">
+                         <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-200 shrink-0"></span>
+                         <p class="text-base sm:text-lg font-black text-slate-800 leading-tight break-words w-full">Table ${escapeHtml(table.table_number)}</p>
+                         <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Live Session</p>
+                         <p class="text-xs text-slate-600">${table.active_orders_count} order${table.active_orders_count === 1 ? '' : 's'}</p>
+                         <p class="text-sm font-black text-amber-600">${table.total_price.toFixed(0)} Ks</p>
+                     </div>
+                     <div class="flex flex-col gap-2 w-full mt-auto pt-2">
+                         <button type="button" data-action="bill" data-table-id="${table.table_id}" class="w-full text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg transition">Bill</button>
+                         <button type="button" data-action="cancel" data-table-id="${table.table_id}" class="w-full text-xs bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-3 rounded-lg transition">Cancel</button>
+                     </div>
+                 `;
+
+                 tile.querySelector('[data-action="bill"]')?.addEventListener('click', (event) => {
+                     event.stopPropagation();
+                     loadConsolidatedTableBill(table.table_id);
+                 });
+                 tile.querySelector('[data-action="cancel"]')?.addEventListener('click', (event) => {
+                     event.stopPropagation();
+                     cancelTableSession(table.table_id);
+                 });
+
+                 grid.appendChild(tile);
+             });
+         }
+
          async function fetchActiveTables() {
              try {
                  const response = await fetch(`${API_BASE}/manager/tables/active`, {
                      headers: getAuthHeaders()
                  });
-         
-                 if (response.status === 401) { handleLogout(); return; }
-         
-                 const activeTables = await response.json();
-                 const tbody = document.getElementById("active-tables-tbody");
-                 tbody.innerHTML = "";
-         
-                 if (activeTables.length === 0) {
-                     tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400 italic">No live dining sessions active currently</td></tr>`;
+
+                 if (response.status === 401) {
+                     handleLogout();
                      return;
                  }
-         
-                 activeTables.forEach(table => {
-                     const tr = document.createElement("tr");
-                     tr.className = "hover:bg-slate-50";
-                     tr.innerHTML = `
-                         <td class="py-3 font-bold text-[#161912]">Table ${table.table_number}</td>
-                         
-                         <td class="py-3 font-semibold text-amber-600">${table.total_price.toFixed(2)} Ks</td>
-                         <td class="py-3 text-right">
-                             <button onclick="loadConsolidatedTableBill(${table.table_id})" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-black py-1 px-3 rounded-lg transition">Generate Master Bill</button>
-                         </td>
-                     `;
-                     tbody.appendChild(tr);
-                 });
+
+                 const activeTables = response.ok ? await response.json() : [];
+                 renderTableFloorGrid(activeTables);
              } catch (err) {
-                 console.error("Could not populate live tables.");
+                 console.error('Could not populate live tables.');
              }
          }
          
+         async function cancelTableSession(tableId) {
+             if (!confirm('Cancel all active orders for this table? Stock will be restored and this cannot be undone.')) {
+                 return;
+             }
+
+             try {
+                 const response = await fetch(`${API_BASE}/manager/tables/${tableId}/cancel`, {
+                     method: 'POST',
+                     headers: getAuthHeaders()
+                 });
+
+                 if (response.status === 401) { handleLogout(); return; }
+
+                 if (response.ok) {
+                     const data = await response.json();
+                     alert(data.message || 'Table session cancelled.');
+                     fetchActiveTables();
+                     fetchOrdersLog();
+                 } else {
+                     const err = await response.json();
+                     alert(err.detail || 'Could not cancel table session.');
+                 }
+             } catch (err) {
+                 alert('Network error while cancelling table session.');
+             }
+         }
+
          async function loadConsolidatedTableBill(tableId) {
              try {
                  const response = await fetch(`${API_BASE}/manager/tables/${tableId}/bill`, {
@@ -767,7 +911,7 @@
          
                  const settleBtn = document.getElementById('settle-bill-btn');
                  settleBtn.setAttribute('onclick', `settleTableBill(${bill.table_id})`);
-                 settleBtn.classList.remove('hidden');
+                 configureReceiptModalActions('live');
          
                  toggleReceiptModal(true);
              } catch (err) {
@@ -885,7 +1029,7 @@
                      </div>
                  `;
          
-                 document.getElementById('settle-bill-btn').classList.add('hidden');
+                 configureReceiptModalActions('historical');
                  toggleReceiptModal(true);
              } catch (err) {
                  alert("Could not load historical receipt.");
@@ -1286,13 +1430,27 @@
                      </div>
                  `;
          
-                 document.getElementById('settle-bill-btn').classList.add('hidden');
+                 configureReceiptModalActions('historical');
                  toggleReceiptModal(true);
              } catch (err) {
                  alert("Receipt compilation failed.");
              }
          }
          
+         function configureReceiptModalActions(mode) {
+             const printActions = document.getElementById('receipt-print-actions');
+             const settleBtn = document.getElementById('settle-bill-btn');
+
+             if (mode === 'live') {
+                 printActions?.classList.add('hidden');
+                 settleBtn?.classList.remove('hidden');
+                 return;
+             }
+
+             printActions?.classList.remove('hidden');
+             settleBtn?.classList.add('hidden');
+         }
+
          function toggleReceiptModal(show) {
              const modal = document.getElementById('receipt-modal');
              if (show) modal.classList.remove('hidden');

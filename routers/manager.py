@@ -427,6 +427,46 @@ async def settle_table_bill(
     return {"message": f"Table {table_label} settled."}
 
 
+@router.post("/tables/{table_id}/cancel")
+async def cancel_table_session(
+    table_id: int,
+    db: Session = Depends(get_db),
+    authenticated: bool = Depends(verify_manager_token),
+):
+    active_orders = (
+        db.query(models.Order)
+        .filter(
+            models.Order.table_id == table_id,
+            models.Order.status.in_(
+                [
+                    models.OrderStatus.PENDING,
+                    models.OrderStatus.PREPARING,
+                    models.OrderStatus.SERVED,
+                ]
+            ),
+        )
+        .all()
+    )
+
+    if not active_orders:
+        raise HTTPException(status_code=400, detail="No active orders found to cancel.")
+
+    table_label = get_table_label(active_orders[0].table)
+
+    for order in active_orders:
+        security.restore_order_stock(order, db)
+        order.status = models.OrderStatus.CANCELLED
+
+    db.commit()
+
+    for order in active_orders:
+        db.refresh(order)
+        response_payload = schemas.OrderResponse.model_validate(order).model_dump(mode="json")
+        await manager_ws.broadcast({"event": "status_update", "order": response_payload})
+
+    return {"message": f"Table {table_label} session cancelled."}
+
+
 # --- GET TABLE BILLS HISTORY ---
 @router.get("/tables/settled-history")
 def get_settled_tables_history(
