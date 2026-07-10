@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Finance Panel</title>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700&display=swap" rel="stylesheet">
+   <script src="https://cdn.tailwindcss.com"></script>
+   <style>
+      .stat-card {
+         background: white;
+         border-radius: 1rem;
+         border: 1px solid #f1f5f9;
+         box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+         padding: 1.25rem 1.5rem;
+      }
+      .fin-chart-card {
+         background: white;
+         border-radius: 1rem;
+         border: 1px solid #f1f5f9;
+         box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+         padding: 1.25rem;
+      }
+      .fin-chart-header h3 { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+      .fin-chart-header p { font-size: 0.7rem; color: #94a3b8; margin-top: 0.15rem; }
+      .fin-chart-body { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+      .fin-flow-bar { display: flex; height: 0.65rem; border-radius: 999px; overflow: hidden; background: #f1f5f9; }
+      .fin-chart-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.7rem; color: #64748b; }
+      .fin-chart-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+      .fin-dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; display: inline-block; }
+   </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+   <div id="login-view" class="fixed inset-0 bg-slate-100 z-50 flex items-center justify-center p-4">
+      <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full border border-slate-200 space-y-6">
+         <div class="text-center space-y-1">
+            <h2 class="text-2xl font-black text-slate-800">27 Cafe Finance</h2>
+            <p class="text-xs text-slate-400">Owner finance access — income &amp; expenses</p>
+         </div>
+         <form onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+               <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Username</label>
+               <input type="text" id="login-username" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+               <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
+               <input type="password" id="login-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-sm transition">
+               Open Finance Panel
+            </button>
+         </form>
+      </div>
+   </div>
+
+   <div id="dashboard-view" class="hidden">
+      <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+               <div>
+                  <h1 class="text-xl font-black tracking-tight text-slate-900">Finance Panel</h1>
+                  <p class="text-xs text-slate-400 mt-0.5">Income, expenses &amp; net profit</p>
+               </div>
+               <button onclick="handleLogout()" class="text-xs font-bold text-rose-600 hover:text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-50 transition w-fit">Logout</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+               <select id="finance-range" onchange="onFinanceRangeChange()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month">Month</option>
+                  <option value="custom">Custom range</option>
+               </select>
+               <div id="finance-date-box" class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Date</span>
+                  <input type="date" id="finance-date" onchange="fetchFinanceSummary()" class="bg-transparent border-none text-sm font-semibold focus:outline-none cursor-pointer text-slate-700">
+               </div>
+               <div id="finance-custom-dates" class="hidden flex flex-wrap items-center gap-2">
+                  <div class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                     <span class="text-[10px] font-bold text-slate-400 uppercase">From</span>
+                     <input type="date" id="finance-from-date" onchange="fetchFinanceSummary()" class="bg-transparent border-none text-sm font-semibold focus:outline-none cursor-pointer text-slate-700">
+                  </div>
+                  <div class="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                     <span class="text-[10px] font-bold text-slate-400 uppercase">To</span>
+                     <input type="date" id="finance-to-date" onchange="fetchFinanceSummary()" class="bg-transparent border-none text-sm font-semibold focus:outline-none cursor-pointer text-slate-700">
+                  </div>
+               </div>
+               <div class="inline-flex rounded-lg border border-slate-200 overflow-hidden text-xs font-bold">
+                  <button type="button" onclick="exportFinanceReport('day')" class="px-3 py-2 bg-indigo-600 text-white hover:bg-indigo-700 transition">Today PDF</button>
+                  <button type="button" onclick="exportFinanceReport('week')" class="px-3 py-2 bg-white text-slate-700 hover:bg-slate-50 border-l border-slate-200 transition">Week</button>
+                  <button type="button" onclick="exportFinanceReport('month')" class="px-3 py-2 bg-white text-slate-700 hover:bg-slate-50 border-l border-slate-200 transition">Month</button>
+               </div>
+               <button onclick="toggleExpenseModal(true)" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-3 rounded-lg text-xs transition">+ Expense</button>
+            </div>
+         </div>
+      </header>
+
+      <main class="max-w-7xl mx-auto p-4 sm:p-6 space-y-8">
+         <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div class="stat-card">
+               <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Income (Sales)</span>
+               <h3 class="text-2xl font-black text-emerald-600 mt-2" id="fin-income">0 Ks</h3>
+               <p class="text-[10px] text-slate-400 mt-1" id="fin-income-sub">0 completed orders</p>
+            </div>
+            <div class="stat-card">
+               <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Outcome (Expenses)</span>
+               <h3 class="text-2xl font-black text-rose-600 mt-2" id="fin-outcome">0 Ks</h3>
+               <p class="text-[10px] text-slate-400 mt-1" id="fin-outcome-sub">0 entries</p>
+            </div>
+            <div class="stat-card">
+               <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider" id="fin-net-title">Net Profit (Day)</span>
+               <h3 class="text-2xl font-black text-indigo-600 mt-2" id="fin-net">0 Ks</h3>
+               <p class="text-[10px] text-slate-400 mt-1">Income minus outcome</p>
+            </div>
+            <div class="stat-card">
+               <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider" id="fin-month-label">Month Net</span>
+               <h3 class="text-2xl font-black text-slate-800 mt-2" id="fin-month-net">0 Ks</h3>
+               <p class="text-[10px] text-slate-400 mt-1" id="fin-month-sub">Monthly income vs expenses</p>
+            </div>
+         </section>
+
+         <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <article class="fin-chart-card">
+               <div class="fin-chart-header">
+                  <h3>Income vs Outcome</h3>
+                  <p id="fin-chart-overview-sub">Period snapshot</p>
+               </div>
+               <div class="fin-chart-body">
+                  <div class="fin-flow-bar" id="fin-flow-bar">
+                     <span id="fin-flow-income" class="bg-indigo-500" style="width:50%"></span>
+                     <span id="fin-flow-outcome" class="bg-rose-500" style="width:50%"></span>
+                  </div>
+                  <div class="fin-chart-legend" id="fin-overview-legend"></div>
+               </div>
+            </article>
+            <article class="fin-chart-card">
+               <div class="fin-chart-header">
+                  <h3>Expense Categories</h3>
+                  <p>Where money went out</p>
+               </div>
+               <div class="fin-chart-body">
+                  <div class="fin-chart-legend" id="fin-expense-legend"></div>
+               </div>
+            </article>
+         </section>
+
+         <section class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+               <div>
+                  <h2 class="text-base font-bold text-slate-800">Outcome — Expenses</h2>
+                  <p class="text-xs text-slate-400">Track rent, supplies, staff &amp; other costs</p>
+               </div>
+               <button onclick="toggleExpenseModal(true)" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2 px-3 rounded-lg transition">+ Add Expense</button>
+            </div>
+            <div class="overflow-x-auto border border-slate-100 rounded-xl">
+               <table class="w-full text-left text-sm">
+                  <thead>
+                     <tr class="text-[10px] text-slate-400 uppercase border-b bg-slate-50/80">
+                        <th class="py-2.5 px-4 font-bold">Time</th>
+                        <th class="py-2.5 px-2 font-bold">Category</th>
+                        <th class="py-2.5 px-2 font-bold">Description</th>
+                        <th class="py-2.5 px-2 font-bold text-right">Amount</th>
+                        <th class="py-2.5 px-4 font-bold text-right">Actions</th>
+                     </tr>
+                  </thead>
+                  <tbody id="expenses-tbody" class="divide-y divide-slate-50"></tbody>
+               </table>
+            </div>
+         </section>
+
+         <section class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <div class="mb-4">
+               <h2 class="text-base font-bold text-slate-800">Income — Settled Sales</h2>
+               <p class="text-xs text-slate-400">Counted by settlement date (when bill was paid)</p>
+            </div>
+            <div class="overflow-x-auto border border-slate-100 rounded-xl">
+               <table class="w-full text-left text-sm">
+                  <thead>
+                     <tr class="text-[10px] text-slate-400 uppercase border-b bg-slate-50/80">
+                        <th class="py-2.5 px-4 font-bold">Order</th>
+                        <th class="py-2.5 px-2 font-bold">Table</th>
+                        <th class="py-2.5 px-2 font-bold">Time</th>
+                        <th class="py-2.5 px-4 font-bold text-right">Amount</th>
+                     </tr>
+                  </thead>
+                  <tbody id="finance-income-tbody" class="divide-y divide-slate-50"></tbody>
+               </table>
+            </div>
+         </section>
+      </main>
+   </div>
+
+   <div id="expense-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl relative space-y-4">
+         <button onclick="toggleExpenseModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+         <h3 id="expense-modal-title" class="text-lg font-bold text-slate-800">Add Expense</h3>
+         <form id="expense-form" onsubmit="submitExpense(event)" class="space-y-4">
+            <input type="hidden" id="expense-id">
+            <div>
+               <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
+               <div class="flex gap-1 mb-2 bg-slate-100 p-1 rounded-lg">
+                  <button type="button" id="expense-cat-tab-preset" onclick="setExpenseCategoryMode('preset')" class="flex-1 text-xs font-bold py-1.5 rounded-md bg-white text-slate-800 shadow-sm">Presets</button>
+                  <button type="button" id="expense-cat-tab-custom" onclick="setExpenseCategoryMode('custom')" class="flex-1 text-xs font-bold py-1.5 rounded-md text-slate-500 hover:text-slate-700">Custom</button>
+               </div>
+               <select id="expense-category-preset" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-500"></select>
+               <div id="expense-category-custom-wrap" class="hidden space-y-2">
+                  <input type="text" id="expense-category-custom" maxlength="50" placeholder="Custom category name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-500">
+                  <div id="expense-custom-suggestions" class="flex flex-wrap gap-1"></div>
+               </div>
+            </div>
+            <div>
+               <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Amount (Ks)</label>
+               <input type="number" id="expense-amount" min="1" step="1" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-500">
+            </div>
+            <div>
+               <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
+               <input type="text" id="expense-description" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-500">
+            </div>
+            <div>
+               <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Date</label>
+               <input type="date" id="expense-date" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-500">
+            </div>
+            <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-lg text-sm transition">Save Expense</button>
+         </form>
+      </div>
+   </div>
+
+   <div id="toast" class="fixed bottom-6 right-6 hidden z-[60] bg-slate-900 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-lg"></div>
+
+   <script>
+      const API_BASE = '/api/v1';
+      let financeExpenses = [];
+      let expenseCategories = { presets: [], custom: [], all: [] };
+      let expenseCategoryMode = 'preset';
+
+      function formatKs(amount) {
+         return `${Number(amount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} Ks`;
+      }
+
+      function getAuthHeaders() {
+         const token = localStorage.getItem('finance_token');
+         return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+         };
+      }
+
+      function showToast(message, type = 'info') {
+         const el = document.getElementById('toast');
+         el.innerText = message;
+         el.className = `fixed bottom-6 right-6 z-[60] text-sm font-semibold px-4 py-3 rounded-xl shadow-lg ${type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white'}`;
+         el.classList.remove('hidden');
+         setTimeout(() => el.classList.add('hidden'), 2500);
+      }
+
+      function handleLogout() {
+         localStorage.removeItem('finance_token');
+         document.getElementById('dashboard-view').classList.add('hidden');
+         document.getElementById('login-view').classList.remove('hidden');
+      }
+
+      async function handleLogin(event) {
+         event.preventDefault();
+         const username = document.getElementById('login-username').value;
+         const password = document.getElementById('login-password').value;
+         try {
+            const response = await fetch(`${API_BASE}/finance/login`, {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ username, password })
+            });
+            if (!response.ok) {
+               alert('Invalid username or password.');
+               return;
+            }
+            const data = await response.json();
+            localStorage.setItem('finance_token', data.token);
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            initFinance();
+         } catch (err) {
+            alert('Network error during login.');
+         }
+      }
+
+      function initFinance() {
+         const todayLocal = new Date().toLocaleDateString('en-CA');
+         document.getElementById('finance-date').value = todayLocal;
+         document.getElementById('finance-from-date').value = todayLocal;
+         document.getElementById('finance-to-date').value = todayLocal;
+         fetchFinanceSummary();
+      }
+
+      function onFinanceRangeChange() {
+         const range = document.getElementById('finance-range').value;
+         const customBox = document.getElementById('finance-custom-dates');
+         const dateBox = document.getElementById('finance-date-box');
+         customBox.classList.toggle('hidden', range !== 'custom');
+         dateBox.classList.toggle('hidden', range === 'custom');
+         fetchFinanceSummary();
+      }
+
+      function buildFinanceQueryParams(overrideRange) {
+         const range = overrideRange || document.getElementById('finance-range')?.value || 'day';
+         const params = new URLSearchParams();
+         if (range === 'custom') {
+            const from = document.getElementById('finance-from-date')?.value;
+            const to = document.getElementById('finance-to-date')?.value;
+            if (from) params.set('from_date', from);
+            if (to) params.set('to_date', to);
+         } else {
+            const selectedDate = document.getElementById('finance-date').value;
+            if (selectedDate) params.set('date', selectedDate);
+            if (range !== 'day') params.set('range', range);
+         }
+         return params;
+      }
+
+      async function fetchFinanceSummary() {
+         const range = document.getElementById('finance-range')?.value || 'day';
+         const selectedDate = document.getElementById('finance-date').value;
+         const dateObj = new Date(selectedDate);
+         const monthLabel = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+         document.getElementById('fin-month-label').innerText = `${monthLabel} Net`;
+         const periodLabels = { day: 'Day', week: 'Week', month: 'Month', custom: 'Period' };
+         document.getElementById('fin-net-title').innerText = `Net Profit (${periodLabels[range] || 'Period'})`;
+
+         try {
+            const params = buildFinanceQueryParams();
+            const response = await fetch(`${API_BASE}/finance/summary?${params.toString()}`, {
+               headers: getAuthHeaders()
+            });
+            if (response.status === 401) { handleLogout(); return; }
+            if (!response.ok) return;
+
+            const data = await response.json();
+            financeExpenses = data.expenses;
+
+            const periodHint = data.period_label && range !== 'day' ? data.period_label : null;
+            document.getElementById('fin-income').innerText = formatKs(data.income_total);
+            document.getElementById('fin-income-sub').innerText = `${data.order_count} completed order${data.order_count === 1 ? '' : 's'}${periodHint ? ` · ${periodHint}` : ''}`;
+            document.getElementById('fin-outcome').innerText = formatKs(data.outcome_total);
+            document.getElementById('fin-outcome-sub').innerText = `${data.expense_count} expense${data.expense_count === 1 ? '' : 's'}${range === 'day' ? ' today' : ''}`;
+            document.getElementById('fin-net').innerText = formatKs(data.net_profit);
+            document.getElementById('fin-net').className = `text-2xl font-black mt-2 ${data.net_profit >= 0 ? 'text-indigo-600' : 'text-rose-600'}`;
+            document.getElementById('fin-month-net').innerText = formatKs(data.monthly_net);
+            document.getElementById('fin-month-sub').innerText = `${formatKs(data.monthly_income)} in · ${formatKs(data.monthly_outcome)} out`;
+
+            const expTbody = document.getElementById('expenses-tbody');
+            expTbody.innerHTML = '';
+            if (data.expenses.length === 0) {
+               expTbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400 italic text-sm">No expenses recorded for this period</td></tr>`;
+            } else {
+               data.expenses.forEach(exp => {
+                  const time = new Date(exp.recorded_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                  const tr = document.createElement('tr');
+                  tr.className = 'hover:bg-slate-50/80';
+                  tr.innerHTML = `
+                     <td class="py-3 px-4 text-slate-500 text-xs">${time}</td>
+                     <td class="py-3 px-2"><span class="text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 px-2 py-1 rounded-md">${exp.category}</span></td>
+                     <td class="py-3 px-2 text-slate-600">${exp.description || '—'}</td>
+                     <td class="py-3 px-2 text-right font-bold text-rose-600">${formatKs(exp.amount)}</td>
+                     <td class="py-3 px-4 text-right space-x-1">
+                        <button onclick="editExpenseById(${exp.id})" class="text-[10px] font-bold text-slate-500 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-100">Edit</button>
+                        <button onclick="deleteExpense(${exp.id})" class="text-[10px] font-bold text-rose-500 hover:text-rose-700 px-2 py-1 rounded hover:bg-rose-50">Delete</button>
+                     </td>`;
+                  expTbody.appendChild(tr);
+               });
+            }
+
+            renderFinanceCharts(data);
+
+            const incTbody = document.getElementById('finance-income-tbody');
+            incTbody.innerHTML = '';
+            if (data.income_entries.length === 0) {
+               incTbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-400 italic text-sm">No completed sales in this period</td></tr>`;
+            } else {
+               data.income_entries.forEach(entry => {
+                  const when = entry.settled_at || entry.created_at;
+                  const time = new Date(when).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                  const tr = document.createElement('tr');
+                  tr.className = 'hover:bg-slate-50/80';
+                  tr.innerHTML = `
+                     <td class="py-3 px-4 font-semibold text-slate-800">#${entry.order_id}</td>
+                     <td class="py-3 px-2 text-slate-600">Table ${entry.table_label}</td>
+                     <td class="py-3 px-2 text-slate-500 text-xs">${time}</td>
+                     <td class="py-3 px-4 text-right font-bold text-emerald-600">${formatKs(entry.amount)}</td>`;
+                  incTbody.appendChild(tr);
+               });
+            }
+         } catch (err) {
+            console.error('Could not fetch finance summary.');
+         }
+      }
+
+      function renderFinanceCharts(data) {
+         const income = Number(data.income_total || 0);
+         const outcome = Number(data.outcome_total || 0);
+         const total = income + outcome || 1;
+         document.getElementById('fin-flow-income').style.width = `${(income / total) * 100}%`;
+         document.getElementById('fin-flow-outcome').style.width = `${(outcome / total) * 100}%`;
+         document.getElementById('fin-overview-legend').innerHTML = `
+            <span><i class="fin-dot bg-indigo-500"></i> Income ${formatKs(income)}</span>
+            <span><i class="fin-dot bg-rose-500"></i> Outcome ${formatKs(outcome)}</span>`;
+         document.getElementById('fin-chart-overview-sub').innerText = data.period_label || 'Period snapshot';
+
+         const legend = document.getElementById('fin-expense-legend');
+         const cats = data.expenses_by_category || [];
+         if (!cats.length) {
+            legend.innerHTML = `<span class="text-slate-400 italic">No expenses in this period</span>`;
+            return;
+         }
+         const colors = ['#e11d48', '#f59e0b', '#6366f1', '#059669', '#0ea5e9', '#8b5cf6', '#64748b'];
+         legend.innerHTML = cats.map((row, i) =>
+            `<span><i class="fin-dot" style="background:${colors[i % colors.length]}"></i> ${row.category}: ${formatKs(row.total)}</span>`
+         ).join('');
+      }
+
+      async function loadExpenseCategories() {
+         try {
+            const response = await fetch(`${API_BASE}/finance/categories`, { headers: getAuthHeaders() });
+            if (response.status === 401) { handleLogout(); return; }
+            if (!response.ok) return;
+            expenseCategories = await response.json();
+            const select = document.getElementById('expense-category-preset');
+            select.innerHTML = expenseCategories.presets.map(c => `<option value="${c}">${c}</option>`).join('');
+            renderExpenseCustomSuggestions();
+         } catch (err) {
+            console.error('Could not load expense categories.');
+         }
+      }
+
+      function setExpenseCategoryMode(mode) {
+         expenseCategoryMode = mode;
+         const presetTab = document.getElementById('expense-cat-tab-preset');
+         const customTab = document.getElementById('expense-cat-tab-custom');
+         const preset = document.getElementById('expense-category-preset');
+         const customWrap = document.getElementById('expense-category-custom-wrap');
+         if (mode === 'preset') {
+            presetTab.className = 'flex-1 text-xs font-bold py-1.5 rounded-md bg-white text-slate-800 shadow-sm';
+            customTab.className = 'flex-1 text-xs font-bold py-1.5 rounded-md text-slate-500 hover:text-slate-700';
+            preset.classList.remove('hidden');
+            customWrap.classList.add('hidden');
+         } else {
+            customTab.className = 'flex-1 text-xs font-bold py-1.5 rounded-md bg-white text-slate-800 shadow-sm';
+            presetTab.className = 'flex-1 text-xs font-bold py-1.5 rounded-md text-slate-500 hover:text-slate-700';
+            preset.classList.add('hidden');
+            customWrap.classList.remove('hidden');
+         }
+      }
+
+      function renderExpenseCustomSuggestions() {
+         const box = document.getElementById('expense-custom-suggestions');
+         box.innerHTML = (expenseCategories.custom || []).map(name =>
+            `<button type="button" onclick='selectExpenseCustomCategory(${JSON.stringify(name)})'
+               class="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded-md">${name}</button>`
+         ).join('');
+      }
+
+      function selectExpenseCustomCategory(name) {
+         document.getElementById('expense-category-custom').value = name;
+      }
+
+      function getExpenseCategoryValue() {
+         if (expenseCategoryMode === 'custom') {
+            return (document.getElementById('expense-category-custom').value || '').trim();
+         }
+         return document.getElementById('expense-category-preset').value;
+      }
+
+      function applyExpenseCategoryToForm(category) {
+         if ((expenseCategories.presets || []).includes(category)) {
+            setExpenseCategoryMode('preset');
+            document.getElementById('expense-category-preset').value = category;
+         } else {
+            setExpenseCategoryMode('custom');
+            document.getElementById('expense-category-custom').value = category;
+         }
+      }
+
+      async function toggleExpenseModal(show, expense) {
+         const modal = document.getElementById('expense-modal');
+         if (show) {
+            await loadExpenseCategories();
+            document.getElementById('expense-modal-title').innerText = expense ? 'Edit Expense' : 'Add Expense';
+            document.getElementById('expense-id').value = expense ? expense.id : '';
+            if (expense) {
+               applyExpenseCategoryToForm(expense.category);
+               document.getElementById('expense-amount').value = expense.amount;
+               document.getElementById('expense-description').value = expense.description || '';
+               document.getElementById('expense-date').value = (expense.recorded_at || '').slice(0, 10);
+            } else {
+               setExpenseCategoryMode('preset');
+               document.getElementById('expense-amount').value = '';
+               document.getElementById('expense-description').value = '';
+               document.getElementById('expense-date').value =
+                  document.getElementById('finance-date').value || new Date().toLocaleDateString('en-CA');
+            }
+            modal.classList.remove('hidden');
+         } else {
+            modal.classList.add('hidden');
+         }
+      }
+
+      async function submitExpense(event) {
+         event.preventDefault();
+         const id = document.getElementById('expense-id').value;
+         const category = getExpenseCategoryValue();
+         if (!category) {
+            showToast('Category is required.', 'error');
+            return;
+         }
+         const payload = {
+            category,
+            amount: Number(document.getElementById('expense-amount').value),
+            description: document.getElementById('expense-description').value || null,
+            recorded_at: `${document.getElementById('expense-date').value}T12:00:00`
+         };
+         try {
+            const url = id ? `${API_BASE}/finance/expenses/${id}` : `${API_BASE}/finance/expenses`;
+            const response = await fetch(url, {
+               method: id ? 'PUT' : 'POST',
+               headers: getAuthHeaders(),
+               body: JSON.stringify(payload)
+            });
+            if (response.status === 401) { handleLogout(); return; }
+            if (!response.ok) {
+               const err = await response.json().catch(() => ({}));
+               showToast(err.detail || 'Could not save expense.', 'error');
+               return;
+            }
+            toggleExpenseModal(false);
+            fetchFinanceSummary();
+            showToast('Expense saved.', 'success');
+         } catch (err) {
+            showToast('Network error.', 'error');
+         }
+      }
+
+      function editExpenseById(expenseId) {
+         const expense = financeExpenses.find(e => e.id === expenseId);
+         if (expense) toggleExpenseModal(true, expense);
+      }
+
+      async function deleteExpense(expenseId) {
+         if (!confirm('Delete this expense?')) return;
+         try {
+            const response = await fetch(`${API_BASE}/finance/expenses/${expenseId}`, {
+               method: 'DELETE',
+               headers: getAuthHeaders()
+            });
+            if (response.status === 401) { handleLogout(); return; }
+            if (response.ok) {
+               fetchFinanceSummary();
+               showToast('Expense deleted.', 'success');
+            }
+         } catch (err) {
+            showToast('Network error.', 'error');
+         }
+      }
+
+      async function exportFinanceReport(rangeOverride) {
+         try {
+            const range = rangeOverride || document.getElementById('finance-range')?.value || 'day';
+            const financeDate = document.getElementById('finance-date')?.value
+               || new Date().toLocaleDateString('en-CA');
+            const params = new URLSearchParams({ date: financeDate, range });
+            const response = await fetch(`${API_BASE}/finance/export?${params.toString()}`, {
+               headers: getAuthHeaders()
+            });
+            if (response.status === 401) { handleLogout(); return; }
+            if (!response.ok) {
+               showToast('Could not export PDF.', 'error');
+               return;
+            }
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = downloadUrl;
+            const safeLabel = financeDate.replace(/[^0-9-]/g, '');
+            anchor.download = `finance_${range}_${safeLabel}.pdf`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+            showToast(`${range} finance PDF downloaded.`, 'success');
+         } catch (err) {
+            showToast('Export failed.', 'error');
+         }
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+         const token = localStorage.getItem('finance_token');
+         if (token) {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            initFinance();
+         }
+      });
+   </script>
+</body>
+</html>

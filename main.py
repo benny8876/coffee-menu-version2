@@ -6,7 +6,7 @@ import models, os
 from sqlalchemy import inspect, text
 from database import engine, SessionLocal
 from table_labels import TABLE_LABELS, label_for_number
-from routers import menu, kitchen, manager
+from routers import menu, kitchen, manager, finance
 import hashlib  # Add to imports
 
 models.Base.metadata.create_all(bind=engine)
@@ -32,6 +32,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(menu.router, prefix="/api/v1")
 app.include_router(kitchen.router, prefix="/api/v1")
 app.include_router(manager.router, prefix="/api/v1")
+app.include_router(finance.router, prefix="/api/v1")
 
 # Static Frontend Routes
 @app.get("/menu")
@@ -47,6 +48,11 @@ def serve_kitchen():
 @app.get("/manager")
 def serve_manager():
     return FileResponse(os.path.join("static", "manager.html"))
+
+
+@app.get("/finance")
+def serve_finance():
+    return FileResponse(os.path.join("static", "finance.html"))
 
 
 # Simple zero-dependency secure password hasher
@@ -136,7 +142,7 @@ def seed_initial_data():
 @app.get("/")
 def root():
     return {
-        "message": "Dine Inn System backend is active. Load /menu, /kitchen or /manager."
+        "message": "Dine Inn System backend is active. Load /menu, /kitchen, /manager or /finance."
     }
 
 

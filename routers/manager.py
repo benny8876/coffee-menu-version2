@@ -1,20 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header, WebSocket, WebSocketDisconnect
-from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, time, timezone, timedelta
 from typing import Optional, List
-import csv, io, hashlib, shutil, uuid
+import hashlib, shutil, uuid
 import os
 from database import get_db
 import models, schemas
 import security
 from websocket import manager_ws
 from table_labels import RESTAURANT_NAME, get_table_label
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
 
 router = APIRouter(prefix="/manager", tags=["Manager Panel"])
 MYANMAR_TZ = timezone(timedelta(hours=6, minutes=30))
@@ -590,7 +585,7 @@ def get_daily_analytics(
     day_start = datetime.combine(target_date, time.min)
     day_end = datetime.combine(target_date, time.max)
 
-    # 1. Daily query
+    # Ops metrics only — revenue/income lives in the finance panel
     completed_orders = (
         db.query(models.Order)
         .filter(
@@ -600,27 +595,7 @@ def get_daily_analytics(
         .all()
     )
 
-    total_revenue = sum(order.total_price for order in completed_orders)
     total_completed = len(completed_orders)
-
-    # 2. NEW: Calculate boundary limits for the entire month
-    month_start = datetime(target_date.year, target_date.month, 1, 0, 0, 0)
-    if target_date.month == 12:
-        next_month_start = datetime(target_date.year + 1, 1, 1, 0, 0, 0)
-    else:
-        next_month_start = datetime(target_date.year, target_date.month + 1, 1, 0, 0, 0)
-    month_end = next_month_start - timedelta(seconds=1)
-
-    # Query all completed orders within this month
-    monthly_orders = (
-        db.query(models.Order)
-        .filter(
-            models.Order.created_at.between(month_start, month_end),
-            models.Order.status == models.OrderStatus.COMPLETED,
-        )
-        .all()
-    )
-    total_monthly_revenue = sum(order.total_price for order in monthly_orders)
 
     popular_items = (
         db.query(
@@ -643,279 +618,20 @@ def get_daily_analytics(
 
     return schemas.DailyAnalytics(
         date=target_date.strftime("%Y-%m-%d"),
-        total_revenue=total_revenue,
-        total_monthly_revenue=total_monthly_revenue,  # NEW
         total_orders_completed=total_completed,
         top_selling_items=top_selling,
     )
 
 
-# --- Updated: PDF Business Summary Exporter ---
+# Revenue PDF export moved to /api/v1/finance/export (finance panel only)
 @router.get("/analytics/export")
-def export_daily_report(
-    date: Optional[str] = None,
-    db: Session = Depends(get_db),
+def export_daily_report_removed(
     authenticated: bool = Depends(verify_manager_token),
 ):
-    if date:
-        try:
-            target_date = datetime.strptime(date, "%Y-%m-%d").date()
-        except ValueError:
-            raise HTTPException(
-                status_code=400, detail="Invalid date format. Use YYYY-MM-DD."
-            )
-    else:
-        target_date = datetime.now(MYANMAR_TZ).date()
-
-    day_start = datetime.combine(target_date, time.min)
-    day_end = datetime.combine(target_date, time.max)
-
-    # 1. Fetch Analytics Data
-    completed_orders = (
-        db.query(models.Order)
-        .filter(
-            models.Order.created_at.between(day_start, day_end),
-            models.Order.status == models.OrderStatus.COMPLETED,
-        )
-        .all()
+    raise HTTPException(
+        status_code=403,
+        detail="Revenue reports are only available in the Finance panel (/finance).",
     )
-
-    total_revenue = sum(order.total_price for order in completed_orders)
-    total_transactions = len(completed_orders)
-
-    # 2. Group Table Performance (Tables 1 - 10)
-    tables = (
-        db.query(models.RestaurantTable)
-        .order_by(models.RestaurantTable.number.asc())
-        .all()
-    )
-    table_revenue = {get_table_label(t): 0.0 for t in tables}
-    for order in completed_orders:
-        t_label = get_table_label(order.table)
-        table_revenue[t_label] = table_revenue.get(t_label, 0.0) + order.total_price
-
-    # 3. Aggregate Top Selling Products
-    popular_items = (
-        db.query(
-            models.MenuItem.name,
-            func.sum(models.OrderItem.quantity).label("total_sold"),
-        )
-        .join(models.OrderItem, models.MenuItem.id == models.OrderItem.menu_item_id)
-        .join(models.Order, models.Order.id == models.OrderItem.order_id)
-        .filter(
-            models.Order.created_at.between(day_start, day_end),
-            models.Order.status == models.OrderStatus.COMPLETED,
-        )
-        .group_by(models.MenuItem.name)
-        .order_by(func.sum(models.OrderItem.quantity).desc())
-        .all()
-    )
-
-    # --- REPORTLAB PDF GENERATION ENGINE ---
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=letter,
-        rightMargin=40,
-        leftMargin=40,
-        topMargin=40,
-        bottomMargin=40,
-    )
-
-    story = []
-    styles = getSampleStyleSheet()
-
-    # Define palette matching 27 Cafe
-    primary_color = colors.HexColor("#301f16")  # Elegant Deep Brown
-    secondary_color = colors.HexColor("#6f8a38")  # Soft Olive Green
-    neutral_light = colors.HexColor("#fbfbfa")
-
-    # Typography Styling
-    title_style = ParagraphStyle(
-        "DocTitle",
-        parent=styles["Heading1"],
-        fontName="Helvetica-Bold",
-        fontSize=20,
-        leading=24,
-        textColor=primary_color,
-        spaceAfter=4,
-    )
-    subtitle_style = ParagraphStyle(
-        "DocSubtitle",
-        parent=styles["Normal"],
-        fontName="Helvetica-Oblique",
-        fontSize=9,
-        leading=12,
-        textColor=colors.HexColor("#666666"),
-        spaceAfter=15,
-    )
-    section_heading_style = ParagraphStyle(
-        "SectionHeading",
-        parent=styles["Heading2"],
-        fontName="Helvetica-Bold",
-        fontSize=12,
-        leading=15,
-        textColor=secondary_color,
-        spaceBefore=12,
-        spaceAfter=6,
-    )
-    cell_text_style = ParagraphStyle(
-        "CellText",
-        parent=styles["Normal"],
-        fontName="Helvetica",
-        fontSize=9,
-        leading=12,
-        textColor=colors.HexColor("#333333"),
-    )
-    cell_bold_style = ParagraphStyle(
-        "CellBold",
-        parent=styles["Normal"],
-        fontName="Helvetica-Bold",
-        fontSize=9,
-        leading=12,
-        textColor=colors.HexColor("#161912"),
-    )
-    th_style = ParagraphStyle(
-        "TableHeader",
-        parent=styles["Normal"],
-        fontName="Helvetica-Bold",
-        fontSize=9,
-        leading=11,
-        textColor=colors.white,
-    )
-
-    # Block A: Header Logo & Subtitle
-    story.append(Paragraph("DAILY BUSINESS SUMMARY REPORT", title_style))
-    story.append(
-        Paragraph(
-            f"Date: {target_date.strftime('%Y-%m-%d')}  |  Timezone: Asia/Yangon (Myanmar)  |  Generated dynamically by 27 Cafe POS",
-            subtitle_style,
-        )
-    )
-    story.append(Spacer(1, 10))
-
-    # Block B: Metrics Summary Table
-    story.append(Paragraph("1. Performance Metrics Summary", section_heading_style))
-    metrics_data = [
-        [Paragraph("Metric Description", th_style), Paragraph("Value", th_style)],
-        [
-            Paragraph("Total Daily Revenue", cell_text_style),
-            Paragraph(f"{total_revenue:.2f} Ks", cell_bold_style),
-        ],
-        [
-            Paragraph("Total Completed Transactions", cell_text_style),
-            Paragraph(str(total_transactions), cell_bold_style),
-        ],
-    ]
-    t_metrics = Table(metrics_data, colWidths=[250, 150])
-    t_metrics.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), primary_color),
-                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dddddd")),
-                (
-                    "ROWBACKGROUNDS",
-                    (0, 1),
-                    (-1, -1),
-                    [colors.white, colors.HexColor("#f9f9f9")],
-                ),
-            ]
-        )
-    )
-    story.append(t_metrics)
-    story.append(Spacer(1, 15))
-
-    # Block C: Table-by-Table Sales Table
-    story.append(Paragraph("2. Revenue Generated by Table", section_heading_style))
-    table_data = [
-        [
-            Paragraph("Table Number", th_style),
-            Paragraph("Accumulated Sales (Ks)", th_style),
-        ]
-    ]
-    for t_label, rev in sorted(table_revenue.items()):
-        table_data.append(
-            [
-                Paragraph(f"Table {t_label}", cell_text_style),
-                Paragraph(
-                    f"{rev:.2f}Ks", cell_bold_style if rev > 0 else cell_text_style
-                ),
-            ]
-        )
-    t_tables = Table(table_data, colWidths=[200, 200])
-    t_tables.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), secondary_color),
-                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-                ("TOPPADDING", (0, 0), (-1, -1), 5),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dddddd")),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, neutral_light]),
-            ]
-        )
-    )
-    story.append(t_tables)
-    story.append(Spacer(1, 15))
-
-    # Block D: Top Selling Products Table
-    story.append(
-        Paragraph(
-            "3. Product Popularity (Top Selling Menu Items)", section_heading_style
-        )
-    )
-    items_data = [
-        [Paragraph("Item Name", th_style), Paragraph("Quantity Sold", th_style)]
-    ]
-    if not popular_items:
-        items_data.append(
-            [
-                Paragraph("No items sold on this date", cell_text_style),
-                Paragraph("0", cell_text_style),
-            ]
-        )
-    else:
-        for item in popular_items:
-            items_data.append(
-                [
-                    Paragraph(item[0], cell_text_style),
-                    Paragraph(str(item[1]), cell_bold_style),
-                ]
-            )
-
-    t_items = Table(items_data, colWidths=[250, 150])
-    t_items.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), primary_color),
-                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-                ("TOPPADDING", (0, 0), (-1, -1), 5),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dddddd")),
-                (
-                    "ROWBACKGROUNDS",
-                    (0, 1),
-                    (-1, -1),
-                    [colors.white, colors.HexColor("#f9f9f9")],
-                ),
-            ]
-        )
-    )
-    story.append(t_items)
-
-    # Build the document
-    doc.build(story)
-    buffer.seek(0)
-
-    filename = f"business_summary_{target_date.strftime('%Y-%m-%d')}.pdf"
-    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-    return StreamingResponse(buffer, media_type="application/pdf", headers=headers)
 
 
 @router.websocket("/ws")

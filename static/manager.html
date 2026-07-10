@@ -62,7 +62,7 @@
          <header class="bg-white border-b px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                <h1 class="text-2xl font-black text-slate-800">Management Panel</h1>
-               <p class="text-xs text-slate-400">Revenue, live bills, QR, menu, and order history</p>
+               <p class="text-xs text-slate-400">Live bills, QR, menu, and order history</p>
             </div>
             <!-- Action Tools -->
             <div class="flex flex-wrap items-center gap-3">
@@ -70,9 +70,6 @@
                   <span class="text-xs font-bold text-slate-400 uppercase pl-2">Filter Date:</span>
                   <input type="date" id="analytics-date" onchange="fetchAnalytics()" class="bg-transparent border-none text-sm font-bold focus:outline-none outline-none cursor-pointer">
                </div>
-               <button onclick="exportReport()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition">
-               Export to PDF
-               </button>
                <!-- Change Password Trigger -->
                <button onclick="togglePasswordModal(true)" class="border-2 border-slate-600/30 hover:border-slate-650 hover:bg-slate-100 text-slate-700 font-bold py-1.5 px-4 rounded-lg text-sm transition">
                Change Password
@@ -95,17 +92,8 @@
          <main class="max-w-7xl mx-auto p-6 space-y-8">
             <!-- MAIN PANEL -->
             <div id="panel-main" class="manager-panel space-y-8">
-            <!-- Dashboard Metrics Row - Upgraded to 4 Columns -->
-            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-               <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                  <span class="text-xs text-slate-400 uppercase font-bold tracking-wider" id="revenue-title">Selected Day's Revenue</span>
-                  <h3 class="text-3xl font-black text-amber-600 mt-2" id="stat-revenue">$0.00</h3>
-               </div>
-               <!-- NEW: Monthly Revenue Card -->
-               <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                  <span class="text-xs text-slate-400 uppercase font-bold tracking-wider" id="monthly-revenue-title">Selected Month's Revenue</span>
-                  <h3 class="text-3xl font-black text-emerald-600 mt-2" id="stat-monthly-revenue">$0.00</h3>
-               </div>
+            <!-- Ops metrics only — income/revenue is in /finance -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
                   <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Completed Transactions</span>
                   <h3 class="text-3xl font-black text-slate-800 mt-2" id="stat-count">0</h3>
@@ -624,13 +612,6 @@
          
          async function fetchAnalytics() {
             const selectedDate = document.getElementById('analytics-date').value;
-            document.getElementById('revenue-title').innerText = `${selectedDate} Revenue`;
-         
-            // Calculate the Name of the month selected for UI labeling (e.g. "June 2026")
-            const dateObj = new Date(selectedDate);
-            const monthNameLabel = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-            document.getElementById('monthly-revenue-title').innerText = `${monthNameLabel} Revenue`;
-         
             try {
                 const response = await fetch(`${API_BASE}/manager/analytics/daily?date=${selectedDate}`, {
                     headers: getAuthHeaders()
@@ -639,9 +620,6 @@
                 if (response.status === 401) { handleLogout(); return; }
          
                 const data = await response.json();
-                
-                document.getElementById('stat-revenue').innerText = `${data.total_revenue.toFixed(2)} Ks`;
-                document.getElementById('stat-monthly-revenue').innerText = `${data.total_monthly_revenue.toFixed(2)} Ks`; // NEW
                 document.getElementById('stat-count').innerText = data.total_orders_completed;
                  
                  const list = document.getElementById('stat-top-items');
@@ -656,43 +634,6 @@
              } catch (err) {
                  console.error("Could not fetch metrics.");
              }
-         }
-         
-         // --- Updated: Secure Excel (CSV) Exporter using Auth-Headers & Blob Streaming ---
-         // --- Updated: Secure PDF Document Exporter ---
-         async function exportReport() {
-         const selectedDate = document.getElementById('analytics-date').value;
-         
-         try {
-         const response = await fetch(`${API_BASE}/manager/analytics/export?date=${selectedDate}`, {
-            headers: getAuthHeaders()
-         });
-         
-         if (response.status === 401) { 
-            handleLogout(); 
-            return; 
-         }
-         
-         if (response.ok) {
-            const blob = await response.blob();
-            const downloadUrl = window.URL.createObjectURL(blob);
-            
-            const virtualAnchor = document.createElement('a');
-            virtualAnchor.href = downloadUrl;
-            // Updated: Saved as a clean, standardized PDF
-            virtualAnchor.download = `business_summary_${selectedDate}.pdf`;
-            
-            document.body.appendChild(virtualAnchor);
-            virtualAnchor.click();
-            
-            virtualAnchor.remove();
-            window.URL.revokeObjectURL(downloadUrl);
-         } else {
-            alert("Export failed. Please check backend log streams.");
-         }
-         } catch (err) {
-         alert("Network error exporting document.");
-         }
          }
          
          async function loadQrTableSelect() {
@@ -793,7 +734,6 @@
                          <p class="text-base sm:text-lg font-black text-slate-800 leading-tight break-words w-full">Table ${escapeHtml(table.table_number)}</p>
                          <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Live Session</p>
                          <p class="text-xs text-slate-600">${table.active_orders_count} order${table.active_orders_count === 1 ? '' : 's'}</p>
-                         <p class="text-sm font-black text-amber-600">${table.total_price.toFixed(0)} Ks</p>
                      </div>
                      <div class="flex flex-col gap-2 w-full mt-auto pt-2">
                          <button type="button" data-action="bill" data-table-id="${table.table_id}" class="w-full text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg transition">Bill</button>
@@ -968,7 +908,7 @@
                          <div>
                              <p class="font-bold text-[#161912]">Table ${session.table_number}</p>
                              <p class="text-[10px] text-slate-400">Closed: ${session.settled_at}</p>
-                             <p class="text-xs text-slate-500 font-semibold mt-1">Total: ${session.total_price.toFixed(2)} Ks| Dockets: ${session.order_ids.map(id => `#${id}`).join(', ')}</p>
+                             <p class="text-xs text-slate-500 font-semibold mt-1">Dockets: ${session.order_ids.map(id => `#${id}`).join(', ')}</p>
                          </div>
                          <button onclick="loadHistoricalTableBill(${session.table_id}, '${isoTime}')" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Master Receipt</button>
                      `;
@@ -1377,7 +1317,7 @@
                      card.innerHTML = `
                          <div>
                              <p class="font-bold text-slate-800">Order ID #${order.id} - Table ${order.table.label}</p>
-                             <p class="text-xs text-slate-400">Total: ${order.total_price.toFixed(2)} Ks| Status: <span class="capitalize font-semibold text-amber-600">${order.status}</span></p>
+                             <p class="text-xs text-slate-400">Status: <span class="capitalize font-semibold text-amber-600">${order.status}</span></p>
                          </div>
                          <button onclick="loadReceipt(${order.id})" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Receipt</button>
                      `;

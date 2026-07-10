@@ -97,3 +97,12 @@ class AdminCredential(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
+
+
+class Expense(Base):
+    __tablename__ = "expenses"
+    id = Column(Integer, primary_key=True, index=True)
+    category = Column(String, nullable=False)
+    amount = Column(Float, nullable=False)
+    description = Column(String, nullable=True)
+    recorded_at = Column(DateTime, default=get_yangon_now, index=True)

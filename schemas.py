@@ -109,7 +109,80 @@ class OrderResponse(BaseModel):
 
 class DailyAnalytics(BaseModel):
     date: str
-    total_revenue: float
-    total_monthly_revenue: float # NEW: Tracks total revenue for the selected calendar month
     total_orders_completed: int
     top_selling_items: List[dict]
+
+
+# --- Finance / Expenses ---
+EXPENSE_CATEGORIES = [
+    "Supplies",
+    "Rent",
+    "Utilities",
+    "Staff",
+    "Equipment",
+    "Marketing",
+    "Other",
+]
+
+EXPENSE_CATEGORY_MYANMAR = {
+    "Supplies": "ပစ္စည်းများ",
+    "Rent": "ငှားရမ်းခ",
+    "Utilities": "အသုံးအဆောင်ခ",
+    "Staff": "ဝန်ထမ်းစရိတ်",
+    "Equipment": "စက်ပစ္စည်း",
+    "Marketing": "ကြော်ငြာစရိတ်",
+    "Other": "အခြား",
+}
+
+
+class ExpenseBase(BaseModel):
+    category: str
+    amount: float = Field(..., gt=0)
+    description: Optional[str] = None
+    recorded_at: Optional[datetime] = None
+
+
+class ExpenseCreate(ExpenseBase):
+    pass
+
+
+class ExpenseUpdate(BaseModel):
+    category: Optional[str] = None
+    amount: Optional[float] = Field(None, gt=0)
+    description: Optional[str] = None
+    recorded_at: Optional[datetime] = None
+
+
+class ExpenseResponse(ExpenseBase):
+    id: int
+    recorded_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class FinanceIncomeEntry(BaseModel):
+    order_id: int
+    table_label: str
+    amount: float
+    created_at: datetime
+    settled_at: Optional[datetime] = None
+    status: OrderStatus
+
+
+class FinanceSummary(BaseModel):
+    date: str
+    date_from: Optional[str] = None
+    date_to: Optional[str] = None
+    period_label: Optional[str] = None
+    income_total: float
+    outcome_total: float
+    net_profit: float
+    monthly_income: float
+    monthly_outcome: float
+    monthly_net: float
+    order_count: int
+    expense_count: int
+    income_entries: List[FinanceIncomeEntry]
+    expenses: List[ExpenseResponse]
+    expenses_by_category: List[dict]

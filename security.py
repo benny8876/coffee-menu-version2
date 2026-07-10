@@ -18,6 +18,9 @@ KITCHEN_SESSION_TOKEN = os.getenv(
 MANAGER_SESSION_TOKEN = os.getenv(
     "MANAGER_SESSION_TOKEN", "secure_manager_session_token_2026_xyz"
 )
+FINANCE_SESSION_TOKEN = os.getenv(
+    "FINANCE_SESSION_TOKEN", "secure_finance_session_token_2026_xyz"
+)
 
 KITCHEN_ALLOWED_TRANSITIONS = {
     models.OrderStatus.PENDING: {
