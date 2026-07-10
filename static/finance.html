@@ -30,6 +30,9 @@
       .fin-chart-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.7rem; color: #64748b; }
       .fin-chart-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
       .fin-dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; display: inline-block; }
+      .income-table-toggle { width: 100%; text-align: left; }
+      .income-table-details { display: none; }
+      .income-table-details.open { display: block; }
    </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
@@ -175,21 +178,21 @@
          <section class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
             <div class="mb-4">
                <h2 class="text-base font-bold text-slate-800">Income — Settled Sales</h2>
-               <p class="text-xs text-slate-400">Counted by settlement date (when bill was paid)</p>
+               <p class="text-xs text-slate-400">Grouped by table — tap a table to see individual orders</p>
             </div>
-            <div class="overflow-x-auto border border-slate-100 rounded-xl">
+            <div class="overflow-x-auto border border-slate-100 rounded-xl mb-4">
                <table class="w-full text-left text-sm">
                   <thead>
                      <tr class="text-[10px] text-slate-400 uppercase border-b bg-slate-50/80">
-                        <th class="py-2.5 px-4 font-bold">Order</th>
-                        <th class="py-2.5 px-2 font-bold">Table</th>
-                        <th class="py-2.5 px-2 font-bold">Time</th>
-                        <th class="py-2.5 px-4 font-bold text-right">Amount</th>
+                        <th class="py-2.5 px-4 font-bold">Table</th>
+                        <th class="py-2.5 px-2 font-bold text-right">Orders</th>
+                        <th class="py-2.5 px-4 font-bold text-right">Total</th>
                      </tr>
                   </thead>
-                  <tbody id="finance-income-tbody" class="divide-y divide-slate-50"></tbody>
+                  <tbody id="finance-income-summary-tbody" class="divide-y divide-slate-50"></tbody>
                </table>
             </div>
+            <div id="finance-income-by-table" class="space-y-2"></div>
          </section>
       </main>
    </div>
@@ -383,6 +386,99 @@
          return params;
       }
 
+      function escapeHtml(text) {
+         return String(text ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+      }
+
+      function groupIncomeByTable(entries) {
+         const groups = {};
+         entries.forEach((entry) => {
+            const label = entry.table_label || 'Unknown';
+            if (!groups[label]) {
+               groups[label] = { label, entries: [], total: 0 };
+            }
+            groups[label].entries.push(entry);
+            groups[label].total += Number(entry.amount || 0);
+         });
+         return Object.values(groups).sort((a, b) => b.total - a.total);
+      }
+
+      function toggleIncomeTableDetails(id) {
+         const panel = document.getElementById(id);
+         if (!panel) return;
+         panel.classList.toggle('open');
+         const btn = panel.previousElementSibling;
+         if (btn) {
+            const chevron = btn.querySelector('[data-chevron]');
+            if (chevron) chevron.textContent = panel.classList.contains('open') ? '▾' : '▸';
+         }
+      }
+
+      function renderIncomeByTable(entries) {
+         const summaryTbody = document.getElementById('finance-income-summary-tbody');
+         const container = document.getElementById('finance-income-by-table');
+         summaryTbody.innerHTML = '';
+         container.innerHTML = '';
+
+         if (!entries.length) {
+            summaryTbody.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-slate-400 italic text-sm">No completed sales in this period</td></tr>`;
+            return;
+         }
+
+         const groups = groupIncomeByTable(entries);
+
+         groups.forEach((group) => {
+            const summaryRow = document.createElement('tr');
+            summaryRow.className = 'hover:bg-slate-50/80';
+            summaryRow.innerHTML = `
+               <td class="py-3 px-4 font-semibold text-slate-800">Table ${escapeHtml(group.label)}</td>
+               <td class="py-3 px-2 text-right text-slate-600">${group.entries.length}</td>
+               <td class="py-3 px-4 text-right font-bold text-emerald-600">${formatKs(group.total)}</td>`;
+            summaryTbody.appendChild(summaryRow);
+
+            const panelId = `income-table-${group.label.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+            const block = document.createElement('div');
+            block.className = 'border border-slate-100 rounded-xl overflow-hidden';
+            block.innerHTML = `
+               <button type="button" class="income-table-toggle flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 transition" onclick="toggleIncomeTableDetails('${panelId}')">
+                  <span class="font-bold text-slate-800 text-sm">Table ${escapeHtml(group.label)}</span>
+                  <span class="flex items-center gap-3 text-xs">
+                     <span class="text-slate-500">${group.entries.length} order${group.entries.length === 1 ? '' : 's'}</span>
+                     <span class="font-bold text-emerald-600">${formatKs(group.total)}</span>
+                     <span data-chevron class="text-slate-400">▸</span>
+                  </span>
+               </button>
+               <div id="${panelId}" class="income-table-details border-t border-slate-100">
+                  <table class="w-full text-left text-sm">
+                     <thead>
+                        <tr class="text-[10px] text-slate-400 uppercase bg-white">
+                           <th class="py-2 px-4 font-bold">Order</th>
+                           <th class="py-2 px-2 font-bold">Time</th>
+                           <th class="py-2 px-4 font-bold text-right">Amount</th>
+                        </tr>
+                     </thead>
+                     <tbody class="divide-y divide-slate-50">
+                        ${group.entries.map((entry) => {
+                           const when = entry.settled_at || entry.created_at;
+                           const time = new Date(when).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                           return `
+                              <tr class="hover:bg-slate-50/80">
+                                 <td class="py-2.5 px-4 font-semibold text-slate-800">#${entry.order_id}</td>
+                                 <td class="py-2.5 px-2 text-slate-500 text-xs">${time}</td>
+                                 <td class="py-2.5 px-4 text-right font-bold text-emerald-600">${formatKs(entry.amount)}</td>
+                              </tr>`;
+                        }).join('')}
+                     </tbody>
+                  </table>
+               </div>`;
+            container.appendChild(block);
+         });
+      }
+
       async function fetchFinanceSummary() {
          const range = document.getElementById('finance-range')?.value || 'day';
          const selectedDate = document.getElementById('finance-date').value;
@@ -436,25 +532,7 @@
             }
 
             renderFinanceCharts(data);
-
-            const incTbody = document.getElementById('finance-income-tbody');
-            incTbody.innerHTML = '';
-            if (data.income_entries.length === 0) {
-               incTbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-400 italic text-sm">No completed sales in this period</td></tr>`;
-            } else {
-               data.income_entries.forEach(entry => {
-                  const when = entry.settled_at || entry.created_at;
-                  const time = new Date(when).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                  const tr = document.createElement('tr');
-                  tr.className = 'hover:bg-slate-50/80';
-                  tr.innerHTML = `
-                     <td class="py-3 px-4 font-semibold text-slate-800">#${entry.order_id}</td>
-                     <td class="py-3 px-2 text-slate-600">Table ${entry.table_label}</td>
-                     <td class="py-3 px-2 text-slate-500 text-xs">${time}</td>
-                     <td class="py-3 px-4 text-right font-bold text-emerald-600">${formatKs(entry.amount)}</td>`;
-                  incTbody.appendChild(tr);
-               });
-            }
+            renderIncomeByTable(data.income_entries);
          } catch (err) {
             console.error('Could not fetch finance summary.');
          }

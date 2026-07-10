@@ -4,14 +4,14 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <title>27 Cafe & Bar- Menu</title>
-      <!-- Google Fonts for classy Serif and modern numerical layouts -->
+    
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Quattrocento:wght@400;700&family=Yrsa:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
       <link href="https://fonts.cdnfonts.com/css/revans" rel="stylesheet">
       <script src="https://cdn.tailwindcss.com"></script>
       <style>
-         /* --- MOBILE-FRIENDLY SCROLL --- */
+ 
          html {
          -webkit-text-size-adjust: 100%;
          }
@@ -22,7 +22,7 @@
          -webkit-overflow-scrolling: touch;
          touch-action: pan-y;
          }
-         /* Decorations stay fixed so they don't repaint while scrolling */
+
          .menu-deco-layer {
          position: fixed;
          inset: 0;
@@ -31,7 +31,7 @@
          z-index: 0;
          contain: strict;
          }
-         /* Let vertical swipes pass through horizontal photo carousels */
+  
          .menu-h-scroll {
          overflow-x: auto;
          overflow-y: hidden;
@@ -64,7 +64,7 @@
          .font-27-body {
          font-family: 'Revans', sans-serif;
          }
-         /* Custom scrollbar hiding for horizontal swiping */
+
          .scrollbar-none::-webkit-scrollbar {
          display: none;
          }
@@ -72,7 +72,7 @@
          -ms-overflow-style: none;
          scrollbar-width: none;
          }
-         /* --- CARTOON MOVEMENTS & KEYFRAME ANIMATIONS --- */
+ 
          @keyframes float {
          0%, 100% { transform: translateY(0) rotate(0deg); }
          50% { transform: translateY(-8px) rotate(3deg); }
@@ -110,7 +110,7 @@
          background: #874230;
          color: white;
          }
-         /* Center logo watermark — soft radial fade like corner textures */
+ 
          .menu-center-logo {
          position: absolute;
          left: 50%;
@@ -142,40 +142,37 @@
    </head>
    <body class="text-[#874230] font-27-body min-h-screen select-none">
       
-      <!-- Fixed decoration layer (does not scroll with menu content) -->
+
       <div class="menu-deco-layer" aria-hidden="true">
          
-         <!-- --- BACKGROUND WATERMARKS --- -->
-         <!-- Top-Left Retro Palm Leaf -->
+
          <div class="absolute -left-24 -top-20 w-[400px] sm:w-[500px] h-auto pointer-events-none opacity-20 text-[#434343]/80 z-0 select-none">
             <img src="/static/corner1.jpg" class="w-full h-full object-contain object-right-top" alt="" loading="lazy" decoding="async">
          </div>
          
-         <!-- Top-Right Retro Monstera Leaf -->
+
          <div class="absolute -right-20 -top-12 w-56 sm:w-80 h-auto pointer-events-none opacity-20 text-[#6f8a38]/80 z-0 select-none">
             <img src="/static/corner4.jpg" class="w-full h-full object-contain object-right-top" alt="" loading="lazy" decoding="async">
          </div>
          
-         <!-- Bottom-Left Retro Monstera Leaf -->
+
          <div class="absolute -left-20 -bottom-16 w-56 sm:w-80 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none ">
             <img src="/static/corner3.jpg" class="w-full h-full object-contain object-right-top" alt="" loading="lazy" decoding="async">
          </div>
          
-         <!-- Bottom-Right Retro Palm Leaf -->
+
          <div class="absolute -right-16 -bottom-16 w-48 sm:w-72 h-auto pointer-events-none opacity-15 text-[#6f8a38]/80 z-0 select-none ">
             <img src="/static/corner5.jpg" class="w-full h-full object-contain object-right-top" alt="" loading="lazy" decoding="async">
          </div>
 
-         <!-- Center Logo Watermark -->
          <div class="menu-center-logo select-none" aria-hidden="true">
             <img src="/static/logo2.jpg" alt="" loading="lazy" decoding="async">
          </div>
 
-         <!-- Checkerboard Top Accent -->
+
          <div class="h-6 w-full checkerboard-border border-b-4 border-[#161912] hidden"></div>
          
-         <!-- --- CARTOON ILLUSTRATION OVERLAYS --- -->
-         <!-- Character 1: Floating Happy Steaming Mug (Top Right margin) -->
+
          <div class="hidden md:block absolute right-28 top-24 w-16 h-16 opacity-20 pointer-events-none animate-float">
             <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                <path d="M30,40 H70 V75 C70,82 60,82 50,82 C40,82 30,82 30,75 Z" />
@@ -187,7 +184,7 @@
                <path class="animate-steam" d="M55,28 Q58,22 55,15" style="animation-delay: 0.8s;" />
             </svg>
          </div>
-         <!-- Character 2: Dancing Coffee Bean (Middle Right margin) -->
+
          <div class="hidden lg:block absolute -right-25 top-[35%] w-20 h-20 opacity-15 pointer-events-none animate-bounce-hop">
             <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                <path d="M35,25 C15,35 15,65 35,75 C55,85 85,85 85,55 C85,25 55,15 35,25 Z" fill="#eae6dd" />
@@ -201,7 +198,7 @@
                <path d="M55,79 L58,89" />
             </svg>
          </div>
-         <!-- Character 3: Levitating Croissant (Middle Left margin) -->
+
          <div class="hidden lg:block absolute -right-26 top-[55%] w-24 h-24 opacity-15 pointer-events-none animate-float" style="animation-delay: 1.5s;">
             <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                <path d="M20,60 C15,50 30,25 50,25 C70,25 85,50 80,60 C75,55 65,52 50,52 C35,52 25,55 20,60 Z" />
@@ -213,7 +210,7 @@
                <circle cx="60" cy="42" r="3" fill="#f59756" opacity="0.4" stroke="none" />
             </svg>
          </div>
-         <!-- Character 4: Waving Take-Away Cup (Bottom Left margin) -->
+
          <div class="hidden lg:block absolute -right-20 bottom-[15%] w-24 h-24 opacity-15 pointer-events-none animate-float">
             <svg viewBox="0 0 100 100" fill="none" stroke="#735647" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                <polygon points="30,30 70,30 65,80 35,80" />
@@ -230,10 +227,9 @@
          </div>
       </div>
 
-      <!-- Scrollable menu content -->
       <div class="relative z-10 min-h-screen w-full">
          <div class="flex flex-col justify-between min-h-screen menu-safe-x menu-safe-bottom pt-[max(1rem,env(safe-area-inset-top))]">
-            <!-- Header -->
+ 
             <header class="relative pb-6 border-b border-[#874230]/30 mb-6 sm:mb-8 flex flex-col items-start w-full">
                <div class="flex items-center gap-3 sm:gap-6 w-full min-w-0">
                   <div class="h-16 w-16 sm:h-28 sm:w-28 md:h-36 md:w-36 shrink-0 flex items-center justify-center">
@@ -276,7 +272,7 @@
 
             </header>
 
-            <!-- Service Summon Controls -->
+
             <section class="border border-[#874230]/30 bg-white/40 p-4 rounded-xl mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
                <div class="text-center sm:text-left">
                   <p class="font-27-title font-bold text-sm uppercase">Service Request</p>
@@ -288,19 +284,19 @@
                </div>
             </section>
 
-            <!-- Dynamic Menu Container -->
+
             <div id="validation-gate" class="hidden flex-1 flex flex-col justify-between">
-               <!-- 1. Standard Categories Container (Vertical Lists: Coffee, Milkshakes, etc.) -->
+ 
                <div id="standard-categories-container" class="space-y-8">
-                  <!-- Populated dynamically -->
+
                </div>
-               <!-- Clean Separator Line above photo sections -->
+
                <hr class="border-[#874230]/10 my-8">
-               <!-- 2. Bottom Swipe-Aside Section (items with uploaded photos) -->
+  
                <div id="photo-categories-container" class="space-y-6">
-                  <!-- Populated dynamically -->
+
                </div>
-               <!-- Card Bottom Stamp Footer (Your Custom Footer on Main Menu) -->
+
                <footer class="mt-16 pt-4 border-t border-[#874230]/20 flex flex-col items-center justify-center text-center text-[11px] sm:text-[12px] text-[#874230]/70 uppercase tracking-widest font-semibold gap-3 px-1">
                   <span class="truncate">Thank you for supporting 27 Cafe.</span>
                   <span class="shrink-0">
@@ -327,7 +323,7 @@
                </footer>
             </div>
 
-            <!-- Security Warning State -->
+
             <div id="security-warning" class="hidden px-1">
                <div class="border border-red-300 bg-red-50 text-red-900 p-8 rounded-2xl text-center space-y-3">
                   <h3 class="text-lg font-27-title font-bold uppercase">Access Blocked</h3>
@@ -337,60 +333,56 @@
          </div>
       </div>
 
-      <!-- --- 2. VIEWPORT-FIXED STICKY OVERLAYS (Direct children of body for perfect mobile/iPad rendering) --- -->
 
-      <!-- Sticky Centered Fully Responsive Cart Bar -->
-      <!-- High Z-Index (z-[100]) forces rendering on top of all iPad Safari/Chrome viewport layers -->
       <div id="cart-bar" class="fixed z-[100] hidden left-1/2 -translate-x-1/2 w-[min(90%,calc(100%-2.5rem))] sm:w-11/12 max-w-xs sm:max-w-sm md:max-w-md" style="bottom: max(1.5rem, env(safe-area-inset-bottom));">
          <button onclick="toggleCartModal(true)" class="w-full flex items-center justify-between bg-[#1E140C] hover:bg-[#2D1C13] text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-full transition shadow-2xl active:scale-[0.98]">
             <div class="flex items-center gap-1.5 sm:gap-2">
-               <!-- Shopping Bag Icon -->
+
                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 0 1-8 0" />
                </svg>
-               <!-- Clean fluid typography and whitespace-nowrap prevents button wrap on small phone viewports -->
+ 
                <span class="font-27-title text-xs sm:text-sm md:text-base tracking-wide whitespace-nowrap uppercase">VIEW MY ORDER</span>
             </div>
-            <!-- Highlighted item count badge with shrink protection -->
+
             <span class="bg-white text-[#1E140C] text-[10px] sm:text-xs font-bold px-2.5 sm:px-3.5 py-1 rounded-full shadow-inner shrink-0 whitespace-nowrap animate-scale">
             <span id="cart-count">0</span> items
             </span>
          </button>
       </div>
 
-      <!-- Review Tray Checkout Dialog (Optimized Mobile Drawer) -->
-      <!-- Placed as direct sibling of body for absolute viewport alignment on iOS -->
+
       <div id="cart-modal" class="fixed inset-0 bg-black/50 z-[110] flex items-end justify-center hidden" onclick="closeCartOnBackdrop(event)">
-         <!-- Elegant Card Drawer (Responsive p-4 on mobile, p-6 on tablet/desktop) -->
+
          <div class="bg-[#eae6dd] border-t border-[#874230]/30 rounded-t-3xl w-full max-w-xl p-4 sm:p-6 space-y-5 max-h-[90vh] flex flex-col justify-between shadow-2xl" onclick="event.stopPropagation()">
-            <!-- Header (Playfair Display) -->
+
             <div class="flex justify-between items-center pb-3 border-b border-[#874230]/10">
                <h3 class="text-2xl font-27-title font-bold text-[#874230]">Your Order</h3>
-               <!-- Styled Close Icon with expanded touch target -->
+  
                <button onclick="toggleCartModal(false)" class="text-[#874230]/60 hover:text-[#874230] text-3xl font-light leading-none transition p-2">&times;</button>
             </div>
-            <!-- Items list (Scrolls independently) -->
+
             <div id="cart-items" class="overflow-y-auto space-y-4 flex-1 pr-2 scrollbar-none divide-y-0" style="-webkit-overflow-scrolling: touch;">
-               <!-- Cart items load here -->
+
             </div>
             <hr class="border-[#874230]/20">
-            <!-- Total Block -->
+
             <div class="pt-2">
                <div class="flex justify-between font-27-title text-xl text-[#874230] font-bold">
                   <span>Total</span>
                   <span id="modal-total" class="font-extrabold text-2xl">0 Ks</span>
                </div>
             </div>
-            <!-- Place Order Action Button (Solid dark brown rounded button) -->
+
             <button onclick="submitOrder()" class="w-full bg-[#22150E] hover:bg-[#341D14] text-white font-retro-title py-4 rounded-2xl text-base font-bold transition active:scale-95 shadow-md">
             Place Order
             </button>
          </div>
       </div>
 
-      <!-- Item Customization Modal -->
+
       <div id="customize-modal" class="fixed inset-0 bg-black/50 z-[105] hidden flex items-end sm:items-center justify-center p-4" onclick="closeCustomizeModal()">
          <div class="bg-[#eae6dd] rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center">
@@ -416,10 +408,9 @@
          </div>
       </div>
 
-      <!-- Simulated Gateway Payment Modal -->
-      <!-- Placed as direct sibling of body for absolute viewport alignment on iOS -->
+
       <div id="payment-modal" class="fixed inset-0 bg-black/70 z-[120] flex items-center justify-center hidden p-4">
-         <!-- Upgraded w-11/12 max-w-xs to prevent container clipping on small viewports -->
+
          <div class="bg-[#eae6dd] border-4 border-[#874230]/30 rounded-2xl w-11/12 max-w-xs p-6 text-center space-y-4 shadow-2xl relative">
             <button onclick="document.getElementById('payment-modal').classList.add('hidden')" 
                class="absolute top-3 right-3 text-[#874230]/60 hover:text-[#874230] text-2xl font-light leading-none p-2">
@@ -445,7 +436,7 @@
       <script>
          const API_BASE = `${window.location.origin}/api/v1`;
          
-         // Secure table and validation matching parameters
+
          const urlParams = new URLSearchParams(window.location.search);
          const tableId = urlParams.get('table');
          const secureToken = urlParams.get('token');
@@ -456,7 +447,7 @@
          let pendingCustomizeItemId = null;
          let selectedPresets = new Set();
          
-         // Neutral placeholder when a photo-card item has no uploaded image yet
+
          const PLACEHOLDER_IMAGE = '/static/logo2.jpg';
 
          function getItemImage(item) {
@@ -491,7 +482,7 @@
              }
          }
          
-         // --- RENDER DYNAMIC 27 CAFE STRUCTURES ---
+
          function renderMenu() {
              const standardContainer = document.getElementById('standard-categories-container');
              const photoContainer = document.getElementById('photo-categories-container');
@@ -560,7 +551,7 @@
                      photoContainer.appendChild(sectionDiv);
          
                  } else {
-                     // --- STANDARD CLASSY VERTICAL LISTS (Fully Responsive layout and shrink protection) ---
+                     
                      const itemsHtml = items.map(item => {
                          const isSoldOut = item.stock !== null && item.stock <= 0;
          
@@ -669,7 +660,7 @@
              if (count > 0) {
                  document.getElementById('cart-count').innerText = count;
                  
-                 // Hide floating bar if checkout trays or payment gates are active
+
                  if (cartModal.classList.contains('hidden') && paymentModal.classList.contains('hidden')) {
                      cartBar.classList.remove('hidden');
                  } else {
@@ -688,15 +679,15 @@
              } else {
                  modal.classList.add('hidden');
              }
-             updateCartSummary(); // Dynamic visibility update
+             updateCartSummary(); 
          }
          
-         // Backdrop click trigger closes the cart tray safely
+         
          function closeCartOnBackdrop(event) {
              toggleCartModal(false);
          }
          
-         // --- UPDATED: Renders list items matching layout in input_file_4.png ---
+        
          function renderCartModalItems() {
              const container = document.getElementById('cart-items');
              container.innerHTML = "";
@@ -709,7 +700,7 @@
                  const rowSubtotal = itemTotal * cartItem.quantity;
                  total += rowSubtotal;
          
-                 // Mathematical format: "unit_price x quantity = subtotal"
+                 
                  const mathBreakdown = `${itemTotal.toFixed(0)} &times; ${cartItem.quantity} = ${rowSubtotal.toFixed(0)}`;
          
                  const div = document.createElement('div');
@@ -778,14 +769,14 @@
                      const orderData = await response.json();
                      pendingOrderId = orderData.id;
                      
-                     // Close the tray cleanly
+                     
                      document.getElementById('cart-modal').classList.add('hidden');
                      
-                     // Launch payment confirmation gate
+                     
                      document.getElementById('pay-amount').innerText = `${orderData.total_price.toFixed(0)} Ks`;
                      document.getElementById('payment-modal').classList.remove('hidden');
          
-                     updateCartSummary(); // Will hide the floating View My Order bar
+                     updateCartSummary(); 
                  } else {
                      const errObj = await response.json();
                      alert(`Order placement failed: ${errObj.detail || 'Internal error'}`);
