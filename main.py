@@ -86,12 +86,26 @@ def seed_initial_data():
     migrate_table_labels()
     db = SessionLocal()
 
-    # NEW: Seeds default manager credentials on first database creation
-    if not db.query(models.AdminCredential).first():
-        default_admin = models.AdminCredential(
-            username="admin", password_hash=hash_password("adminpassword123")
+    # Seed manager account (staff panel)
+    if not db.query(models.AdminCredential).filter(
+        models.AdminCredential.username == "admin"
+    ).first():
+        db.add(
+            models.AdminCredential(
+                username="admin", password_hash=hash_password("adminpassword123")
+            )
         )
-        db.add(default_admin)
+        db.commit()
+
+    # Seed finance account (owner panel) — separate password from manager
+    if not db.query(models.AdminCredential).filter(
+        models.AdminCredential.username == "finance"
+    ).first():
+        db.add(
+            models.AdminCredential(
+                username="finance", password_hash=hash_password("adminpassword123")
+            )
+        )
         db.commit()
 
     # Seed tables A1–A7 and B1–B6

@@ -39,9 +39,12 @@ def verify_manager_token(authorization: Optional[str] = Header(None)):
 # --- Updated: Secure Database Login (No longer hardcoded) ---
 @router.post("/login")
 def manager_login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
+    if credentials.username != security.MANAGER_USERNAME:
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+
     admin = (
         db.query(models.AdminCredential)
-        .filter(models.AdminCredential.username == credentials.username)
+        .filter(models.AdminCredential.username == security.MANAGER_USERNAME)
         .first()
     )
     if not admin or admin.password_hash != hash_password(credentials.password):
@@ -58,7 +61,11 @@ def change_password(
     authenticated: bool = Depends(verify_manager_token),
 ):
     # Retrieve the admin record
-    admin = db.query(models.AdminCredential).first()
+    admin = (
+        db.query(models.AdminCredential)
+        .filter(models.AdminCredential.username == security.MANAGER_USERNAME)
+        .first()
+    )
     if not admin:
         raise HTTPException(status_code=404, detail="Admin configuration missing.")
 

@@ -22,6 +22,9 @@ FINANCE_SESSION_TOKEN = os.getenv(
     "FINANCE_SESSION_TOKEN", "secure_finance_session_token_2026_xyz"
 )
 
+MANAGER_USERNAME = os.getenv("MANAGER_USERNAME", "admin")
+FINANCE_USERNAME = os.getenv("FINANCE_USERNAME", "finance")
+
 KITCHEN_ALLOWED_TRANSITIONS = {
     models.OrderStatus.PENDING: {
         models.OrderStatus.PREPARING,

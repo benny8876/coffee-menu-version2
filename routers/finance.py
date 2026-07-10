@@ -49,15 +49,41 @@ def verify_finance_token(authorization: Optional[str] = Header(None)) -> bool:
 
 @router.post("/login")
 def finance_login(credentials: schemas.LoginRequest, db: Session = Depends(get_db)):
-    admin = (
+    if credentials.username != security.FINANCE_USERNAME:
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+
+    finance_user = (
         db.query(models.AdminCredential)
-        .filter(models.AdminCredential.username == credentials.username)
+        .filter(models.AdminCredential.username == security.FINANCE_USERNAME)
         .first()
     )
-    if not admin or admin.password_hash != hash_password(credentials.password):
+    if not finance_user or finance_user.password_hash != hash_password(credentials.password):
         raise HTTPException(status_code=401, detail="Invalid username or password.")
 
     return {"token": security.FINANCE_SESSION_TOKEN}
+
+
+@router.post("/change-password")
+def change_finance_password(
+    data: schemas.PasswordChangeRequest,
+    db: Session = Depends(get_db),
+    authenticated: bool = Depends(verify_finance_token),
+):
+    finance_user = (
+        db.query(models.AdminCredential)
+        .filter(models.AdminCredential.username == security.FINANCE_USERNAME)
+        .first()
+    )
+    if not finance_user:
+        raise HTTPException(status_code=404, detail="Finance account not configured.")
+
+    if finance_user.password_hash != hash_password(data.old_password):
+        raise HTTPException(status_code=400, detail="Incorrect old password.")
+
+    finance_user.password_hash = hash_password(data.new_password)
+    db.commit()
+
+    return {"message": "Finance password changed successfully. Please log in again."}
 
 
 def _normalize_category(category: str) -> str:

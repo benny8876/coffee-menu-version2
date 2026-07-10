@@ -37,12 +37,12 @@
       <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full border border-slate-200 space-y-6">
          <div class="text-center space-y-1">
             <h2 class="text-2xl font-black text-slate-800">27 Cafe Finance</h2>
-            <p class="text-xs text-slate-400">Owner finance access — income &amp; expenses</p>
+            <p class="text-xs text-slate-400">Owner only — separate from staff manager login</p>
          </div>
          <form onsubmit="handleLogin(event)" class="space-y-4">
             <div>
                <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Username</label>
-               <input type="text" id="login-username" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+               <input type="text" id="login-username" value="finance" readonly class="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none">
             </div>
             <div>
                <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
@@ -63,7 +63,10 @@
                   <h1 class="text-xl font-black tracking-tight text-slate-900">Finance Panel</h1>
                   <p class="text-xs text-slate-400 mt-0.5">Income, expenses &amp; net profit</p>
                </div>
-               <button onclick="handleLogout()" class="text-xs font-bold text-rose-600 hover:text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-50 transition w-fit">Logout</button>
+               <div class="flex items-center gap-2">
+                  <button onclick="togglePasswordModal(true)" class="text-xs font-bold text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-50 transition">Password</button>
+                  <button onclick="handleLogout()" class="text-xs font-bold text-rose-600 hover:text-rose-700 px-3 py-2 rounded-lg hover:bg-rose-50 transition w-fit">Logout</button>
+               </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                <select id="finance-range" onchange="onFinanceRangeChange()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500">
@@ -191,6 +194,30 @@
       </main>
    </div>
 
+   <div id="password-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-white p-6 rounded-xl max-w-sm w-full shadow-2xl relative space-y-4">
+         <button onclick="togglePasswordModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+         <h3 class="text-lg font-bold text-slate-800">Change Finance Password</h3>
+         <form onsubmit="submitChangePassword(event)" class="space-y-4">
+            <div>
+               <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Old Password</label>
+               <input type="password" id="p-old-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+               <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">New Password</label>
+               <input type="password" id="p-new-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+               <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Confirm New Password</label>
+               <input type="password" id="p-confirm-password" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg text-sm transition">
+               Update Password
+            </button>
+         </form>
+      </div>
+   </div>
+
    <div id="expense-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden p-4">
       <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl relative space-y-4">
          <button onclick="toggleExpenseModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
@@ -260,9 +287,48 @@
          document.getElementById('login-view').classList.remove('hidden');
       }
 
+      function togglePasswordModal(show) {
+         const modal = document.getElementById('password-modal');
+         if (show) modal.classList.remove('hidden');
+         else modal.classList.add('hidden');
+      }
+
+      async function submitChangePassword(event) {
+         event.preventDefault();
+         const oldPassword = document.getElementById('p-old-password').value;
+         const newPassword = document.getElementById('p-new-password').value;
+         const confirmPassword = document.getElementById('p-confirm-password').value;
+
+         if (newPassword !== confirmPassword) {
+            showToast('New passwords do not match.', 'error');
+            return;
+         }
+
+         try {
+            const response = await fetch(`${API_BASE}/finance/change-password`, {
+               method: 'POST',
+               headers: getAuthHeaders(),
+               body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
+            });
+
+            if (response.status === 401) { handleLogout(); return; }
+
+            if (response.ok) {
+               showToast('Password updated. Please log in again.', 'success');
+               togglePasswordModal(false);
+               handleLogout();
+            } else {
+               const err = await response.json().catch(() => ({}));
+               showToast(err.detail || 'Incorrect old password.', 'error');
+            }
+         } catch (err) {
+            showToast('Network error.', 'error');
+         }
+      }
+
       async function handleLogin(event) {
          event.preventDefault();
-         const username = document.getElementById('login-username').value;
+         const username = document.getElementById('login-username').value || 'finance';
          const password = document.getElementById('login-password').value;
          try {
             const response = await fetch(`${API_BASE}/finance/login`, {
