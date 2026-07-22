@@ -9,7 +9,9 @@ from database import get_db
 import models, schemas
 import security
 from websocket import manager_ws
-from table_labels import RESTAURANT_NAME, get_table_label
+from table_labels import RESTAURANT_NAME, get_table_label, COUNTER_TABLE_NUMBER, is_counter_table
+from services.orders import create_order_from_items
+from sqlalchemy.orm import joinedload
 
 router = APIRouter(prefix="/manager", tags=["Manager Panel"])
 MYANMAR_TZ = timezone(timedelta(hours=6, minutes=30))
@@ -134,7 +136,10 @@ def get_all_table_qr_links(
 ):
     tables = (
         db.query(models.RestaurantTable)
-        .filter(models.RestaurantTable.is_active == True)
+        .filter(
+            models.RestaurantTable.is_active == True,
+            models.RestaurantTable.number != COUNTER_TABLE_NUMBER,
+        )
         .order_by(models.RestaurantTable.number.asc())
         .all()
     )
@@ -309,6 +314,8 @@ def get_active_tables(
 
     tables_map = {}
     for order in active_orders:
+        if is_counter_table(order.table):
+            continue
         t_id = order.table.id
         if t_id not in tables_map:
             tables_map[t_id] = {
@@ -321,6 +328,52 @@ def get_active_tables(
         tables_map[t_id]["total_price"] += order.total_price
 
     return list(tables_map.values())
+
+
+# --- WALK-IN / COUNTER SALE ---
+@router.post("/counter/sale", response_model=schemas.OrderResponse)
+async def create_counter_sale(
+    data: schemas.CounterSaleCreate,
+    db: Session = Depends(get_db),
+    authenticated: bool = Depends(verify_manager_token),
+):
+    counter_table = (
+        db.query(models.RestaurantTable)
+        .filter(models.RestaurantTable.number == COUNTER_TABLE_NUMBER)
+        .first()
+    )
+    if not counter_table:
+        raise HTTPException(
+            status_code=500,
+            detail="Counter table is not configured. Restart the server to seed it.",
+        )
+
+    order = create_order_from_items(
+        db,
+        table_id=counter_table.id,
+        items=data.items,
+        initial_status=models.OrderStatus.PENDING,
+    )
+    order.settled_at = datetime.now(MYANMAR_TZ).replace(tzinfo=None)
+    db.commit()
+    order = (
+        db.query(models.Order)
+        .options(
+            joinedload(models.Order.table),
+            joinedload(models.Order.items)
+            .joinedload(models.OrderItem.menu_item),
+            joinedload(models.Order.items)
+            .joinedload(models.OrderItem.selected_modifiers)
+            .joinedload(models.OrderItemModifier.modifier),
+        )
+        .filter(models.Order.id == order.id)
+        .first()
+    )
+
+    response_payload = schemas.OrderResponse.model_validate(order).model_dump(mode="json")
+    await manager_ws.broadcast({"event": "new_order", "order": response_payload})
+
+    return order
 
 
 # --- GENERATE UNIFIED MASTER BILL ---
@@ -477,7 +530,7 @@ def get_settled_tables_history(
     completed_orders = (
         db.query(models.Order)
         .filter(
-            models.Order.status == models.OrderStatus.COMPLETED,
+            models.Order.status != models.OrderStatus.CANCELLED,
             models.Order.settled_at != None,
         )
         .order_by(models.Order.settled_at.desc())
@@ -493,6 +546,7 @@ def get_settled_tables_history(
             history_map[key] = {
                 "table_id": order.table_id,
                 "table_number": get_table_label(order.table),
+                "is_counter": is_counter_table(order.table),
                 "settled_at": order.settled_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "settled_at_iso": iso_time,
                 "order_ids": [],
@@ -521,7 +575,7 @@ def get_historical_table_bill(
         db.query(models.Order)
         .filter(
             models.Order.table_id == table_id,
-            models.Order.status == models.OrderStatus.COMPLETED,
+            models.Order.status != models.OrderStatus.CANCELLED,
             models.Order.settled_at == settled_datetime,
         )
         .all()

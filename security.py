@@ -53,7 +53,10 @@ def verify_kitchen_token(authorization: Optional[str] = Header(None)) -> bool:
         )
     try:
         token_type, token = authorization.split(" ")
-        if token_type.lower() != "bearer" or token != KITCHEN_SESSION_TOKEN:
+        if token_type.lower() != "bearer" or token not in (
+            KITCHEN_SESSION_TOKEN,
+            MANAGER_SESSION_TOKEN,
+        ):
             raise ValueError()
     except (ValueError, AttributeError):
         raise HTTPException(status_code=401, detail="Invalid kitchen session.")

@@ -8,11 +8,21 @@ TABLE_LABELS = [
 
 RESTAURANT_NAME = "27 Cafe & Bar"
 
+# Walk-in / counter sales (not a physical dining table)
+COUNTER_TABLE_NUMBER = 0
+COUNTER_TABLE_LABEL = "Counter"
+
 
 def label_for_number(n: int) -> str:
+    if n == COUNTER_TABLE_NUMBER:
+        return COUNTER_TABLE_LABEL
     if 1 <= n <= len(TABLE_LABELS):
         return TABLE_LABELS[n - 1]
     return f"T{n}"
+
+
+def is_counter_table(table) -> bool:
+    return table is not None and table.number == COUNTER_TABLE_NUMBER
 
 
 def format_table_display(label: str) -> str:

@@ -81,11 +81,11 @@ def resolve_range_bounds(
 def completed_orders_for_range(
     db: Session, start: datetime, end: datetime
 ) -> List[models.Order]:
-    """Paid orders in range — counted by settlement date when available."""
+    """Paid orders in range — table sessions when settled, counter sales when prepaid."""
     return (
         db.query(models.Order)
         .filter(
-            models.Order.status == models.OrderStatus.COMPLETED,
+            models.Order.status != models.OrderStatus.CANCELLED,
             models.Order.settled_at.isnot(None),
             INCOME_DATE.between(start, end),
         )

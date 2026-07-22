@@ -81,6 +81,10 @@ class OrderCreate(BaseModel):
     token: str # Security validation token
     items: List[OrderItemCreate]
 
+
+class CounterSaleCreate(BaseModel):
+    items: List[OrderItemCreate]
+
 class OrderItemResponse(BaseModel):
     id: int
     menu_item: MenuItemResponse

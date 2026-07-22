@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 import models, os
 from sqlalchemy import inspect, text
 from database import engine, SessionLocal
-from table_labels import TABLE_LABELS, label_for_number
+from table_labels import TABLE_LABELS, label_for_number, COUNTER_TABLE_NUMBER, COUNTER_TABLE_LABEL
 from routers import menu, kitchen, manager, finance
 import hashlib  # Add to imports
 
@@ -81,6 +81,26 @@ def migrate_table_labels():
         db.close()
 
 
+def ensure_counter_table(db):
+    counter = (
+        db.query(models.RestaurantTable)
+        .filter(models.RestaurantTable.number == COUNTER_TABLE_NUMBER)
+        .first()
+    )
+    if not counter:
+        db.add(
+            models.RestaurantTable(
+                number=COUNTER_TABLE_NUMBER,
+                label=COUNTER_TABLE_LABEL,
+                is_active=True,
+            )
+        )
+        db.commit()
+    elif counter.label != COUNTER_TABLE_LABEL:
+        counter.label = COUNTER_TABLE_LABEL
+        db.commit()
+
+
 @app.on_event("startup")
 def seed_initial_data():
     migrate_table_labels()
@@ -116,6 +136,8 @@ def seed_initial_data():
         ]
         db.add_all(tables)
         db.commit()
+
+    ensure_counter_table(db)
 
     # Seed default menu items
     if not db.query(models.MenuItem).first():

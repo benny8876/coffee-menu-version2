@@ -58,6 +58,7 @@
       </div>
       <!-- 2. PROTECTED DASHBOARD VIEW (Hidden until successfully authorized) -->
       <div id="dashboard-view" class="hidden">
+         <div id="kitchen-new-order-flash" class="fixed inset-0 pointer-events-none z-[90] hidden bg-amber-400/25"></div>
          <!-- Header -->
          <header class="bg-white border-b px-8 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -83,6 +84,9 @@
          <nav class="bg-white border-b px-6 md:px-8">
             <div class="max-w-7xl mx-auto flex flex-wrap gap-2 py-3">
                <button type="button" data-panel="main" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-800 text-white">Main</button>
+               <button type="button" data-panel="settled" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">Settled</button>
+               <button type="button" data-panel="counter" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">Counter</button>
+               <button type="button" data-panel="kitchen" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">Kitchen</button>
                <button type="button" data-panel="qr" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">QR Panel</button>
                <button type="button" data-panel="orders" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">Single Tickets</button>
                <button type="button" data-panel="menu" class="panel-tab px-4 py-2 rounded-lg text-sm font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">Update Menu</button>
@@ -124,13 +128,88 @@
                      <!-- Populated dynamically -->
                   </div>
                </section>
-               <!-- Settled Table Sessions (Grouped Tables) -->
+            </div>
+            </div>
+
+            <!-- SETTLED PANEL -->
+            <div id="panel-settled" class="manager-panel hidden space-y-8">
                <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6 w-full min-w-0">
-                  <h2 class="text-lg font-bold mb-2 text-slate-800">Settled Table Sessions Record (Grouped)</h2>
-                  <p class="text-xs text-slate-400 mb-4">View master receipts of historical dining sessions closed together.</p>
-                  <div class="space-y-3 overflow-y-auto max-h-[420px]" id="settled-tables-history-log"></div>
+                  <h2 class="text-lg font-bold mb-2 text-slate-800">Settled Sales</h2>
+                  <p class="text-xs text-slate-400 mb-4">Table and counter receipts — tap Receipt for the voucher.</p>
+                  <div class="space-y-3 overflow-y-auto max-h-[min(70vh,40rem)]" id="settled-history-log"></div>
                </section>
             </div>
+
+            <!-- COUNTER / WALK-IN PANEL -->
+            <div id="panel-counter" class="manager-panel hidden space-y-6">
+               <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
+                  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 border-b border-slate-100 pb-4">
+                     <div>
+                        <h2 class="text-lg font-bold text-slate-800">Walk-in / Counter Sale</h2>
+                        <p class="text-xs text-slate-400 mt-1">Ring up takeaway or counter orders — no table QR needed.</p>
+                     </div>
+                     <button type="button" onclick="clearCounterCart()" class="text-xs font-bold text-slate-500 hover:text-rose-600 px-3 py-2 rounded-lg hover:bg-rose-50 transition">Clear cart</button>
+                  </div>
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                     <div class="lg:col-span-2 space-y-3">
+                        <input type="search" id="counter-menu-search" placeholder="Search menu..." oninput="renderCounterMenu()" class="w-full bg-slate-100 border-none rounded-lg px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500">
+                        <div id="counter-menu-grid" class="space-y-5 max-h-[min(60vh,28rem)] overflow-y-auto pr-1"></div>
+                     </div>
+                     <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col min-h-[20rem]">
+                        <h3 class="text-sm font-bold text-slate-700 mb-3">Current sale</h3>
+                        <div id="counter-cart-lines" class="flex-1 space-y-2 overflow-y-auto text-sm mb-4 min-h-[8rem]">
+                           <p class="text-slate-400 italic text-xs">Tap menu items to add</p>
+                        </div>
+                        <div class="border-t border-slate-200 pt-3 space-y-3">
+                           <div class="flex justify-between items-center">
+                              <span class="text-xs font-bold uppercase text-slate-400">Total</span>
+                              <span id="counter-cart-total" class="text-xl font-black text-violet-600">0 Ks</span>
+                           </div>
+                           <button type="button" onclick="submitCounterSale()" id="counter-checkout-btn" disabled class="w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition">Complete sale</button>
+                        </div>
+                     </div>
+                  </div>
+               </section>
+            </div>
+
+            <!-- KITCHEN PANEL -->
+            <div id="panel-kitchen" class="manager-panel hidden space-y-4">
+               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                     <h2 class="text-lg font-bold text-slate-800">Kitchen Orders</h2>
+                     <p class="text-xs text-slate-500 font-medium">Pending → Preparing → Ready — same board as /kitchen</p>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                     <button type="button" onclick="unlockManagerKitchenAlerts()" id="kitchen-audio-banner" class="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg font-semibold">
+                        Tap to enable alert sounds
+                     </button>
+                     <button type="button" onclick="fetchKitchenOrders()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-lg transition">Refresh</button>
+                  </div>
+               </div>
+               <section id="kitchen-alerts-container" class="space-y-2"></section>
+               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <section class="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+                     <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-base font-black text-amber-800 uppercase tracking-wide">Pending</h3>
+                        <span class="bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full text-sm font-black" id="count-pending">0</span>
+                     </div>
+                     <div id="pending-orders" class="space-y-3 max-h-[min(65vh,36rem)] overflow-y-auto pr-1"></div>
+                  </section>
+                  <section class="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+                     <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-base font-black text-blue-800 uppercase tracking-wide">Preparing</h3>
+                        <span class="bg-blue-200 text-blue-900 px-2.5 py-0.5 rounded-full text-sm font-black" id="count-preparing">0</span>
+                     </div>
+                     <div id="preparing-orders" class="space-y-3 max-h-[min(65vh,36rem)] overflow-y-auto pr-1"></div>
+                  </section>
+                  <section class="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+                     <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-base font-black text-emerald-800 uppercase tracking-wide">Ready</h3>
+                        <span class="bg-emerald-200 text-emerald-900 px-2.5 py-0.5 rounded-full text-sm font-black" id="count-served">0</span>
+                     </div>
+                     <div id="served-orders" class="space-y-3 max-h-[min(65vh,36rem)] overflow-y-auto pr-1"></div>
+                  </section>
+               </div>
             </div>
 
             <!-- QR PANEL -->
@@ -229,6 +308,16 @@
          </main>
       </div>
       <!-- Change Password Modal -->
+      <div id="counter-modifier-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden p-4">
+         <div class="bg-white p-6 rounded-xl max-w-sm w-full shadow-2xl relative space-y-3">
+            <button onclick="closeCounterModifierModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            <h3 id="counter-modifier-title" class="text-lg font-bold text-slate-800 mb-1">Customize item</h3>
+            <p class="text-xs text-slate-400">Optional extras</p>
+            <div id="counter-modifier-options" class="space-y-2 max-h-48 overflow-y-auto mb-4"></div>
+            <button type="button" onclick="confirmCounterModifierAdd()" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 rounded-lg text-sm transition">Add to cart</button>
+         </div>
+      </div>
+
       <div id="password-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
          <div class="bg-white p-6 rounded-xl max-w-sm w-full shadow-2xl relative space-y-4">
             <button onclick="togglePasswordModal(false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
@@ -379,9 +468,16 @@
          let menuItemsList = [];
          let managerWs = null;
          let activeTablesPollId = null;
+         let counterMenuItems = [];
+         let counterCart = [];
+         let counterPendingItem = null;
+
+         function formatKs(amount) {
+             return `${Number(amount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} Ks`;
+         }
          
          function showManagerPanel(panelId) {
-             const validPanels = ['main', 'qr', 'orders', 'menu'];
+             const validPanels = ['main', 'settled', 'counter', 'kitchen', 'qr', 'orders', 'menu'];
              const activePanel = validPanels.includes(panelId) ? panelId : 'main';
 
              document.querySelectorAll('.manager-panel').forEach((panel) => {
@@ -400,6 +496,12 @@
 
              if (activePanel === 'qr') {
                  loadQrTableSelect();
+             } else if (activePanel === 'settled') {
+                 fetchSettledTablesHistory();
+             } else if (activePanel === 'counter') {
+                 loadCounterMenu();
+             } else if (activePanel === 'kitchen') {
+                 fetchKitchenOrders();
              } else if (activePanel === 'orders') {
                  fetchOrdersLog();
              } else if (activePanel === 'menu') {
@@ -408,7 +510,6 @@
              } else {
                  fetchAnalytics();
                  fetchActiveTables();
-                 fetchSettledTablesHistory();
              }
          }
 
@@ -463,12 +564,21 @@
          }
 
          function handleManagerWsEvent(data) {
-             if (data.event === 'new_order' || data.event === 'status_update') {
+             if (data.event === 'new_order') {
                  refreshLiveDashboard();
+                 fetchKitchenOrders();
+                 const tableNumber = data.order && data.order.table ? data.order.table.label : null;
+                 playManagerKitchenNewOrderAlert(tableNumber);
+             } else if (data.event === 'status_update') {
+                 refreshLiveDashboard();
+                 fetchKitchenOrders();
              } else if (data.event === 'table_settled') {
                  refreshLiveDashboard();
                  fetchSettledTablesHistory();
                  fetchAnalytics();
+                 fetchKitchenOrders();
+             } else if (data.event === 'service_request') {
+                 triggerManagerStaffSummonAlert(data.table_number, data.request);
              }
          }
 
@@ -892,25 +1002,35 @@
                  if (response.status === 401) { handleLogout(); return; }
          
                  const history = await response.json();
-                 const container = document.getElementById("settled-tables-history-log");
+                 const container = document.getElementById("settled-history-log");
+                 if (!container) return;
                  container.innerHTML = "";
-         
+
                  if (history.length === 0) {
-                     container.innerHTML = `<div class="col-span-full text-center text-slate-400 italic py-4 bg-white rounded-xl border border-slate-100">No settled table sessions recorded yet</div>`;
+                     container.innerHTML = `<div class="text-center text-slate-400 italic py-4 bg-slate-50 rounded-xl border border-slate-100">No settled sales recorded yet</div>`;
                      return;
                  }
-         
+
                  history.forEach(session => {
                      const card = document.createElement("div");
-                     card.className = "bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex justify-between items-center";
+                     card.className = "bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex justify-between items-center gap-3";
                      const isoTime = session.settled_at_iso;
+                     const title = session.is_counter
+                         ? escapeHtml(session.table_number)
+                         : `Table ${escapeHtml(session.table_number)}`;
+                     const badge = session.is_counter
+                         ? `<span class="text-[10px] font-bold uppercase tracking-wide bg-violet-50 text-violet-700 px-2 py-0.5 rounded-md">Counter</span>`
+                         : `<span class="text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md">Table</span>`;
                      card.innerHTML = `
-                         <div>
-                             <p class="font-bold text-[#161912]">Table ${session.table_number}</p>
+                         <div class="min-w-0">
+                             <div class="flex items-center gap-2 flex-wrap">
+                                 <p class="font-bold text-[#161912]">${title}</p>
+                                 ${badge}
+                             </div>
                              <p class="text-[10px] text-slate-400">Closed: ${session.settled_at}</p>
                              <p class="text-xs text-slate-500 font-semibold mt-1">Dockets: ${session.order_ids.map(id => `#${id}`).join(', ')}</p>
                          </div>
-                         <button onclick="loadHistoricalTableBill(${session.table_id}, '${isoTime}')" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition">Master Receipt</button>
+                         <button onclick="loadHistoricalTableBill(${session.table_id}, '${isoTime}')" class="text-xs border border-slate-300 hover:bg-slate-50 py-1.5 px-3 rounded-lg font-bold transition shrink-0">Receipt</button>
                      `;
                      container.appendChild(card);
                  });
@@ -1423,8 +1543,420 @@
          
          setupBluetoothLifecycleHooks();
 
+         async function loadCounterMenu() {
+             try {
+                 const response = await fetch(`${API_BASE}/menu/`);
+                 if (!response.ok) return;
+                 counterMenuItems = await response.json();
+                 renderCounterMenu();
+             } catch (err) {
+                 console.error('Could not load menu for counter.');
+             }
+         }
+
+         function renderCounterMenu() {
+             const grid = document.getElementById('counter-menu-grid');
+             if (!grid) return;
+             const query = (document.getElementById('counter-menu-search')?.value || '').trim().toLowerCase();
+             const items = counterMenuItems.filter(item =>
+                 !query || item.name.toLowerCase().includes(query) || item.category.toLowerCase().includes(query)
+             );
+             if (items.length === 0) {
+                 grid.innerHTML = `<p class="text-center text-slate-400 italic text-sm py-8">No items available</p>`;
+                 return;
+             }
+
+             const categories = {};
+             const categoryOrder = [];
+             items.forEach((item) => {
+                 if (!categories[item.category]) {
+                     categories[item.category] = [];
+                     categoryOrder.push(item.category);
+                 }
+                 categories[item.category].push(item);
+             });
+
+             grid.innerHTML = categoryOrder.map((categoryName) => {
+                 const categoryItems = categories[categoryName];
+                 const cards = categoryItems.map(item => `
+                     <button type="button" onclick="onCounterItemClick(${item.id})"
+                         class="text-left bg-slate-50 hover:bg-violet-50 border border-slate-100 hover:border-violet-200 rounded-xl p-3 transition active:scale-[0.98]">
+                         <p class="text-sm font-bold text-slate-800 leading-tight line-clamp-2">${escapeHtml(item.name)}</p>
+                         <p class="text-sm font-black text-violet-600 mt-2">${formatKs(item.price)}</p>
+                     </button>`).join('');
+                 return `
+                     <section>
+                         <h3 class="text-xs font-black uppercase tracking-wider text-slate-500 mb-2 border-b border-slate-100 pb-1.5">${escapeHtml(categoryName)}</h3>
+                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${cards}</div>
+                     </section>`;
+             }).join('');
+         }
+
+         function onCounterItemClick(itemId) {
+             const item = counterMenuItems.find(i => i.id === itemId);
+             if (!item) return;
+             if (item.modifiers && item.modifiers.length > 0) {
+                 counterPendingItem = item;
+                 document.getElementById('counter-modifier-title').innerText = item.name;
+                 document.getElementById('counter-modifier-options').innerHTML = item.modifiers.map(mod => `
+                     <label class="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-3 py-2 cursor-pointer hover:bg-violet-50">
+                         <span class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                             <input type="checkbox" class="counter-mod-check rounded text-violet-600" value="${mod.id}">
+                             ${escapeHtml(mod.name)}
+                         </span>
+                         <span class="text-xs font-bold text-violet-600">+${formatKs(mod.price)}</span>
+                     </label>`).join('');
+                 document.getElementById('counter-modifier-modal').classList.remove('hidden');
+             } else {
+                 addToCounterCart(item, []);
+             }
+         }
+
+         function closeCounterModifierModal() {
+             document.getElementById('counter-modifier-modal').classList.add('hidden');
+             counterPendingItem = null;
+         }
+
+         function confirmCounterModifierAdd() {
+             if (!counterPendingItem) return;
+             const modIds = Array.from(document.querySelectorAll('.counter-mod-check:checked')).map(el => parseInt(el.value, 10));
+             addToCounterCart(counterPendingItem, modIds);
+             closeCounterModifierModal();
+         }
+
+         function counterLineKey(menuItemId, modifierIds) {
+             return `${menuItemId}:${[...modifierIds].sort((a, b) => a - b).join(',')}`;
+         }
+
+         function addToCounterCart(item, modifierIds) {
+             const mods = (item.modifiers || []).filter(m => modifierIds.includes(m.id));
+             const modExtra = mods.reduce((sum, m) => sum + m.price, 0);
+             const unitPrice = item.price + modExtra;
+             const key = counterLineKey(item.id, modifierIds);
+             const existing = counterCart.find(line => line.key === key);
+             if (existing) {
+                 existing.quantity += 1;
+             } else {
+                 counterCart.push({
+                     key,
+                     menu_item_id: item.id,
+                     name: item.name,
+                     quantity: 1,
+                     unit_price: unitPrice,
+                     modifier_ids: modifierIds,
+                     modifier_names: mods.map(m => m.name),
+                 });
+             }
+             renderCounterCart();
+         }
+
+         function adjustCounterQty(key, delta) {
+             const line = counterCart.find(l => l.key === key);
+             if (!line) return;
+             line.quantity += delta;
+             if (line.quantity < 1) {
+                 counterCart = counterCart.filter(l => l.key !== key);
+             }
+             renderCounterCart();
+         }
+
+         function renderCounterCart() {
+             const container = document.getElementById('counter-cart-lines');
+             const checkoutBtn = document.getElementById('counter-checkout-btn');
+             if (!container) return;
+
+             if (counterCart.length === 0) {
+                 container.innerHTML = `<p class="text-slate-400 italic text-xs">Tap menu items to add</p>`;
+                 document.getElementById('counter-cart-total').innerText = formatKs(0);
+                 if (checkoutBtn) checkoutBtn.disabled = true;
+                 return;
+             }
+
+             container.innerHTML = counterCart.map(line => `
+                 <div class="flex items-start justify-between gap-2 bg-white rounded-lg border border-slate-100 p-2.5">
+                     <div class="min-w-0 flex-1">
+                         <p class="text-sm font-bold text-slate-800 leading-tight">${escapeHtml(line.name)}</p>
+                         ${line.modifier_names.length ? `<p class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(line.modifier_names.join(', '))}</p>` : ''}
+                         <p class="text-xs text-violet-600 font-semibold mt-1">${formatKs(line.unit_price)}</p>
+                     </div>
+                     <div class="flex items-center gap-1.5 shrink-0">
+                         <button type="button" onclick="adjustCounterQty('${line.key}', -1)" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm">−</button>
+                         <span class="w-5 text-center text-sm font-bold">${line.quantity}</span>
+                         <button type="button" onclick="adjustCounterQty('${line.key}', 1)" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm">+</button>
+                     </div>
+                 </div>`).join('');
+
+             const total = counterCart.reduce((sum, line) => sum + line.unit_price * line.quantity, 0);
+             document.getElementById('counter-cart-total').innerText = formatKs(total);
+             if (checkoutBtn) checkoutBtn.disabled = false;
+         }
+
+         function clearCounterCart() {
+             counterCart = [];
+             renderCounterCart();
+         }
+
+         async function submitCounterSale() {
+             if (!counterCart.length) return;
+             const payload = {
+                 items: counterCart.map(line => ({
+                     menu_item_id: line.menu_item_id,
+                     quantity: line.quantity,
+                     modifier_ids: line.modifier_ids,
+                 })),
+             };
+
+             try {
+                 const response = await fetch(`${API_BASE}/manager/counter/sale`, {
+                     method: 'POST',
+                     headers: getAuthHeaders(),
+                     body: JSON.stringify(payload),
+                 });
+                 if (response.status === 401) { handleLogout(); return; }
+                 if (!response.ok) {
+                     const err = await response.json();
+                     alert(err.detail || 'Could not complete sale.');
+                     return;
+                 }
+
+                 const order = await response.json();
+                 clearCounterCart();
+                 loadCounterMenu();
+                 fetchAnalytics();
+                 fetchSettledTablesHistory();
+                 fetchKitchenOrders();
+                 alert(`Counter sale #${order.id} completed.`);
+                 loadReceipt(order.id);
+             } catch (err) {
+                 alert('Network error completing sale.');
+             }
+         }
+
+         // --- Kitchen (embedded in manager) ---
+         let kitchenAudioCtx = null;
+         let kitchenAudioUnlocked = sessionStorage.getItem('manager_kitchen_audio_unlocked') === '1';
+         const KITCHEN_ALERT_VOLUME = 1.0;
+
+         async function ensureKitchenAudioContext() {
+             if (!kitchenAudioCtx) {
+                 kitchenAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+             }
+             if (kitchenAudioCtx.state === 'suspended') {
+                 await kitchenAudioCtx.resume();
+             }
+             return kitchenAudioCtx;
+         }
+
+         function markKitchenAudioActive() {
+             kitchenAudioUnlocked = true;
+             sessionStorage.setItem('manager_kitchen_audio_unlocked', '1');
+             const banner = document.getElementById('kitchen-audio-banner');
+             if (banner) {
+                 banner.innerText = 'Audio alerts on';
+                 banner.className = 'text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg font-semibold';
+             }
+         }
+
+         async function unlockManagerKitchenAlerts() {
+             await ensureKitchenAudioContext();
+             markKitchenAudioActive();
+             if ('Notification' in window && Notification.permission === 'default') {
+                 try { await Notification.requestPermission(); } catch (err) {}
+             }
+         }
+
+         function playKitchenTone(ctx, frequency, startTime, duration, volume = KITCHEN_ALERT_VOLUME) {
+             const oscillator = ctx.createOscillator();
+             const gain = ctx.createGain();
+             oscillator.type = 'square';
+             oscillator.frequency.setValueAtTime(frequency, startTime);
+             gain.gain.setValueAtTime(volume, startTime);
+             gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+             oscillator.connect(gain);
+             gain.connect(ctx.destination);
+             oscillator.start(startTime);
+             oscillator.stop(startTime + duration);
+         }
+
+         function playKitchenChimePattern(ctx) {
+             const now = ctx.currentTime;
+             const pattern = [
+                 { freq: 880, start: 0, duration: 0.18 },
+                 { freq: 988, start: 0.22, duration: 0.18 },
+                 { freq: 1175, start: 0.44, duration: 0.18 },
+                 { freq: 880, start: 0.72, duration: 0.18 },
+                 { freq: 988, start: 0.94, duration: 0.18 },
+                 { freq: 1175, start: 1.16, duration: 0.28 },
+             ];
+             pattern.forEach((tone) => {
+                 playKitchenTone(ctx, tone.freq, now + tone.start, tone.duration);
+             });
+         }
+
+         function showKitchenNewOrderBanner(tableNumber) {
+             const container = document.getElementById('kitchen-alerts-container');
+             if (!container) return;
+             const alertBox = document.createElement('div');
+             alertBox.className = 'bg-amber-500 text-slate-900 font-black p-3 rounded-xl flex justify-between items-center shadow-lg border-2 border-amber-300';
+             alertBox.innerHTML = `
+                 <span>NEW ORDER${tableNumber ? ` — Table ${escapeHtml(tableNumber)}` : ''}!</span>
+                 <button onclick="this.parentElement.remove()" class="bg-slate-900/20 hover:bg-slate-900/30 px-3 py-1 rounded-lg text-xs font-black">Dismiss</button>
+             `;
+             container.prepend(alertBox);
+             setTimeout(() => alertBox.remove(), 12000);
+         }
+
+         async function playManagerKitchenNewOrderAlert(tableNumber) {
+             if (navigator.vibrate) navigator.vibrate([400, 120, 400, 120, 400]);
+             const flash = document.getElementById('kitchen-new-order-flash');
+             if (flash) {
+                 flash.classList.remove('hidden');
+                 setTimeout(() => flash.classList.add('hidden'), 900);
+             }
+             showKitchenNewOrderBanner(tableNumber);
+             if (!kitchenAudioUnlocked) return;
+             try {
+                 const ctx = await ensureKitchenAudioContext();
+                 if (ctx.state === 'running') playKitchenChimePattern(ctx);
+             } catch (err) {}
+         }
+
+         function triggerManagerStaffSummonAlert(tableNum, serviceRequest) {
+             const container = document.getElementById('kitchen-alerts-container');
+             if (!container) return;
+             const alertBox = document.createElement('div');
+             alertBox.className = 'bg-rose-500 text-white font-bold p-3 rounded-xl flex justify-between items-center shadow-lg';
+             alertBox.innerHTML = `
+                 <span>Alert: Table ${escapeHtml(tableNum)} requested [${escapeHtml(serviceRequest)}]!</span>
+                 <button onclick="this.parentElement.remove()" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-xs font-black">Dismiss</button>
+             `;
+             container.prepend(alertBox);
+             setTimeout(() => alertBox.remove(), 12000);
+         }
+
+         async function fetchKitchenOrders() {
+             try {
+                 const response = await fetch(`${API_BASE}/kitchen/orders`, {
+                     headers: getAuthHeaders()
+                 });
+                 if (response.status === 401) { handleLogout(); return; }
+                 if (!response.ok) return;
+                 renderKitchenOrders(await response.json());
+             } catch (err) {
+                 console.error('Could not fetch kitchen orders.');
+             }
+         }
+
+         function kitchenCancelButton(orderId) {
+             return `<button onclick="kitchenCancelOrder(${orderId})" class="w-full bg-rose-100 hover:bg-rose-200 text-rose-800 py-2 rounded-lg text-sm font-bold transition mt-2">Cancel Order</button>`;
+         }
+
+         function kitchenCardTemplate(order, itemsHtml, actionsHtml) {
+             const timeStr = new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+             return `
+                 <div class="flex justify-between items-center">
+                     <span class="text-sm text-slate-600 font-bold font-mono">#${order.id}</span>
+                     <span class="text-sm text-slate-600 font-semibold">${timeStr}</span>
+                 </div>
+                 <div class="bg-white border-2 border-slate-200 p-2.5 rounded-lg text-center">
+                     <h4 class="font-black text-lg text-slate-900">Table ${escapeHtml(order.table.label)}</h4>
+                 </div>
+                 <div class="space-y-1.5 my-2">${itemsHtml}</div>
+                 <div class="pt-1">${actionsHtml}</div>
+             `;
+         }
+
+         function renderKitchenOrders(orders) {
+             const pendingDiv = document.getElementById('pending-orders');
+             const preparingDiv = document.getElementById('preparing-orders');
+             const servedDiv = document.getElementById('served-orders');
+             if (!pendingDiv || !preparingDiv || !servedDiv) return;
+
+             pendingDiv.innerHTML = '';
+             preparingDiv.innerHTML = '';
+             servedDiv.innerHTML = '';
+             let pendingCount = 0, preparingCount = 0, servedCount = 0;
+
+             orders.forEach(order => {
+                 const card = document.createElement('div');
+                 card.className = 'bg-white p-3.5 rounded-xl border-2 border-slate-200 shadow-sm space-y-2';
+                 const itemsHtml = order.items.map(i => {
+                     const mods = (i.selected_modifiers || []).map(m =>
+                         `<div class="text-sm font-semibold text-amber-800 pl-3">+ ${escapeHtml(m.modifier.name)}</div>`
+                     ).join('');
+                     return `
+                         <div class="border-b border-slate-200 pb-2">
+                             <div class="text-base font-bold text-slate-900"><span class="text-lg font-black">${i.quantity}x</span> ${escapeHtml(i.menu_item.name)}</div>
+                             ${i.notes ? `<div class="mt-1.5 text-sm font-bold text-amber-900 bg-amber-50 border border-amber-300 rounded px-2 py-1.5">📝 ${escapeHtml(i.notes)}</div>` : ''}
+                             ${mods}
+                         </div>`;
+                 }).join('');
+
+                 let actionsHtml = '';
+                 if (order.status === 'pending') {
+                     actionsHtml = `
+                         <button onclick="kitchenUpdateStatus(${order.id}, 'preparing')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-bold transition">Start Cooking</button>
+                         ${kitchenCancelButton(order.id)}`;
+                     pendingCount++;
+                     card.innerHTML = kitchenCardTemplate(order, itemsHtml, actionsHtml);
+                     pendingDiv.appendChild(card);
+                 } else if (order.status === 'preparing') {
+                     actionsHtml = `
+                         <button onclick="kitchenUpdateStatus(${order.id}, 'served')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-bold transition">Mark Ready</button>
+                         ${kitchenCancelButton(order.id)}`;
+                     preparingCount++;
+                     card.innerHTML = kitchenCardTemplate(order, itemsHtml, actionsHtml);
+                     preparingDiv.appendChild(card);
+                 } else if (order.status === 'served') {
+                     actionsHtml = `<div class="w-full text-center bg-emerald-100 border-2 border-emerald-300 text-emerald-900 py-2 rounded-lg text-sm font-bold">Ready / Delivered</div>`;
+                     servedCount++;
+                     card.innerHTML = kitchenCardTemplate(order, itemsHtml, actionsHtml);
+                     servedDiv.appendChild(card);
+                 }
+             });
+
+             document.getElementById('count-pending').innerText = pendingCount;
+             document.getElementById('count-preparing').innerText = preparingCount;
+             document.getElementById('count-served').innerText = servedCount;
+         }
+
+         async function kitchenUpdateStatus(orderId, nextStatus) {
+             try {
+                 const response = await fetch(`${API_BASE}/kitchen/orders/${orderId}/status?status=${nextStatus}`, {
+                     method: 'PATCH',
+                     headers: getAuthHeaders()
+                 });
+                 if (response.status === 401) { handleLogout(); return; }
+                 fetchKitchenOrders();
+                 refreshLiveDashboard();
+             } catch (err) {
+                 console.error('Failed to update kitchen status.');
+             }
+         }
+
+         async function kitchenCancelOrder(orderId) {
+             if (!confirm('Cancel this order? Stock will be restored.')) return;
+             try {
+                 const response = await fetch(`${API_BASE}/kitchen/orders/${orderId}/cancel`, {
+                     method: 'POST',
+                     headers: getAuthHeaders()
+                 });
+                 if (response.status === 401) { handleLogout(); return; }
+                 if (response.ok) {
+                     fetchKitchenOrders();
+                     refreshLiveDashboard();
+                 } else {
+                     const err = await response.json();
+                     alert(err.detail || 'Could not cancel order.');
+                 }
+             } catch (err) {
+                 console.error('Failed to cancel kitchen order.');
+             }
+         }
+
          // Initialize session protection on page load
          checkAuthState();
+         if (kitchenAudioUnlocked) markKitchenAudioActive();
       </script>
    </body>
 </html>

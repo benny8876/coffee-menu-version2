@@ -4,6 +4,7 @@ from database import get_db
 import models, schemas
 from websocket import manager_ws
 from typing import List
+from table_labels import is_counter_table
 import security
 
 router = APIRouter(prefix="/kitchen", tags=["Kitchen Panel"])
@@ -54,6 +55,9 @@ async def update_order_status(
         security.restore_order_stock(order, db)
 
     order.status = status
+    if status == models.OrderStatus.SERVED and is_counter_table(order.table):
+        order.status = models.OrderStatus.COMPLETED
+
     db.commit()
     db.refresh(order)
 
