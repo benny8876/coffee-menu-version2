@@ -472,14 +472,12 @@
          let activeCategory = null;
          
 
-         const PLACEHOLDER_IMAGE = '/static/logo2.jpg';
-
          function getItemImage(item) {
-             return item.image_url || PLACEHOLDER_IMAGE;
+             return item.image_url || null;
          }
 
-         function categoryUsesPhotoLayout(items) {
-             return items.some((item) => Boolean(item.image_url));
+         function itemHasPhoto(item) {
+             return Boolean(item.image_url);
          }
          
          async function verifyAndLoad() {
@@ -569,10 +567,11 @@
                  const isSoldOut = item.stock !== null && item.stock <= 0;
                  const imgUrl = getItemImage(item);
                  const quantityInCart = getItemQuantityInCart(item.id);
+                 if (!imgUrl) return '';
 
                  return `
-                     <div class="snap-start flex-none w-44 sm:w-48 flex flex-col cursor-pointer sm:active:scale-95 sm:transition sm:duration-200" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
-                         <div class="relative h-44 sm:h-56 w-full rounded-3xl overflow-hidden shadow-md sm:shadow-xl border border-[#9d958c]/25">
+                     <div class="w-full min-w-0 flex flex-col cursor-pointer sm:active:scale-95 sm:transition sm:duration-200" onclick="${isSoldOut ? '' : `openCustomizeModal(${item.id})`}">
+                         <div class="relative aspect-[4/5] w-full rounded-3xl overflow-hidden shadow-md sm:shadow-xl border border-[#9d958c]/25">
                              <img src="${imgUrl}" class="h-full w-full object-cover" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async">
                              ${quantityInCart > 0 ? `
                                  <div class="absolute top-3 left-3 bg-[#874230] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-md animate-scale">
@@ -628,28 +627,31 @@
              }
 
              const items = categoryMap[activeCategory];
-             const isPhotoCategory = categoryUsesPhotoLayout(items);
+             const photoItems = items.filter(itemHasPhoto);
+             const textItems = items.filter((item) => !itemHasPhoto(item));
              const sectionDiv = document.createElement('div');
              sectionDiv.className = 'menu-category-section space-y-4 relative';
 
-             if (isPhotoCategory) {
-                 sectionDiv.innerHTML = `
-                     <div class="flex flex-col border-b-2 border-[#874230]/20 pb-3">
-                         <h3 class="font-27-title text-2xl md:text-3xl font-black uppercase tracking-wider">${escapeHtml(activeCategory)}</h3>
-                         <span class="text-xs uppercase tracking-wider text-[#9d958c] font-semibold mt-1">Swipe to explore →</span>
-                     </div>
-                     <div class="menu-h-scroll grid grid-rows-2 grid-flow-col snap-x snap-mandatory gap-y-4 gap-x-4 scrollbar-none py-2 -mx-1 px-1">
-                         ${renderPhotoCategoryItems(items)}
-                     </div>
-                 `;
-             } else {
-                 sectionDiv.innerHTML = `
-                     <h3 class="font-27-title text-2xl md:text-3xl font-black uppercase tracking-wider border-b-2 border-[#735647]/15 pb-3">${escapeHtml(activeCategory)}</h3>
-                     <div class="divide-y divide-dashed divide-[#735647]/10">
-                         ${renderListCategoryItems(items)}
+             let bodyHtml = '';
+             if (photoItems.length) {
+                 bodyHtml += `
+                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 py-2">
+                         ${renderPhotoCategoryItems(photoItems)}
                      </div>
                  `;
              }
+             if (textItems.length) {
+                 bodyHtml += `
+                     <div class="divide-y divide-dashed divide-[#735647]/10 ${photoItems.length ? 'mt-2 border-t border-[#874230]/10 pt-2' : ''}">
+                         ${renderListCategoryItems(textItems)}
+                     </div>
+                 `;
+             }
+
+             sectionDiv.innerHTML = `
+                 <h3 class="font-27-title text-2xl md:text-3xl font-black uppercase tracking-wider border-b-2 border-[#735647]/15 pb-3">${escapeHtml(activeCategory)}</h3>
+                 ${bodyHtml || '<p class="text-center text-slate-400 italic py-8">No items in this category.</p>'}
+             `;
 
              container.appendChild(sectionDiv);
          }
